@@ -41,7 +41,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekening Rawat Inap</title>
+    <title>Rekening Rawat Jalan</title>
 
     <style>
         @page {
@@ -220,7 +220,7 @@
                 <div class="header-sub">
                     JL. KH. HASYIM ASY'ARI 17 BOJONEGORO, TELP. (0353)885978
                 </div>
-                <div class="rekening-title">REKENING RAWAT INAP</div>
+                <div class="rekening-title">REKENING RAWAT JALAN</div>
             </td>
 
             <td style="width:90px;"></td>

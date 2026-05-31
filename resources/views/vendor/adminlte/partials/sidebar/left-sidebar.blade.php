@@ -59,7 +59,7 @@
                 <!-- Pulang -->
                 <li class="nav-item">
 
-                    <a href="/rawat-inap" class="nav-link menu-link">
+                    <a href="/pulang" class="nav-link menu-link">
 
                         <i class="nav-icon fas fa-home"></i>
 
@@ -69,10 +69,18 @@
 
                 </li>
 
+                <!-- IGD -->
+                <li class="nav-item">
+                    <a href="/igd" class="nav-link menu-link">
+                        <i class="nav-icon fas fa-ambulance"></i>
+                        <p>IGD</p>
+                    </a>
+                </li>
+
                 <!-- Rawat jalan -->
                 <li class="nav-item">
 
-                    <a href="/rawat-jalan" class="nav-link menu-link">
+                    <a href="/rawatjalan" class="nav-link menu-link">
                         <i class="nav-icon fas fa-user-injured"></i>
                         <p>Rawat Jalan</p>
                     </a>

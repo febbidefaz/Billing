@@ -1,57 +1,71 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
 
-@section('title', 'Rawat Jalan')
+@section('title', 'IGD')
 
 @section('content_header')
+
     <div class="d-flex align-items-center">
-        <h1 class="mb-0 mr-2">Data Rawat Jalan</h1>
+
+        <h1 class="mb-0 mr-2">
+            Data Pasien IGD
+        </h1>
 
         <span class="badge badge-info shadow-sm px-3 py-2" id="totalPasienHeader"
-            style="font-size:16px; font-weight:700; border-radius:10px;">
+            style="font-size:14px;font-weight:1000;border-radius:10px;letter-spacing:0.5px;">
             0 Pasien
         </span>
-    </div>
-    <div class="row mb-2">
-
-        <div class="col-md-2">
-            <input type="date" id="tgl1" class="form-control" value="{{ date('Y-m-d') }}">
-        </div>
-
-        <div class="col-md-2">
-            <input type="date" id="tgl2" class="form-control" value="{{ date('Y-m-d') }}">
-        </div>
-
-        <div class="col-md-2">
-            <button id="btnFilter" class="btn btn-info">
-                Filter
-            </button>
-        </div>
 
     </div>
+
 @stop
 
-@section('content')
+@section('page-content')
 
     <div class="card shadow-sm">
+
+        <div class="card-header bg-light">
+
+            <div class="row align-items-end">
+
+                <div class="col-md-3">
+                    <label>Tanggal Awal</label>
+                    <input type="date" id="tglAwal" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Tanggal Akhir</label>
+                    <input type="date" id="tglAkhir" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-info btn-block" onclick="reloadIGD()">
+                        <i class="fas fa-search"></i>
+                        Tampilkan
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
         <div class="card-body p-0">
 
             <div class="table-wrap">
-                <table id="tbl" class="table table-hover table-striped table-bordered nowrap">
+                <table id="tblIGD" class="table table-hover table-striped table-bordered nowrap">
                     <thead class="bg-info">
                         <tr>
-                            <th style="width:50px">PxRS</th>
-                            <th style="width:40px">ID</th>
-                            <th style="width:40px">NoRM</th>
-                            <th style="width:50px">Nama Pasien</th>
-                            <th style="width:20px">Tanggal</th>
-                            <th style="width:80px">Alamat</th>
-                            <th style="width:50px">Bagian</th>
-                            <th style="width:10px">Shift</th>
-                            <th style="width:50px">NoSEP</th>
-                            <th style="width:50px">No JKN</th>
-                            <th style="width:40px">No WA</th>
+                            <th>PxRS</th>
+                            <th>ID</th>
+                            <th>NoRM</th>
+                            <th>Nama Pasien</th>
+                            <th>Dokter</th>
+                            <th>Tanggal</th>
+                            <th>No SEP</th>
+                            <th>Alamat</th>
+                            <th>Follow Up</th>
+                            <th>Sub Layanan</th>
 
                         </tr>
                     </thead>
@@ -61,11 +75,13 @@
             </div>
 
         </div>
+
     </div>
 
 @stop
 
 @section('css')
+
     <style>
         .table-wrap {
             width: 100%;
@@ -75,57 +91,70 @@
             position: relative;
         }
 
-        #tbl {
-            min-width: 450px !important;
-            table-layout: auto !important;
+        #tblIGD {
+            min-width: 900px !important;
+            width: max-content !important;
         }
 
-        #tbl th,
-        #tbl td {
+        #tblIGD th,
+        #tblIGD td {
             white-space: nowrap;
             vertical-align: middle;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        #tbl thead th {
+        #tblIGD thead th {
             position: sticky;
             top: 0;
             z-index: 2;
             background: #17a2b8 !important;
             color: white;
         }
+
+        .table-wrap::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: #999;
+            border-radius: 10px;
+        }
     </style>
+
 @stop
 
 @section('js')
+
     <script>
+        let tableIGD;
+
         $(function() {
-            let table = $("#tbl").DataTable({
+
+            tableIGD = $("#tblIGD").DataTable({
+
                 processing: true,
+
                 ajax: {
-                    url: "{{ route('rawatjalan.data') }}",
+                    url: "{{ route('igd.data') }}",
                     data: function(d) {
-                        d.tgl_awal = $('#tgl1').val();
-                        d.tgl_akhir = $('#tgl2').val();
+                        d.tgl_awal = $('#tglAwal').val();
+                        d.tgl_akhir = $('#tglAkhir').val();
                     }
                 },
 
                 columns: [{
-                        data: 'PxRS',
-                        defaultContent: '-'
+                        data: 'PxRS'
                     },
                     {
-                        data: 'ID',
-                        defaultContent: '-'
+                        data: 'ID'
                     },
                     {
-                        data: 'RegNum',
-                        defaultContent: '-'
+                        data: 'RegNum'
                     },
                     {
-                        data: 'Nama',
-                        defaultContent: '-'
+                        data: 'Nama'
+                    },
+                    {
+                        data: 'Dokter'
                     },
                     {
                         data: 'Tanggal',
@@ -141,54 +170,35 @@
                         }
                     },
                     {
-                        data: 'Addr',
-                        defaultContent: '-'
+                        data: 'NoSEP'
                     },
                     {
-                        data: 'SubLayanan',
-                        defaultContent: '-'
+                        data: 'Addr'
                     },
                     {
-                        data: 'Alias',
-                        defaultContent: '-'
+                        data: 'FollowUp'
                     },
                     {
-                        data: 'NoSEP',
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'NoJKN',
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'NoWA',
-                        defaultContent: '-'
-                    },
+                        data: 'SubLayanan'
+                    }
 
                 ],
 
                 createdRow: function(row, data) {
-
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
-
-                        window.location.href =
-                            '/rawatjalan/' + data.ID;
-
+                        window.location.href = '/igd/' + data.ID;
                     });
-
                 },
 
                 responsive: false,
                 autoWidth: false,
                 scrollX: false,
+
                 paging: true,
                 pageLength: 200,
-                lengthMenu: [
-                    [50, 100, 150, 200, -1],
-                    [50, 100, 150, 200, "Semua"]
-                ],
+
                 ordering: true,
                 order: [
                     [1, 'desc']
@@ -199,6 +209,11 @@
                     $('#totalPasienHeader').html(total + ' Pasien');
                 },
 
+                lengthMenu: [
+                    [50, 100, 150, 200, -1],
+                    [50, 100, 150, 200, "Semua"]
+                ],
+
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data",
@@ -208,11 +223,14 @@
                         next: "Berikutnya"
                     }
                 }
+
             });
 
-            $('#btnFilter').on('click', function() {
-                table.ajax.reload();
-            });
         });
+
+        function reloadIGD() {
+            tableIGD.ajax.reload();
+        }
     </script>
+
 @stop

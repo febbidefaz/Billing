@@ -5,14 +5,14 @@
 @section('content_header')
     <div class="d-flex align-items-center">
 
-        <a href="{{ route('rawatinap.index') }}" class="btn btn-secondary btn-sm mr-3">
+        <a href="{{ route('pulang') }}" class="btn btn-secondary btn-sm mr-3">
 
             <i class="fas fa-arrow-left fa-2x"></i>
 
         </a>
 
         <h1 class="mb-0">
-            Billing Rawat Inap
+            Billing Pasien Pulang
         </h1>
 
     </div>

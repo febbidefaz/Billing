@@ -9,21 +9,29 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class RawatInapController extends Controller
+class IGDController extends Controller
 {
     public function index()
     {
-        return view('rawatinap');
+        return view('igd');
     }
 
-    public function data()
+    public function data(Request $request)
     {
-        $data = DB::select("EXEC dbo.DaftarPasienRawatInap_SP");
+        $tglAwal = $request->tgl_awal ?? date('Y-m-d');
+        $tglAkhir = $request->tgl_akhir ?? date('Y-m-d');
+
+        $data = DB::select("
+            EXEC dbo.WebDaftarPasienRawatJalanIGD_SP ?, ?
+        ", [
+            $tglAwal,
+            $tglAkhir
+        ]);
 
         return response()->json([
             'data' => $data
         ]);
-    }  
+    }
 
     public function sepDetail(Request $request)
     {
@@ -620,7 +628,7 @@ class RawatInapController extends Controller
 
         $tanggalCetak = now()->format('d M Y H:i:s');
     
-        return view('rawatinap.rekening-print', compact(
+        return view('igd.rekening-print', compact(
             'pasien',
             'kamar',
             'rekeningVisit',
@@ -753,7 +761,7 @@ class RawatInapController extends Controller
     //kasirRS   
     $kasirList = DB::select("EXEC dbo.cboKasirRS_SP");
 
-    return view('rawatinap.inapdetail', compact(
+    return view('igd.igddetail', compact(
         'pasien', 
         'dokterList',
         'kamar', 
@@ -776,7 +784,6 @@ class RawatInapController extends Controller
         'roomObatList',
         'kasir',
         'kasirList',));
-        }
     }
     
-
+}

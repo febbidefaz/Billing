@@ -1,18 +1,18 @@
 @extends('adminlte::page')
 
-@section('title', 'Bil Inap')
+@section('title', 'Bil IGD')
 
 @section('content_header')
     <div class="d-flex align-items-center">
 
-        <a href="{{ route('rawatinap.index') }}" class="btn btn-secondary btn-sm mr-3">
+        <a href="{{ route('igd') }}" class="btn btn-secondary btn-sm mr-3">
 
             <i class="fas fa-arrow-left fa-2x"></i>
 
         </a>
 
         <h1 class="mb-0">
-            Billing Rawat Inap
+            Billing IGD
         </h1>
 
     </div>
@@ -505,7 +505,7 @@
                         function printBilling() {
 
                             let printWindow = window.open(
-                                "{{ route('rawatinap.rekeningPrint', $pasien->ID) }}",
+                                "{{ route('igd.rekeningPrint', $pasien->ID) }}",
                                 "PRINT",
                                 "height=800,width=1000"
                             );

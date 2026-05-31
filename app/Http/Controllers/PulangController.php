@@ -2,28 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
-class RawatInapController extends Controller
+class PulangController extends Controller
 {
     public function index()
     {
-        return view('rawatinap');
+        return view('pulang');
     }
 
-    public function data()
+    public function data(Request $request)
     {
-        $data = DB::select("EXEC dbo.DaftarPasienRawatInap_SP");
+        $tglAwal = $request->tgl_awal ?? date('Y-m-d');
+        $tglAkhir = $request->tgl_akhir ?? date('Y-m-d');
+
+        $data = DB::select("
+            EXEC dbo.WebDaftarPasienPulang_SP ?, ?
+        ", [
+            $tglAwal,
+            $tglAkhir
+        ]);
 
         return response()->json([
             'data' => $data
         ]);
-    }  
+    }
 
     public function sepDetail(Request $request)
     {
@@ -753,7 +761,7 @@ class RawatInapController extends Controller
     //kasirRS   
     $kasirList = DB::select("EXEC dbo.cboKasirRS_SP");
 
-    return view('rawatinap.inapdetail', compact(
+    return view('pulang.pulangdetail', compact(
         'pasien', 
         'dokterList',
         'kamar', 
@@ -777,6 +785,4 @@ class RawatInapController extends Controller
         'kasir',
         'kasirList',));
         }
-    }
-    
-
+}
