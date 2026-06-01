@@ -158,7 +158,8 @@
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
-                        window.location.href = '/rawat-inap/' + data.ID;
+                        window.location.href =
+                            "{{ route('rawatinap.index') }}/" + data.ID;
                     });
                 },
                 responsive: false,

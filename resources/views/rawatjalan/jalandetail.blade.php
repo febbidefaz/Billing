@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="d-flex align-items-center">
 
-        <a href="{{ route('rawatjalan') }}" class="btn btn-secondary btn-sm mr-3">
+        <a href="{{ route('rawatjalan.index') }}" class="btn btn-secondary btn-sm mr-3">
 
             <i class="fas fa-arrow-left fa-2x"></i>
 

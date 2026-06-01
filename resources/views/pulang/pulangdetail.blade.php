@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="d-flex align-items-center">
 
-        <a href="{{ route('pulang') }}" class="btn btn-secondary btn-sm mr-3">
+        <a href="{{ route('pulang.index') }}" class="btn btn-secondary btn-sm mr-3">
 
             <i class="fas fa-arrow-left fa-2x"></i>
 

@@ -79,21 +79,21 @@ Route::middleware(['auth'])->group(function () {
         ->name('profile.password.update');
 
         // Rawat Jalan
-    Route::get('/rawatjalan', [RawatJalanController::class, 'index'])->name('rawatjalan');
+    Route::get('/rawatjalan', [RawatJalanController::class, 'index'])->name('rawatjalan.index');
     Route::get('/rawatjalan/data', [RawatJalanController::class, 'data'])->name('rawatjalan.data');
     Route::get('/rawatjalan/{id}', [RawatJalanController::class, 'detail'])->name('rawatjalan.detail');
     Route::get('/rawatjalan/{id}/rekening-print', [RawatJalanController::class, 'rekeningPrint'])
         ->name('rawatjalan.rekeningPrint');
         
        // IGD
-    Route::get('/igd', [IGDController::class, 'index'])->name('igd');      
+    Route::get('/igd', [IGDController::class, 'index'])->name('igd.index');      
     Route::get('/igd/data', [IGDController::class, 'data'])->name('igd.data');  
     Route::get('/igd/{id}', [IGDController::class, 'detail'])->name('igd.detail');
     Route::get('/igd/{id}/rekening-print', [IGDController::class, 'rekeningPrint'])
         ->name('igd.rekeningPrint');  
 
         // Pasien Pulang
-    Route::get('/pulang', [PulangController::class, 'index'])->name('pulang');
+    Route::get('/pulang', [PulangController::class, 'index'])->name('pulang.index');
     Route::get('/pulang/data', [PulangController::class, 'data'])->name('pulang.data');
     Route::get('/pulang/{id}', [PulangController::class, 'detail'])->name('pulang.detail');
 });

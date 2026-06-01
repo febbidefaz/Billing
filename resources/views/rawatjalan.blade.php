@@ -174,7 +174,7 @@
                     $(row).on('click', function() {
 
                         window.location.href =
-                            '/rawatjalan/' + data.ID;
+                            "{{ route('rawatjalan.index') }}/" + data.ID;
 
                     });
 

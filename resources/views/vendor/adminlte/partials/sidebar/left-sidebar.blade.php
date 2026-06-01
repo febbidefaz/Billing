@@ -3,8 +3,8 @@
     <!-- Logo -->
     <a href="/dashboard" class="brand-link">
 
-        <img src="/vendor/adminlte/dist/img/AdminLTELogo.png" alt="RSA" class="brand-image img-circle elevation-3"
-            style="opacity:.8">
+        <img src="{{ asset('vendor/adminlte/dist/img/AdminLTELogo.png') }}" alt="RSA"
+            class="brand-image img-circle elevation-3" style="opacity:.8">
 
         <span class="brand-text font-weight-light">
             Billing RSA
@@ -45,46 +45,34 @@
 
                 <!-- Rawat Inap -->
                 <li class="nav-item">
-
-                    <a href="/rawat-inap" class="nav-link menu-link">
-
+                    <a href="{{ route('rawatinap.index') }}" class="nav-link menu-link">
                         <i class="nav-icon fas fa-bed"></i>
-
                         <p>Rawat Inap</p>
-
                     </a>
-
                 </li>
 
                 <!-- Pulang -->
                 <li class="nav-item">
-
-                    <a href="/pulang" class="nav-link menu-link">
-
+                    <a href="{{ route('pulang.index') }}" class="nav-link menu-link">
                         <i class="nav-icon fas fa-home"></i>
-
                         <p>Pulang</p>
-
                     </a>
-
                 </li>
 
                 <!-- IGD -->
                 <li class="nav-item">
-                    <a href="/igd" class="nav-link menu-link">
+                    <a href="{{ route('igd.index') }}" class="nav-link menu-link">
                         <i class="nav-icon fas fa-ambulance"></i>
                         <p>IGD</p>
                     </a>
                 </li>
 
-                <!-- Rawat jalan -->
+                <!-- Rawat Jalan -->
                 <li class="nav-item">
-
-                    <a href="/rawatjalan" class="nav-link menu-link">
+                    <a href="{{ route('rawatjalan.index') }}" class="nav-link menu-link">
                         <i class="nav-icon fas fa-user-injured"></i>
                         <p>Rawat Jalan</p>
                     </a>
-
                 </li>
 
                 <!-- User Billing -->
