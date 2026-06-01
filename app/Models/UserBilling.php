@@ -6,6 +6,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class UserBilling extends Authenticatable
 {
+    protected $connection = 'sqlsrv';
+
     protected $table = 'UserBilling';
     protected $primaryKey = 'ID';
     public $timestamps = false;
