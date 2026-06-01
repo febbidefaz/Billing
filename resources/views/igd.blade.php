@@ -188,7 +188,8 @@
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
-                        window.location.href = '/igd/' + data.ID;
+                        window.location.href =
+                            "{{ route('igd.detail', ':id') }}".replace(':id', data.ID);
                     });
                 },
 

@@ -101,106 +101,106 @@
         let tablePasienPulang;
 
         $(function() {
-            tablePasienPulang = $("#tblPasienPulang").DataTable({
-                processing: true,
+                    tablePasienPulang = $("#tblPasienPulang").DataTable({
+                        processing: true,
 
-                ajax: {
-                    url: "{{ route('pulang.data') }}",
-                    data: function(d) {
-                        d.tgl_awal = $('#tglAwal').val();
-                        d.tgl_akhir = $('#tglAkhir').val();
-                    }
-                },
+                        ajax: {
+                            url: "{{ route('pulang.data') }}",
+                            data: function(d) {
+                                d.tgl_awal = $('#tglAwal').val();
+                                d.tgl_akhir = $('#tglAkhir').val();
+                            }
+                        },
 
-                columns: [{
-                        data: 'PxRS'
-                    },
-                    {
-                        data: 'ID'
-                    },
-                    {
-                        data: 'RegNum'
-                    },
-                    {
-                        data: 'Nama'
-                    },
-                    {
-                        data: 'RoomName'
-                    },
-                    {
-                        data: 'TMasuk',
-                        render: function(data) {
-                            return formatTanggal(data);
-                        }
-                    },
-                    {
-                        data: 'LDate',
-                        render: function(data) {
-                            return formatTanggal(data);
-                        }
-                    },
-                    {
-                        data: 'Status'
-                    },
-                    {
-                        data: 'Addr'
-                    }
-                ],
+                        columns: [{
+                                data: 'PxRS'
+                            },
+                            {
+                                data: 'ID'
+                            },
+                            {
+                                data: 'RegNum'
+                            },
+                            {
+                                data: 'Nama'
+                            },
+                            {
+                                data: 'RoomName'
+                            },
+                            {
+                                data: 'TMasuk',
+                                render: function(data) {
+                                    return formatTanggal(data);
+                                }
+                            },
+                            {
+                                data: 'LDate',
+                                render: function(data) {
+                                    return formatTanggal(data);
+                                }
+                            },
+                            {
+                                data: 'Status'
+                            },
+                            {
+                                data: 'Addr'
+                            }
+                        ],
 
-                createdRow: function(row, data) {
-                    $(row).css('cursor', 'pointer');
-                    $(row).on('click', function() {
-                        window.location.href = '/pulang/' + data.ID;
+                        createdRow: function(row, data) {
+                            $(row).css('cursor', 'pointer');
+                            $(row).on('click', function() {
+                                    window.location.href =
+                                        "{{ route('pulang.detail', ':id') }}".replace(':id', data.ID);
+                                },
+
+                                responsive: false,
+                                autoWidth: false,
+                                scrollX: false,
+
+                                paging: true,
+                                pageLength: 200,
+
+                                ordering: true,
+                                order: [
+                                    [6, 'desc']
+                                ],
+
+                                drawCallback: function(settings) {
+                                    let total = settings.fnRecordsTotal();
+                                    $('#totalPasienHeader').html(total + ' Pasien');
+                                },
+
+                                lengthMenu: [
+                                    [50, 100, 150, 200, -1],
+                                    [50, 100, 150, 200, "Semua"]
+                                ],
+
+                                language: {
+                                    search: "Cari:",
+                                    lengthMenu: "Tampilkan _MENU_ data",
+                                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                                    paginate: {
+                                        previous: "Sebelumnya",
+                                        next: "Berikutnya"
+                                    }
+                                }
+                            });
                     });
-                },
 
-                responsive: false,
-                autoWidth: false,
-                scrollX: false,
-
-                paging: true,
-                pageLength: 200,
-
-                ordering: true,
-                order: [
-                    [6, 'desc']
-                ],
-
-                drawCallback: function(settings) {
-                    let total = settings.fnRecordsTotal();
-                    $('#totalPasienHeader').html(total + ' Pasien');
-                },
-
-                lengthMenu: [
-                    [50, 100, 150, 200, -1],
-                    [50, 100, 150, 200, "Semua"]
-                ],
-
-                language: {
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    paginate: {
-                        previous: "Sebelumnya",
-                        next: "Berikutnya"
+                    function reloadPasienPulang() {
+                        tablePasienPulang.ajax.reload();
                     }
-                }
-            });
-        });
 
-        function reloadPasienPulang() {
-            tablePasienPulang.ajax.reload();
-        }
+                    function formatTanggal(data) {
+                        if (!data) return '-';
 
-        function formatTanggal(data) {
-            if (!data) return '-';
+                        let tgl = new Date(data);
+                        let dd = String(tgl.getDate()).padStart(2, '0');
+                        let mm = String(tgl.getMonth() + 1).padStart(2, '0');
+                        let yyyy = tgl.getFullYear();
 
-            let tgl = new Date(data);
-            let dd = String(tgl.getDate()).padStart(2, '0');
-            let mm = String(tgl.getMonth() + 1).padStart(2, '0');
-            let yyyy = tgl.getFullYear();
-
-            return dd + '/' + mm + '/' + yyyy;
-        }
+                        return dd + '/' + mm + '/' + yyyy;
+                    }
     </script>
 @stop
