@@ -34,7 +34,7 @@
         <div class="card-body p-0">
 
             <div class="table-wrap">
-                <table id="tbl" class="table table-hover table-striped table-bordered nowrap">
+                <table id="tblRawatInap" class="table table-hover table-striped table-bordered nowrap">
                     <thead class="bg-info">
                         <tr>
                             <th style="width:40px">PxRS</th>
@@ -70,20 +70,20 @@
         }
 
         /* KUNCI LEBAR TABEL */
-        #tbl {
+        #tblRawatInap {
             min-width: 800px !important;
             width: max-content !important;
         }
 
         /* Supaya kolom tidak turun */
-        #tbl th,
-        #tbl td {
+        #tblRawatInap th,
+        #tblRawatInap td {
             white-space: nowrap;
             vertical-align: middle;
         }
 
         /* Header tabel sticky */
-        #tbl thead th {
+        #tblRawatInap thead th {
             position: sticky;
             top: 0;
             z-index: 2;
@@ -108,7 +108,7 @@
 
     <script>
         $(function() {
-            $("#tbl").DataTable({
+            $("#tblRawatInap").DataTable({
 
                 processing: true,
                 ajax: "{{ route('rawatinap.data') }}",

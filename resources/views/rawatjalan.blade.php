@@ -38,7 +38,7 @@
         <div class="card-body p-0">
 
             <div class="table-wrap">
-                <table id="tbl" class="table table-hover table-striped table-bordered nowrap">
+                <table id="tblRawatJalan" class="table table-hover table-striped table-bordered nowrap">
                     <thead class="bg-info">
                         <tr>
                             <th style="width:50px">PxRS</th>
@@ -75,20 +75,20 @@
             position: relative;
         }
 
-        #tbl {
+        #tblRawatJalan {
             min-width: 450px !important;
             table-layout: auto !important;
         }
 
-        #tbl th,
-        #tbl td {
+        #tblRawatJalan th,
+        #tblRawatJalan td {
             white-space: nowrap;
             vertical-align: middle;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        #tbl thead th {
+        #tblRawatJalan thead th {
             position: sticky;
             top: 0;
             z-index: 2;
@@ -101,7 +101,7 @@
 @section('js')
     <script>
         $(function() {
-            let table = $("#tbl").DataTable({
+            let table = $("#tblRawatJalan").DataTable({
                 processing: true,
                 ajax: {
                     url: "{{ route('rawatjalan.data') }}",
