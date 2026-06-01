@@ -18,12 +18,27 @@ class RawatInapController extends Controller
 
     public function data()
     {
-        $data = DB::select("EXEC dbo.DaftarPasienRawatInap_SP");
+        try {
 
-        return response()->json([
-            'data' => $data
-        ]);
-    }  
+            $data = DB::select("
+                SET NOCOUNT ON;
+                EXEC dbo.DaftarPasienRawatInap_SP
+            ");
+
+            return response()->json([
+                'data' => $data ?: []
+            ]);
+
+        } catch (\Exception $e) {
+
+            Log::error('RAWAT INAP DATA ERROR : ' . $e->getMessage());
+
+            return response()->json([
+                'data' => [],
+                'message' => 'Data tidak ditemukan atau gagal dimuat.'
+            ], 200);
+        }
+    }
 
     public function sepDetail(Request $request)
     {
