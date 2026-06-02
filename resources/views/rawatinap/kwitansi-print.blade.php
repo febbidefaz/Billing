@@ -70,11 +70,30 @@
         .small {
             font-size: 7px;
         }
+
+        .print-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 7px 12px;
+            background: #17a2b8;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media print {
+            .print-btn {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body>
 
+    <button onclick="window.print()" class="print-btn">Print</button>
 
     @php
         $R = fn($v) => number_format($v ?? 0, 0, ',', '.');

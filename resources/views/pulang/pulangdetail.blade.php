@@ -497,35 +497,38 @@
                     </script>
 
                     {{-- print Rek --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="printBilling()">
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewBilling()">
                         <i class="fas fa-print"></i> Rekening
                     </button>
 
                     <script>
-                        function printBilling() {
+                        function previewBilling() {
 
-                            let printWindow = window.open(
+                            window.open(
                                 "{{ route('rawatinap.rekeningPrint', $pasien->ID) }}",
-                                "PRINT",
+                                "_blank",
                                 "height=800,width=1000"
                             );
 
-                            printWindow.focus();
-
-                            setTimeout(function() {
-                                printWindow.print();
-                            }, 1000);
-
-                            printWindow.onafterprint = function() {
-                                printWindow.close();
-                            };
                         }
                     </script>
 
                     {{-- Print Kwitansi --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="printKwitansi()">
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
                         <i class="fas fa-print"></i> Kwitansi
                     </button>
+
+                    <script>
+                        function previewKwitansi() {
+
+                            window.open(
+                                "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+
+                        }
+                    </script>
 
                     <script>
                         function printKwitansi() {
