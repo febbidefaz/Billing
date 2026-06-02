@@ -46,8 +46,8 @@
 
     <style>
         @page {
-            size: A4 portrait;
-            margin: 10mm;
+            size: legal portrait;
+            margin: 8mm;
         }
 
         body {
