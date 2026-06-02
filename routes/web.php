@@ -34,7 +34,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/rawat-inap/{id}/update-pxrs', [RawatInapController::class, 'updatePxRS'])
         ->name('rawatinap.updatePxRS');
     Route::get('/rawat-inap/{id}/rekening-print', [RawatInapController::class, 'rekeningPrint'])
-        ->name('rawatinap.rekeningPrint');
+        ->name('rawatinap.rekeningPrint'); 
+    Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
+        ->name('rawatinap.updateKarcisJasa');
+    Route::post('/rawatinap/{id}/hapus-karcis-jasa', [RawatInapController::class, 'hapusKarcisJasa'])
+        ->name('rawatinap.hapusKarcisJasa');             
  
     Route::get('/sep/detail', [RawatInapController::class, 'sepDetail'])->name('sep.detail');
     Route::get('/bpjs/peserta', [RawatInapController::class, 'cekPesertaBpjs'])->name('bpjs.peserta');
@@ -84,13 +88,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rawatjalan/{id}', [RawatJalanController::class, 'detail'])->name('rawatjalan.detail');
     Route::get('/rawatjalan/{id}/rekening-print', [RawatJalanController::class, 'rekeningPrint'])
         ->name('rawatjalan.rekeningPrint');
+    Route::post('/rawatjalan/{id}/update-karcis-jasa',[RawatJalanController::class, 'updateKarcisJasa'])
+        ->name('rawatjalan.updateKarcisJasa');
+    Route::post('/rawatjalan/{id}/hapus-karcis-jasa', [RawatJalanController::class, 'hapusKarcisJasa'])
+        ->name('rawatjalan.hapusKarcisJasa');
+    Route::post('/rawatjalan/{id}/auto-karcis-jasa', [RawatJalanController::class, 'autoKarcisJasa'])
+        ->name('rawatjalan.autoKarcisJasa');            
         
        // IGD
     Route::get('/igd', [IGDController::class, 'index'])->name('igd.index');      
     Route::get('/igd/data', [IGDController::class, 'data'])->name('igd.data');  
     Route::get('/igd/{id}', [IGDController::class, 'detail'])->name('igd.detail');
     Route::get('/igd/{id}/rekening-print', [IGDController::class, 'rekeningPrint'])
-        ->name('igd.rekeningPrint');  
+        ->name('igd.rekeningPrint');
+    Route::post('/igd/{id}/update-karcis-jasa',[IGDController::class, 'updateKarcisJasa'])
+        ->name('igd.updateKarcisJasa');
+    Route::post('/igd/{id}/hapus-karcis-jasa', [IGDController::class, 'hapusKarcisJasa'])
+        ->name('igd.hapusKarcisJasa');
+    Route::post('/igd/{id}/auto-karcis-jasa', [IGDController::class, 'autoKarcisJasa'])
+        ->name('igd.autoKarcisJasa');            
 
         // Pasien Pulang
     Route::get('/pulang', [PulangController::class, 'index'])->name('pulang.index');

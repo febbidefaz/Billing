@@ -2777,23 +2777,198 @@
                 <div class="row">
 
                     <div class="col-md-4">
-                        <div class="billing-box">
-                            <div class="billing-row">
+                        <div class="billing-box position-relative">
+
+                            <div class="billing-row billing-clickable" data-toggle="modal"
+                                data-target="#modalKarcisJasa">
                                 <span>Karcis</span>
-                                <strong>Rp {{ number_format($pasien->Biaya ?? 0, 0, ',', '.') }}</strong>
+                                <strong id="labelBiaya">
+                                    Rp {{ number_format($pasien->Biaya ?? 0, 0, ',', '.') }}
+                                </strong>
                             </div>
 
-                            <div class="billing-row">
+                            <div class="billing-row billing-clickable" data-toggle="modal"
+                                data-target="#modalKarcisJasa">
                                 <span>Jasa</span>
-                                <strong>Rp {{ number_format($pasien->JasaPrk ?? 0, 0, ',', '.') }}</strong>
+                                <strong id="labelJasa">
+                                    Rp {{ number_format($pasien->JasaPrk ?? 0, 0, ',', '.') }}
+                                </strong>
                             </div>
 
                             <div class="billing-row">
                                 <span>Hutang Obat</span>
-                                <strong>Rp {{ number_format($hutangObat, 0, ',', '.') }}</strong>
+                                <strong>
+                                    Rp {{ number_format($hutangObat, 0, ',', '.') }}
+                                </strong>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- Modal Edit Karcis Dan Jasa --}}
+                    <div class="modal fade" id="modalKarcisJasa" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+                            <div class="modal-content border-0 shadow">
+
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-edit mr-1"></i>
+                                        Edit Karcis & Jasa
+                                    </h5>
+
+                                    <button type="button" class="close text-white" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <input type="hidden" id="editID" value="{{ $pasien->ID }}">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Karcis</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Rp</span>
+                                            </div>
+
+                                            <input type="text" class="form-control text-right rupiah-input"
+                                                id="editKarcis"
+                                                value="{{ number_format($pasien->Biaya ?? 0, 0, ',', '.') }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <label class="font-weight-bold">Jasa</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Rp</span>
+                                            </div>
+
+                                            <input type="text" class="form-control text-right rupiah-input"
+                                                id="editJasaPrk"
+                                                value="{{ number_format($pasien->JasaPrk ?? 0, 0, ',', '.') }}">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        Batal
+                                    </button>
+
+                                    <button type="button" class="btn btn-info" onclick="autoKarcisJasa()">
+                                        <i class="fas fa-sync"></i> Auto Tarif
+                                    </button>
+
+                                    <button type="button" class="btn btn-success" onclick="simpanKarcisJasa()">
+                                        Simpan
+                                    </button>
+
+                                    <button type="button" class="btn btn-danger" onclick="hapusKarcisJasa()">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                </div>
+
                             </div>
                         </div>
                     </div>
+
+                    {{-- JS Edit Karcis Dan jasa --}}
+                    <script>
+                        function onlyNumber(value) {
+                            return value.toString().replace(/\D/g, '');
+                        }
+
+                        function formatRupiah(value) {
+                            value = onlyNumber(value);
+
+                            if (!value) {
+                                return '0';
+                            }
+
+                            return new Intl.NumberFormat('id-ID').format(value);
+                        }
+
+                        $('.rupiah-input').on('input', function() {
+                            this.value = formatRupiah(this.value);
+                        });
+
+                        function simpanKarcisJasa() {
+
+                            $.ajax({
+                                url: "{{ route('rawatjalan.updateKarcisJasa', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    biaya: onlyNumber($('#editKarcis').val()),
+                                    jasa: onlyNumber($('#editJasaPrk').val())
+                                },
+                                success: function(response) {
+
+                                    $('#modalKarcisJasa').modal('hide');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 300);
+
+                                },
+                                error: function(xhr) {
+                                    alert(xhr.responseText);
+                                    console.log(xhr.responseText);
+                                }
+                            });
+
+                        }
+
+                        function hapusKarcisJasa() {
+
+                            if (!confirm('Yakin ingin menghapus Karcis dan Jasa?')) {
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('rawatjalan.hapusKarcisJasa', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+
+                                success: function(response) {
+
+                                    $('#modalKarcisJasa').modal('hide');
+
+                                    location.reload();
+
+                                },
+
+                                error: function(xhr) {
+
+                                    alert(xhr.responseText);
+
+                                }
+                            });
+
+                        }
+
+                        function autoKarcisJasa() {
+
+                            $.ajax({
+                                url: "{{ route('rawatjalan.autoKarcisJasa', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function() {
+                                    location.reload();
+                                },
+                                error: function(xhr) {
+                                    alert(xhr.responseText);
+                                }
+                            });
+
+                        }
+                    </script>
 
                     <div class="col-md-4">
                         <div class="billing-box">
@@ -3074,6 +3249,18 @@
     .billing-row.netto strong {
         color: #0A7C86;
         font-size: 19px;
+    }
+
+    .billing-clickable {
+        cursor: pointer;
+        transition: .2s;
+        border-radius: 6px;
+        padding: 6px 8px;
+    }
+
+    .billing-clickable:hover {
+        background: #eef9fb;
+        color: #0c7c89;
     }
 </style>
 
