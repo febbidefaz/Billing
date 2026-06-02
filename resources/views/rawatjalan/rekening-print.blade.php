@@ -26,7 +26,8 @@
         $totalLab +
         $totalLain +
         $totalOperasi +
-        $totalObat;
+        $totalObat +
+        ($grandTotalFarmasiApi ?? 0);
 
     $dijamin = $pasien->DownPay ?? 0;
     $diskon = 0;
