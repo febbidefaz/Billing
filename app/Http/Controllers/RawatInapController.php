@@ -349,7 +349,7 @@ class RawatInapController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.2.234:8010/api/sales', [
+                ->get('http://192.168.1.9:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
 
@@ -507,7 +507,7 @@ class RawatInapController extends Controller
 
         $response = Http::withToken($token)
             ->timeout(15)
-            ->get('http://192.168.2.234:8010/api/sales', [
+            ->get('http://192.168.1.9:8010/api/sales', [
                 'appointment_id' => $id
             ]);
 
@@ -573,7 +573,7 @@ class RawatInapController extends Controller
     
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.2.234:8010/api/sales', [
+                ->get('http://192.168.1.9:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
     
@@ -584,7 +584,7 @@ class RawatInapController extends Controller
     
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->get('http://192.168.2.234:8010/api/sales', [
+                    ->get('http://192.168.1.9:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
             }
@@ -660,7 +660,7 @@ class RawatInapController extends Controller
     {
         return Cache::remember('farmasi_token', 360, function () {
 
-            $response = Http::post('http://192.168.2.234:8010/api/token', [
+            $response = Http::post('http://192.168.1.9:8010/api/token', [
                 'username' => env('FARMASI_USER'),
                 'password' => env('FARMASI_PASS')
             ]);
@@ -742,7 +742,7 @@ class RawatInapController extends Controller
     
         $response = Http::withToken($token)
             ->timeout(15)
-            ->get('http://192.168.2.234:8010/api/sales', [
+            ->get('http://192.168.1.9:8010/api/sales', [
                 'appointment_id' => $id
             ]);
     
