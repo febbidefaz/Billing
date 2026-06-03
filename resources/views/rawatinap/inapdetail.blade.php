@@ -567,17 +567,16 @@
                     </script>
 
                     {{-- Print ObaPay --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="printObaPay()">
+                    <button type="button" class="btn btn-info btn-sm" onclick="printObaPay('{{ $pasien->ID }}')">
 
                         <i class="fas fa-print"></i>
                         ObaPay All
-
                     </button>
 
                     <script>
-                        function printObaPay(id, roomId) {
+                        function printObaPay(id) {
 
-                            let url = "{{ url('/rawatinap') }}/" + id + "/obapayPrint/" + roomId;
+                            let url = "{{ url('/rawatinap') }}/" + id + "/obapay-print";
 
                             window.open(
                                 url,
@@ -586,8 +585,6 @@
                             );
                         }
                     </script>
-
-
 
                 </div>
 

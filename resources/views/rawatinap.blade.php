@@ -130,11 +130,15 @@
                     },
                     {
                         data: 'TIN',
-                        render: function(data) {
+                        render: function(data, type) {
 
                             if (!data) return '-';
 
                             let tgl = new Date(data);
+
+                            if (type === 'sort' || type === 'type') {
+                                return tgl.getTime();
+                            }
 
                             let dd = String(tgl.getDate()).padStart(2, '0');
                             let mm = String(tgl.getMonth() + 1).padStart(2, '0');
