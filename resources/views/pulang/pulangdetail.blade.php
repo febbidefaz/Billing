@@ -578,21 +578,11 @@
 
                             let url = "{{ url('/rawatinap') }}/" + id + "/obat-rinci/" + roomId;
 
-                            let printWindow = window.open(
+                            window.open(
                                 url,
-                                "PRINT_OBAT_RINCI",
+                                "_blank",
                                 "height=800,width=1000"
                             );
-
-                            printWindow.focus();
-
-                            setTimeout(function() {
-                                printWindow.print();
-                            }, 1000);
-
-                            printWindow.onafterprint = function() {
-                                printWindow.close();
-                            };
                         }
                     </script>
 
@@ -605,23 +595,15 @@
                     </button>
 
                     <script>
-                        function printObaPay() {
+                        function printObaPay(id, roomId) {
 
-                            let printWindow = window.open(
-                                "{{ route('rawatinap.obapayPrint', $pasien->ID) }}",
-                                "PRINT_OBAPAY",
+                            let url = "{{ url('/rawatinap') }}/" + id + "/obapayPrint/" + roomId;
+
+                            window.open(
+                                url,
+                                "_blank",
                                 "height=800,width=1000"
                             );
-
-                            printWindow.focus();
-
-                            setTimeout(function() {
-                                printWindow.print();
-                            }, 1000);
-
-                            printWindow.onafterprint = function() {
-                                printWindow.close();
-                            };
                         }
                     </script>
 
@@ -1291,45 +1273,49 @@
 
                                 <thead class="bg-info">
                                     <tr>
-
                                         <th>Dokter</th>
-                                        {{-- <th>Ruangan</th> --}}
                                         <th>Tgl Visit</th>
                                         <th>Tarif</th>
                                         <th>Pot (%)</th>
-
                                     </tr>
                                 </thead>
 
                                 <tbody>
-
                                     @forelse ($visitdokter as $v)
-                                        <tr>
+                                        <tr style="cursor:pointer"
+                                            onclick="openEditVisit(
+                                                '{{ $v->Visit_ID }}',
+                                                '{{ $v->DokterID }}',
+                                                '{{ $v->TglVisit ? date('Y-m-d', strtotime($v->TglVisit)) : '' }}',
+                                                '{{ $v->BiayaVisit ?? 0 }}',
+                                                '{{ ($v->Pot ?? 0) * 100 }}'
+                                            )">
+
                                             <td>{{ $v->NamaDokter ?? '-' }}</td>
-                                            {{-- <td>{{ $v->NamaKamar ?? '-' }}</td> --}}
                                             <td>{{ $v->TglVisit ? date('d/m/Y', strtotime($v->TglVisit)) : '-' }}</td>
                                             <td>Rp {{ number_format($v->BiayaVisit ?? 0, 0, ',', '.') }}</td>
                                             <td>{{ number_format(($v->Pot ?? 0) * 100, 2) }}%</td>
                                         </tr>
-
                                     @empty
-
                                         <tr>
-
                                             <td colspan="4" class="text-center text-muted">
                                                 Data visit dokter belum tersedia.
                                             </td>
-
                                         </tr>
                                     @endforelse
-
                                 </tbody>
 
                                 <tfoot>
-
                                     <tr class="font-weight-bold bg-light">
+                                        <td>
+                                            <button type="button" class="btn btn-success btn-sm"
+                                                onclick="openInsertVisit()">
+                                                <i class="fas fa-plus-circle mr-1"></i>
+                                                Tambah Visit
+                                            </button>
+                                        </td>
 
-                                        <td colspan="2" class="text-right">
+                                        <td class="text-right">
                                             Total Visit
                                         </td>
 
@@ -1337,11 +1323,305 @@
                                             Rp {{ number_format(collect($visitdokter)->sum('TotalVisit'), 0, ',', '.') }}
                                         </td>
 
+                                        <td></td>
                                     </tr>
-
                                 </tfoot>
 
                             </table>
+
+                        </div>
+
+                        <script>
+                            function openEditVisit(
+                                visitId,
+                                dokterId,
+                                tanggal,
+                                biaya,
+                                pot
+                            ) {
+
+                                $('#editVisitID').val(visitId);
+
+                                $('#editVisitDokterID')
+                                    .val(dokterId)
+                                    .trigger('change');
+
+                                $('#editVisitTanggal').val(tanggal);
+
+                                $('#editVisitBiaya').val(
+                                    formatRupiahVisit(biaya)
+                                );
+
+                                $('#editVisitPot').val(pot);
+
+                                $('#btnHapusVisit')
+                                    .show()
+                                    .off('click')
+                                    .on('click', hapusVisit);
+
+                                $('#modalEditVisit').modal('show');
+                            }
+
+                            function simpanEditVisit() {
+                                $.ajax({
+                                    url: "{{ route('rawatinap.updateVisit') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        Visit_ID: $('#editVisitID').val(),
+                                        DokterID: $('#editVisitDokterID').val(),
+                                        TglVisit: $('#editVisitTanggal').val(),
+                                        Pot: $('#editVisitPot').val() || 0
+                                    },
+                                    success: function(res) {
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(
+                                            xhr.responseJSON?.message ??
+                                            'Gagal mengubah data visit dokter.'
+                                        );
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function formatRupiahVisit(angka) {
+                                angka = parseFloat(angka || 0);
+                                return 'Rp ' + angka.toLocaleString('id-ID');
+                            }
+
+                            $(function() {
+                                $('#modalEditVisit').on('shown.bs.modal', function() {
+                                    if ($('#editVisitDokterID').hasClass("select2-hidden-accessible")) {
+                                        $('#editVisitDokterID').select2('destroy');
+                                    }
+
+                                    $('#editVisitDokterID').select2({
+                                        dropdownParent: $('#modalEditVisit'),
+                                        width: '100%',
+                                        placeholder: 'Pilih dokter...',
+                                        allowClear: true
+                                    });
+                                });
+                            });
+
+                            function openInsertVisit() {
+
+                                $('#editVisitID').val('');
+
+                                $('#editVisitDokterID')
+                                    .val('')
+                                    .trigger('change');
+
+                                $('#editVisitTanggal').val('{{ date('Y-m-d') }}');
+
+                                $('#editVisitBiaya').val('Rp 0');
+
+                                $('#editVisitPot').val(0);
+
+                                $('#btnSimpanVisit')
+                                    .attr('onclick', 'simpanInsertVisit()');
+
+                                $('#btnHapusVisit').hide();
+
+                                $('#modalEditVisit').modal('show');
+                            }
+
+                            function simpanInsertVisit() {
+
+                                if (!$('#editVisitDokterID').val()) {
+                                    alert('Pilih dokter terlebih dahulu.');
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.insertVisit') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        DokterID: $('#editVisitDokterID').val(),
+                                        TglVisit: $('#editVisitTanggal').val(),
+                                        Pot: $('#editVisitPot').val() || 0
+                                    },
+                                    success: function(res) {
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(
+                                            xhr.responseJSON?.message ??
+                                            'Gagal menambahkan data visit dokter.'
+                                        );
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function hapusVisit() {
+
+                                let visitID = $('#editVisitID').val();
+
+                                if (!visitID) {
+                                    alert('Data belum tersimpan.');
+                                    return;
+                                }
+
+                                if (!confirm('Yakin ingin menghapus visit dokter ini ?')) {
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.deleteVisit') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        Visit_ID: visitID
+                                    },
+                                    success: function(res) {
+
+                                        $('#modalEditVisit').modal('hide');
+
+                                        location.reload();
+
+                                    },
+                                    error: function(xhr) {
+
+                                        alert(
+                                            xhr.responseJSON?.message ??
+                                            'Gagal menghapus visit dokter.'
+                                        );
+
+                                    }
+                                });
+                            }
+                        </script>
+
+                        {{-- Modal Edit Visit --}}
+                        <div class="modal fade" id="modalEditVisit" tabindex="-1" role="dialog"
+                            aria-labelledby="modalEditVisitLabel" aria-hidden="true">
+
+                            <div class="modal-dialog modal-lg" role="document">
+
+                                <div class="modal-content border-0 shadow-lg">
+
+                                    <div class="modal-header bg-info text-white">
+                                        <h5 class="modal-title font-weight-bold" id="modalEditVisitLabel">
+                                            <i class="fas fa-user-md mr-2"></i>
+                                            Perubahan Data Visit Dokter
+                                        </h5>
+
+                                        <button type="button" class="close text-white" data-dismiss="modal"
+                                            aria-label="Tutup">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+
+                                        <input type="hidden" id="editVisitID">
+
+                                        <div class="card card-outline card-info mb-3">
+                                            <div class="card-header py-2">
+                                                <h6 class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-user-md mr-1"></i>
+                                                    Informasi Visit Dokter
+                                                </h6>
+                                            </div>
+
+                                            <div class="card-body pb-2">
+                                                <div class="row">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="editVisitDokterID">Dokter</label>
+                                                            <select id="editVisitDokterID" class="form-control select2">
+                                                                <option value="">-- Pilih Dokter --</option>
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->ID }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="editVisitTanggal">Tanggal Visit</label>
+                                                            <input type="date" id="editVisitTanggal"
+                                                                class="form-control">
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card card-outline card-success mb-3">
+                                            <div class="card-header py-2">
+                                                <h6 class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-file-invoice-dollar mr-1"></i>
+                                                    Informasi Tarif & Potongan
+                                                </h6>
+                                            </div>
+
+                                            <div class="card-body pb-2">
+                                                <div class="row">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="editVisitBiaya">Tarif Visit</label>
+                                                            <input type="text" id="editVisitBiaya"
+                                                                class="form-control text-right" readonly>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="editVisitPot">Potongan (%)</label>
+                                                            <input type="number" step="0.01" id="editVisitPot"
+                                                                class="form-control text-right" placeholder="0">
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-light border mb-0">
+                                            <i class="fas fa-info-circle text-info mr-1"></i>
+                                            Tarif visit otomatis mengikuti dokter dan kelas rawat terakhir pasien.
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            data-dismiss="modal">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Tutup
+                                        </button>
+
+                                        <button type="button" id="btnSimpanVisit" class="btn btn-success btn-sm"
+                                            onclick="simpanEditVisit()">
+                                            <i class="fas fa-save mr-1"></i>
+                                            Simpan
+                                        </button>
+
+                                        <button type="button" id="btnHapusVisit" class="btn btn-danger btn-sm">
+
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Hapus
+
+                                        </button>
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
@@ -1359,51 +1639,379 @@
                                         <th>Tindakan</th>
                                         <th>Tanggal</th>
                                         <th>Dokter</th>
-                                        {{-- <th>Ruangan</th> --}}
                                         <th>Biaya</th>
                                         <th>Pot (%)</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-
                                     @forelse ($utilitas as $u)
-                                        <tr>
+                                        <tr style="cursor:pointer"
+                                            onclick="openEditUtilitas(
+                                                '{{ $u->ActID }}',
+                                                '{{ $u->TindakID }}',
+                                                '{{ $u->DokterID }}',
+                                                '{{ $u->Tanggal ? date('Y-m-d', strtotime($u->Tanggal)) : '' }}',
+                                                '{{ $u->Jam ? date('H:i', strtotime($u->Jam)) : '' }}',
+                                                '{{ $u->Biaya ?? 0 }}',
+                                                '{{ ($u->Pot ?? 0) * 100 }}'
+                                            )">
+
                                             <td>{{ $u->NamaTindakan ?? '-' }}</td>
                                             <td>{{ $u->Tanggal ? date('d/m/Y', strtotime($u->Tanggal)) : '-' }}</td>
                                             <td>{{ $u->NamaDokter ?? '-' }}</td>
-                                            {{--  <td>{{ $u->NamaKamar ?? '-' }}</td> --}}
-
-                                            <td>
-                                                Rp {{ number_format($u->Biaya ?? 0, 0, ',', '.') }}
-                                            </td>
-
-                                            <td>
-                                                {{ number_format(($u->Pot ?? 0) * 100, 2) }}%
-                                            </td>
+                                            <td>Rp {{ number_format($u->Biaya ?? 0, 0, ',', '.') }}</td>
+                                            <td>{{ number_format(($u->Pot ?? 0) * 100, 2) }}%</td>
                                         </tr>
-
                                     @empty
-
                                         <tr>
                                             <td colspan="5" class="text-center text-muted">
                                                 Data utilitas / tindakan dokter belum tersedia.
                                             </td>
                                         </tr>
                                     @endforelse
-
                                 </tbody>
 
                                 <tfoot>
                                     <tr class="font-weight-bold bg-light">
-                                        <td colspan="3" class="text-right">Total Utilitas</td>
+                                        <td>
+                                            <button type="button" class="btn btn-success btn-sm"
+                                                onclick="openInsertUtilitas()">
+                                                <i class="fas fa-plus-circle mr-1"></i>
+                                                Tambah Utilitas
+                                            </button>
+                                        </td>
+
+                                        <td colspan="2" class="text-right">
+                                            Total Utilitas
+                                        </td>
+
                                         <td>
                                             Rp {{ number_format(collect($utilitas)->sum('TotalUtilitas'), 0, ',', '.') }}
                                         </td>
+
+                                        <td></td>
                                     </tr>
                                 </tfoot>
 
                             </table>
+
+                        </div>
+
+                        {{-- JS Modal Utilitas --}}
+                        <script>
+                            function openInsertUtilitas() {
+                                $('#editUtilitasActID').val('');
+                                $('#editUtilitasTindakID').val('').trigger('change');
+                                $('#editUtilitasDokterID').val('').trigger('change');
+                                $('#editUtilitasTanggal').val('{{ date('Y-m-d') }}');
+                                $('#editUtilitasJam').val('{{ date('H:i') }}');
+                                $('#editUtilitasBiaya').val('Rp 0');
+                                $('#editUtilitasPot').val(0);
+
+                                $('#modalEditUtilitasLabel').html(
+                                    '<i class="fas fa-plus-circle mr-2"></i> Tambah Utilitas / Tindakan Dokter'
+                                );
+
+                                $('#btnSimpanUtilitas')
+                                    .attr('onclick', 'simpanInsertUtilitas()');
+
+                                $('#btnHapusUtilitas').hide();
+
+                                $('#modalEditUtilitas').modal('show');
+                            }
+
+                            function openEditUtilitas(
+                                actId,
+                                tindakId,
+                                dokterId,
+                                tanggal,
+                                jam,
+                                biaya,
+                                pot
+                            ) {
+                                $('#editUtilitasActID').val(actId);
+
+                                $('#editUtilitasTindakID')
+                                    .val(tindakId)
+                                    .trigger('change');
+
+                                $('#editUtilitasDokterID')
+                                    .val(dokterId)
+                                    .trigger('change');
+
+                                $('#editUtilitasTanggal').val(tanggal);
+                                $('#editUtilitasJam').val(jam);
+                                $('#editUtilitasBiaya').val(formatRupiahUtilitas(biaya));
+                                $('#editUtilitasPot').val(pot);
+
+                                $('#modalEditUtilitasLabel').html(
+                                    '<i class="fas fa-stethoscope mr-2"></i> Perubahan Data Utilitas / Tindakan Dokter'
+                                );
+
+                                $('#btnSimpanUtilitas')
+                                    .attr('onclick', 'simpanEditUtilitas()');
+
+                                $('#btnHapusUtilitas')
+                                    .show()
+                                    .off('click')
+                                    .on('click', hapusUtilitas);
+
+                                $('#modalEditUtilitas').modal('show');
+                            }
+
+                            function simpanInsertUtilitas() {
+                                if (!$('#editUtilitasTindakID').val()) {
+                                    alert('Pilih tindakan terlebih dahulu.');
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.insertUtilitas') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        TindakID: $('#editUtilitasTindakID').val(),
+                                        DokterID: $('#editUtilitasDokterID').val(),
+                                        Tanggal: $('#editUtilitasTanggal').val(),
+                                        Jam: $('#editUtilitasJam').val(),
+                                        Pot: $('#editUtilitasPot').val() || 0
+                                    },
+                                    success: function() {
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseJSON?.message ?? 'Gagal menambahkan data utilitas.');
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function simpanEditUtilitas() {
+                                if (!$('#editUtilitasTindakID').val()) {
+                                    alert('Pilih tindakan terlebih dahulu.');
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.updateUtilitas') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        ActID: $('#editUtilitasActID').val(),
+                                        TindakID: $('#editUtilitasTindakID').val(),
+                                        DokterID: $('#editUtilitasDokterID').val(),
+                                        Tanggal: $('#editUtilitasTanggal').val(),
+                                        Jam: $('#editUtilitasJam').val(),
+                                        Pot: $('#editUtilitasPot').val() || 0
+                                    },
+                                    success: function() {
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseJSON?.message ?? 'Gagal mengubah data utilitas.');
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function hapusUtilitas() {
+                                let actID = $('#editUtilitasActID').val();
+
+                                if (!actID) {
+                                    alert('Data belum tersimpan.');
+                                    return;
+                                }
+
+                                if (!confirm('Yakin ingin menghapus utilitas / tindakan dokter ini?')) {
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.deleteUtilitas') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        ActID: actID,
+                                        TindakID: $('#editUtilitasTindakID').val()
+                                    },
+                                    success: function() {
+                                        $('#modalEditUtilitas').modal('hide');
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseJSON?.message ?? 'Gagal menghapus data utilitas.');
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function formatRupiahUtilitas(angka) {
+                                angka = parseFloat(angka || 0);
+                                return 'Rp ' + angka.toLocaleString('id-ID');
+                            }
+
+                            $(function() {
+                                $('#modalEditUtilitas').on('shown.bs.modal', function() {
+                                    if ($('.select2-utilitas').hasClass("select2-hidden-accessible")) {
+                                        $('.select2-utilitas').select2('destroy');
+                                    }
+
+                                    $('.select2-utilitas').select2({
+                                        dropdownParent: $('#modalEditUtilitas'),
+                                        width: '100%',
+                                        allowClear: true
+                                    });
+                                });
+                            });
+                        </script>
+
+                        {{-- Modal Edit Utilitas --}}
+                        <div class="modal fade" id="modalEditUtilitas" tabindex="-1" role="dialog"
+                            aria-labelledby="modalEditUtilitasLabel" aria-hidden="true">
+
+                            <div class="modal-dialog modal-lg" role="document">
+
+                                <div class="modal-content border-0 shadow-lg">
+
+                                    <div class="modal-header bg-info text-white">
+                                        <h5 class="modal-title font-weight-bold" id="modalEditUtilitasLabel">
+                                            <i class="fas fa-stethoscope mr-2"></i>
+                                            Perubahan Data Utilitas / Tindakan Dokter
+                                        </h5>
+
+                                        <button type="button" class="close text-white" data-dismiss="modal">
+                                            <span>&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+
+                                        <input type="hidden" id="editUtilitasActID">
+
+                                        <div class="card card-outline card-info mb-3">
+                                            <div class="card-header py-2">
+                                                <h6 class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-notes-medical mr-1"></i>
+                                                    Informasi Tindakan
+                                                </h6>
+                                            </div>
+
+                                            <div class="card-body pb-2">
+                                                <div class="row">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Tindakan</label>
+                                                            <select id="editUtilitasTindakID"
+                                                                class="form-control select2-utilitas">
+                                                                <option value="">-- Pilih Tindakan --</option>
+                                                                @foreach ($tindakanList as $t)
+                                                                    <option value="{{ $t->ID }}">
+                                                                        {{ $t->Tindak }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Dokter</label>
+                                                            <select id="editUtilitasDokterID"
+                                                                class="form-control select2-utilitas">
+                                                                <option value="">-- Pilih Dokter --</option>
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->ID }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Tanggal</label>
+                                                            <input type="date" id="editUtilitasTanggal"
+                                                                class="form-control">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Jam</label>
+                                                            <input type="time" id="editUtilitasJam"
+                                                                class="form-control">
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card card-outline card-success mb-3">
+                                            <div class="card-header py-2">
+                                                <h6 class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-file-invoice-dollar mr-1"></i>
+                                                    Informasi Tarif & Potongan
+                                                </h6>
+                                            </div>
+
+                                            <div class="card-body pb-2">
+                                                <div class="row">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Biaya</label>
+                                                            <input type="text" id="editUtilitasBiaya"
+                                                                class="form-control text-right" readonly>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Potongan (%)</label>
+                                                            <input type="number" step="0.01" id="editUtilitasPot"
+                                                                class="form-control text-right" placeholder="0">
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-light border mb-0">
+                                            <i class="fas fa-info-circle text-info mr-1"></i>
+                                            Tarif tindakan otomatis mengikuti tindakan dan kelas rawat terakhir pasien.
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            data-dismiss="modal">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Tutup
+                                        </button>
+
+                                        <button type="button" id="btnSimpanUtilitas" class="btn btn-success btn-sm">
+                                            <i class="fas fa-save mr-1"></i>
+                                            Simpan
+                                        </button>
+
+                                        <button type="button" id="btnHapusUtilitas" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Hapus
+                                        </button>
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
@@ -2161,7 +2769,6 @@
                         <div class="table-responsive">
 
                             <table class="table table-bordered table-striped mb-0">
-
                                 <thead class="bg-info">
                                     <tr>
                                         <th>Operasi/ Tindakan</th>
@@ -2173,15 +2780,55 @@
                                 </thead>
 
                                 <tbody>
-
                                     @forelse ($operasi as $o)
-                                        <tr style="cursor:pointer" data-toggle="modal"
-                                            data-target="#modalOperasi{{ $o->Ope_ID }}">
+                                        <tr style="cursor:pointer"
+                                            onclick="openEditOperasi(
+                                '{{ $o->Ope_ID }}',
+                                '{{ $o->JenisOp }}',
+                                '{{ $o->JenisOperasi ?? '' }}',
+                                '{{ $o->TgOp ? date('Y-m-d', strtotime($o->TgOp)) : '' }}',
+                                '{{ $o->StartOp ? date('H:i', strtotime($o->StartOp)) : '' }}',
+                                '{{ $o->EndOp ? date('H:i', strtotime($o->EndOp)) : '' }}',
+                                '{{ $o->Op ?? '' }}',
+                                '{{ $o->Ass ?? '' }}',
+                                '{{ $o->Anes ?? '' }}',
+                                '{{ $o->AssAnes ?? '' }}',
+                                '{{ $o->BiayaOp ?? 0 }}',
+                                '{{ $o->BiayaAss ?? 0 }}',
+                                '{{ $o->BiayaAnes ?? 0 }}',
+                                '{{ $o->BiayaAssAnes ?? 0 }}',
+                                '{{ $o->SewaAlat ?? 0 }}',
+                                '{{ $o->Bahan ?? 0 }}',
+                                '{{ $o->SewaOK ?? 0 }}',
+                                '{{ $o->Jasa ?? 0 }}',
+                                '{{ $o->Cssd ?? 0 }}',
+                                '{{ $o->PotOp ?? 0 }}',
+                                '{{ $o->PotAss ?? 0 }}',
+                                '{{ $o->PotAnes ?? 0 }}',
+                                '{{ $o->PotAssAnes ?? 0 }}',
+                                '{{ $o->PotAlat ?? 0 }}',
+                                '{{ $o->PotBahan ?? 0 }}',
+                                '{{ $o->PotOk ?? 0 }}',
+                                '{{ $o->PotJasa ?? 0 }}',
+                                '{{ $o->Brutto ?? 0 }}',
+                                '{{ $o->Discount ?? 0 }}',
+                                '{{ $o->Netto ?? 0 }}',
+                                '{{ $o->AtOk ?? 0 }}',
+                                '{{ $o->ProsenOp ?? 0 }}',
+                                '{{ $o->ProsenAss ?? 0 }}',
+                                '{{ $o->ProsenAnes ?? 0 }}',
+                                '{{ $o->ProsenAssAnes ?? 0 }}',
+                                '{{ $o->ProsenAlat ?? 0 }}',
+                                '{{ $o->ProsenBahan ?? 0 }}',
+                                '{{ $o->ProsenOk ?? 0 }}',
+                                '{{ $o->ProsenJasa ?? 0 }}',
+                                '{{ $o->Note ?? '' }}'
+                            )">
 
                                             <td>{{ $o->JenisOperasi ?? '-' }}</td>
                                             <td>{{ $o->TgOp ? date('d/m/Y', strtotime($o->TgOp)) : '-' }}</td>
-                                            <td> {{ $o->Op ?? '-' }} </td>
-                                            <td> Rp {{ number_format($o->Netto ?? 0, 0, ',', '.') }} </td>
+                                            <td>{{ $o->Op ?? '-' }}</td>
+                                            <td>Rp {{ number_format($o->Netto ?? 0, 0, ',', '.') }}</td>
                                             <td>
                                                 @if ($o->AtOk == 1)
                                                     <i class="fas fa-check text-success"></i>
@@ -2190,25 +2837,26 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-
-
                                     @empty
-
                                         <tr>
                                             <td colspan="5" class="text-center text-muted">
                                                 Data operasi belum tersedia.
                                             </td>
                                         </tr>
                                     @endforelse
-
                                 </tbody>
 
                                 <tfoot>
-
                                     <tr class="font-weight-bold bg-light">
+                                        <td>
+                                            <button type="button" class="btn btn-success btn-sm"
+                                                onclick="openInsertOperasi()">
+                                                <i class="fas fa-plus-circle mr-1"></i>
+                                                Tambah Operasi
+                                            </button>
+                                        </td>
 
-                                        <td colspan="3" class="text-right">
+                                        <td colspan="2" class="text-right">
                                             Total Operasi
                                         </td>
 
@@ -2216,276 +2864,641 @@
                                             Rp {{ number_format(collect($operasi)->sum('Netto'), 0, ',', '.') }}
                                         </td>
 
+                                        <td></td>
                                     </tr>
-
                                 </tfoot>
-
                             </table>
 
-                            {{-- Modal Tab Operasi --}}
-                            @foreach ($operasi as $o)
-                                <div class="modal fade" id="modalOperasi{{ $o->Ope_ID }}" tabindex="-1">
-                                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                        <div class="modal-content border-0 shadow-lg">
+                        </div>
 
-                                            <div class="modal-header bg-info text-white">
-                                                <div>
-                                                    <h5 class="modal-title font-weight-bold mb-0">
-                                                        <i class="fas fa-procedures mr-2"></i>
-                                                        Detail Operasi / Tindakan
-                                                    </h5>
-                                                    <small>
-                                                        No. Operasi: {{ $o->Ope_ID ?? '-' }}
-                                                    </small>
-                                                </div>
+                        {{-- Modal Operasi 1 Pintu --}}
+                        <div class="modal fade" id="modalOperasi" tabindex="-1">
+                            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                                <div class="modal-content border-0 shadow-lg">
 
-                                                <button type="button" class="close text-white" data-dismiss="modal">
-                                                    <span>&times;</span>
-                                                </button>
-                                            </div>
+                                    <div class="modal-header bg-info text-white">
+                                        <div>
+                                            <h5 class="modal-title font-weight-bold mb-0" id="modalOperasiTitle">
+                                                <i class="fas fa-procedures mr-2"></i>
+                                                Detail Operasi / Tindakan
+                                            </h5>
+                                            <small id="modalOperasiSubTitle">
+                                                No. Operasi: -
+                                            </small>
+                                        </div>
 
-                                            <div class="modal-body" style="background:#f4f6f9; font-size:13px;">
+                                        <button type="button" class="close text-white" data-dismiss="modal">
+                                            <span>&times;</span>
+                                        </button>
+                                    </div>
 
-                                                {{-- Ringkasan --}}
-                                                <div class="card border-0 shadow-sm mb-3">
-                                                    <div class="card-body py-3">
-                                                        <div class="row">
-                                                            <div class="col-md-4">
-                                                                <small class="text-muted d-block">Operasi /
-                                                                    Tindakan</small>
-                                                                <strong>{{ $o->JenisOperasi ?? '-' }}</strong>
-                                                            </div>
+                                    <div class="modal-body" style="background:#f4f6f9; font-size:13px;">
 
-                                                            <div class="col-md-3">
-                                                                <small class="text-muted d-block">Tanggal</small>
-                                                                <strong>{{ $o->TgOp ? date('d/m/Y', strtotime($o->TgOp)) : '-' }}</strong>
-                                                            </div>
+                                        <input type="hidden" id="operasiMode" value="insert">
+                                        <input type="hidden" id="operasiOpeID">
 
-                                                            <div class="col-md-3">
-                                                                <small class="text-muted d-block">Jam Operasi</small>
-                                                                <strong>
-                                                                    {{ $o->StartOp ? date('H:i', strtotime($o->StartOp)) : '-' }}
-                                                                    -
-                                                                    {{ $o->EndOp ? date('H:i', strtotime($o->EndOp)) : '-' }}
-                                                                </strong>
-                                                            </div>
-
-                                                            <div class="col-md-2">
-                                                                <small class="text-muted d-block">Di OK</small>
-                                                                @if ($o->AtOk == 1)
-                                                                    <span class="badge badge-success px-3">Ya</span>
-                                                                @else
-                                                                    <span class="badge badge-secondary px-3">Tidak</span>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
+                                        {{-- Ringkasan --}}
+                                        <div class="card border-0 shadow-sm mb-3">
+                                            <div class="card-body py-3">
                                                 <div class="row">
 
-                                                    {{-- Tim Operasi --}}
                                                     <div class="col-md-4">
-                                                        <div class="card border-0 shadow-sm h-100">
-                                                            <div class="card-header bg-white font-weight-bold">
-                                                                <i class="fas fa-users text-info mr-1"></i>
-                                                                Tim Operasi
-                                                            </div>
-
-                                                            <div class="card-body p-0">
-                                                                <table class="table table-sm mb-0 detail-table">
-                                                                    <tr>
-                                                                        <th>Operator</th>
-                                                                        <td>{{ $o->Op ?? '-' }}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Asisten</th>
-                                                                        <td>{{ $o->Ass ?? '-' }}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Anestesi</th>
-                                                                        <td>{{ $o->Anes ?? '-' }}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Asisten Anestesi</th>
-                                                                        <td>{{ $o->AssAnes ?? '-' }}</td>
-                                                                    </tr>
-                                                                </table>
-                                                            </div>
-                                                        </div>
+                                                        <small class="text-muted d-block">Operasi / Tindakan</small>
+                                                        <select id="operasiJenisOp" class="form-control select2-operasi">
+                                                            <option value="">-- Pilih Jenis Operasi --</option>
+                                                            @foreach ($jenisOpList as $j)
+                                                                <option value="{{ $j->Kode_jenis }}">
+                                                                    {{ $j->Nama_jenis }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
 
-                                                    {{-- Rincian Biaya --}}
-                                                    <div class="col-md-5">
-                                                        <div class="card border-0 shadow-sm h-100">
-                                                            <div class="card-header bg-white font-weight-bold">
-                                                                <i class="fas fa-file-invoice-dollar text-info mr-1"></i>
-                                                                Rincian Biaya
-                                                            </div>
-
-                                                            <div class="card-body p-0">
-                                                                <table class="table table-sm mb-0 detail-table">
-                                                                    <tr>
-                                                                        <th>Honor Operator</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->BiayaOp ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Honor Ass. Op</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->BiayaAss ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Honor dr Anestesi</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->BiayaAnes ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Ass. Anestesi</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->BiayaAssAnes ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Biaya Alat</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->SewaAlat ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Bahan</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->Bahan ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Sewa Ruang Operasi</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->SewaOK ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Jasa Rumah Sakit</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->Jasa ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>CSSD</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format($o->Cssd ?? 0, 0, ',', '.') }}
-                                                                        </td>
-                                                                    </tr>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Discount --}}
                                                     <div class="col-md-3">
-                                                        <div class="card border-0 shadow-sm h-100">
-                                                            <div class="card-header bg-white font-weight-bold">
-                                                                <i class="fas fa-percent text-info mr-1"></i>
-                                                                Discount
-                                                            </div>
+                                                        <small class="text-muted d-block">Tanggal</small>
+                                                        <input type="date" id="operasiTgOp" class="form-control">
+                                                    </div>
 
-                                                            <div class="card-body p-0">
-                                                                <table class="table table-sm mb-0 detail-table">
-                                                                    <tr>
-                                                                        <th>Operator</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotOp ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Ass. Op</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotAss ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Anestesi</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotAnes ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Ass. Anestesi</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotAssAnes ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Alat</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotAlat ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Bahan</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotBahan ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Ruang OK</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotOk ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th>Jasa RS</th>
-                                                                        <td class="text-right">
-                                                                            {{ number_format(($o->PotJasa ?? 0) * 100, 2) }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                </table>
-                                                            </div>
+                                                    <div class="col-md-3">
+                                                        <small class="text-muted d-block">Jam Operasi</small>
+                                                        <div class="d-flex">
+                                                            <input type="time" id="operasiStartOp"
+                                                                class="form-control mr-1">
+                                                            <input type="time" id="operasiEndOp"
+                                                                class="form-control ml-1">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-2">
+                                                        <small class="text-muted d-block">Di OK</small>
+                                                        <div class="form-control d-flex align-items-center">
+                                                            <input type="checkbox" id="operasiAtOk" class="mr-2">
+                                                            <span>Ya</span>
                                                         </div>
                                                     </div>
 
                                                 </div>
 
-                                                {{-- Total --}}
-                                                <div class="card border-0 shadow-sm mt-3">
-                                                    <div class="card-body py-3">
-                                                        <div class="row text-center">
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <small class="text-muted d-block">Catatan</small>
+                                                        <input type="text" id="operasiNote" class="form-control"
+                                                            maxlength="80">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                            <div class="col-md-4">
-                                                                <small class="text-muted d-block">Brutto</small>
-                                                                <h5 class="mb-0">
-                                                                    Rp {{ number_format($o->Brutto ?? 0, 0, ',', '.') }}
-                                                                </h5>
-                                                            </div>
+                                        <div class="row">
 
-                                                            <div class="col-md-4">
-                                                                <small class="text-muted d-block">Discount</small>
-                                                                <h5 class="mb-0 text-danger">
-                                                                    Rp {{ number_format($o->Discount ?? 0, 0, ',', '.') }}
-                                                                </h5>
-                                                            </div>
+                                            {{-- Tim Operasi --}}
+                                            <div class="col-md-4">
+                                                <div class="card border-0 shadow-sm h-100">
+                                                    <div class="card-header bg-white font-weight-bold">
+                                                        <i class="fas fa-users text-info mr-1"></i>
+                                                        Tim Operasi
+                                                    </div>
 
-                                                            <div class="col-md-4">
-                                                                <small class="text-muted d-block">Netto</small>
-                                                                <h4 class="mb-0 text-info font-weight-bold">
-                                                                    Rp {{ number_format($o->Netto ?? 0, 0, ',', '.') }}
-                                                                </h4>
-                                                            </div>
+                                                    <div class="card-body">
+                                                        <div class="form-group">
+                                                            <label>Operator</label>
 
+                                                            <select id="operasiOp" class="form-control select2-dokter">
+
+                                                                <option value="">-- Pilih Operator --</option>
+
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->DokterAlias }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label>Asisten</label>
+
+                                                            <select id="operasiAss" class="form-control select2-dokter">
+
+                                                                <option value="">-- Pilih Asisten --</option>
+
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->DokterAlias }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label>Anestesi</label>
+
+                                                            <select id="operasiAnes" class="form-control select2-dokter">
+
+                                                                <option value="">-- Pilih Dokter Anestesi --</option>
+
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->DokterAlias }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label>Asisten Anestesi</label>
+
+                                                            <select id="operasiAssAnes"
+                                                                class="form-control select2-dokter">
+
+                                                                <option value="">-- Pilih Asisten Anestesi --
+                                                                </option>
+
+                                                                @foreach ($dokterList as $d)
+                                                                    <option value="{{ $d->DokterAlias }}">
+                                                                        {{ $d->DokterAlias }}
+                                                                    </option>
+                                                                @endforeach
+
+                                                            </select>
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
 
+                                            {{-- Rincian Biaya --}}
+                                            <div class="col-md-5">
+                                                <div class="card border-0 shadow-sm h-100">
+                                                    <div class="card-header bg-white font-weight-bold">
+                                                        <i class="fas fa-file-invoice-dollar text-info mr-1"></i>
+                                                        Rincian Biaya
+                                                    </div>
+
+                                                    <div class="card-body p-0">
+                                                        <table class="table table-sm mb-0 detail-table">
+                                                            <tr>
+                                                                <th>Honor Operator</th>
+                                                                <td><input type="text" id="biayaOp"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Honor Ass. Op</th>
+                                                                <td><input type="text" id="biayaAss"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Honor dr Anestesi</th>
+                                                                <td><input type="text" id="biayaAnes"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Ass. Anestesi</th>
+                                                                <td><input type="text" id="biayaAssAnes"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Biaya Alat</th>
+                                                                <td><input type="text" id="biayaAlat"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Bahan</th>
+                                                                <td><input type="text" id="biayaBahan"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Sewa Ruang Operasi</th>
+                                                                <td><input type="text" id="biayaOk"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Jasa Rumah Sakit</th>
+                                                                <td><input type="text" id="biayaJasa"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>CSSD</th>
+                                                                <td><input type="text" id="biayaCssd"
+                                                                        class="form-control form-control-sm text-right"
+                                                                        readonly></td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Discount --}}
+                                            <div class="col-md-3">
+                                                <div class="card border-0 shadow-sm h-100">
+
+                                                    <div class="card-header bg-white font-weight-bold py-2">
+                                                        <i class="fas fa-percent text-info mr-1"></i>
+                                                        Disc (%)
+                                                    </div>
+
+                                                    <div class="card-body p-2">
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Op</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenOp"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Ass</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenAss"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Anes</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenAnes"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Ass Anes</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenAssAnes"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Alat</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenAlat"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">Bahan</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenBahan"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-7 col-form-label-sm">OK</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenOk"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-0">
+                                                            <label class="col-7 col-form-label-sm">Jasa</label>
+                                                            <div class="col-5">
+                                                                <input type="number" step="0.01" id="prosenJasa"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        {{-- Total --}}
+                                        <div class="card border-0 shadow-sm mt-3">
+                                            <div class="card-body py-3">
+                                                <div class="row text-center">
+
+                                                    <div class="col-md-4">
+                                                        <small class="text-muted d-block">Brutto</small>
+                                                        <h5 class="mb-0" id="totalBrutto">Rp 0</h5>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <small class="text-muted d-block">Discount</small>
+                                                        <h5 class="mb-0 text-danger" id="totalDiscount">Rp 0</h5>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <small class="text-muted d-block">Netto</small>
+                                                        <h4 class="mb-0 text-info font-weight-bold" id="totalNetto">Rp 0
+                                                        </h4>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
+
+                                    <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            data-dismiss="modal">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Tutup
+                                        </button>
+
+                                        <button type="button" id="btnSimpanOperasi" class="btn btn-success btn-sm">
+                                            <i class="fas fa-save mr-1"></i>
+                                            Simpan
+                                        </button>
+
+                                        <button type="button" id="btnHapusOperasi" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Hapus
+                                        </button>
+                                    </div>
+
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
+
+                        <script>
+                            function openInsertOperasi() {
+                                $('#operasiMode').val('insert');
+                                $('#operasiOpeID').val('');
+
+                                $('#modalOperasiTitle').html('<i class="fas fa-plus-circle mr-2"></i>Tambah Operasi / Tindakan');
+                                $('#modalOperasiSubTitle').html('No. Operasi: Baru');
+
+                                $('#operasiJenisOp').val('').trigger('change');
+                                $('#operasiTgOp').val('{{ date('Y-m-d') }}');
+                                const now = new Date();
+                                const jam = now.toTimeString().slice(0, 5);
+
+                                $('#operasiStartOp').val(jam);
+                                $('#operasiEndOp').val(jam);
+                                $('#operasiAtOk').prop('checked', false);
+                                $('#operasiNote').val('');
+
+                                $('#operasiOp').val('');
+                                $('#operasiAss').val('');
+                                $('#operasiAnes').val('');
+                                $('#operasiAssAnes').val('');
+
+                                resetOperasiBiaya();
+                                resetOperasiPotongan();
+                                resetOperasiTotal();
+
+                                $('#btnSimpanOperasi')
+                                    .off('click')
+                                    .on('click', function() {
+                                        simpanOperasi("{{ route('rawatinap.insertOperasi') }}", false);
+                                    });
+
+                                $('#btnHapusOperasi').hide();
+
+                                $('#modalOperasi').modal('show');
+                            }
+
+                            function openEditOperasi(
+                                opeID,
+                                jenisOp,
+                                jenisOperasi,
+                                tgOp,
+                                startOp,
+                                endOp,
+                                op,
+                                ass,
+                                anes,
+                                assAnes,
+                                biayaOp,
+                                biayaAss,
+                                biayaAnes,
+                                biayaAssAnes,
+                                biayaAlat,
+                                biayaBahan,
+                                biayaOk,
+                                biayaJasa,
+                                biayaCssd,
+                                potOp,
+                                potAss,
+                                potAnes,
+                                potAssAnes,
+                                potAlat,
+                                potBahan,
+                                potOk,
+                                potJasa,
+                                brutto,
+                                discount,
+                                netto,
+                                atOk,
+                                prosenOp,
+                                prosenAss,
+                                prosenAnes,
+                                prosenAssAnes,
+                                prosenAlat,
+                                prosenBahan,
+                                prosenOk,
+                                prosenJasa,
+                                note
+                            ) {
+                                $('#operasiMode').val('edit');
+                                $('#operasiOpeID').val(opeID);
+
+                                $('#modalOperasiTitle').html('<i class="fas fa-procedures mr-2"></i>Detail / Edit Operasi');
+                                $('#modalOperasiSubTitle').html('No. Operasi: ' + opeID);
+
+                                $('#operasiJenisOp').val(jenisOp).trigger('change');
+                                $('#operasiTgOp').val(tgOp);
+                                $('#operasiStartOp').val(startOp);
+                                $('#operasiEndOp').val(endOp);
+                                $('#operasiAtOk').prop('checked', atOk == 1);
+                                $('#operasiNote').val(note);
+
+                                $('#operasiOp').val(op);
+                                $('#operasiAss').val(ass);
+                                $('#operasiAnes').val(anes);
+                                $('#operasiAssAnes').val(assAnes);
+
+                                $('#biayaOp').val(formatRupiahOperasi(biayaOp));
+                                $('#biayaAss').val(formatRupiahOperasi(biayaAss));
+                                $('#biayaAnes').val(formatRupiahOperasi(biayaAnes));
+                                $('#biayaAssAnes').val(formatRupiahOperasi(biayaAssAnes));
+                                $('#biayaAlat').val(formatRupiahOperasi(biayaAlat));
+                                $('#biayaBahan').val(formatRupiahOperasi(biayaBahan));
+                                $('#biayaOk').val(formatRupiahOperasi(biayaOk));
+                                $('#biayaJasa').val(formatRupiahOperasi(biayaJasa));
+                                $('#biayaCssd').val(formatRupiahOperasi(biayaCssd));
+
+                                $('#prosenOp').val(prosenOp);
+                                $('#prosenAss').val(prosenAss);
+                                $('#prosenAnes').val(prosenAnes);
+                                $('#prosenAssAnes').val(prosenAssAnes);
+                                $('#prosenAlat').val(prosenAlat);
+                                $('#prosenBahan').val(prosenBahan);
+                                $('#prosenOk').val(prosenOk);
+                                $('#prosenJasa').val(prosenJasa);
+
+                                $('#totalBrutto').html(formatRupiahOperasi(brutto));
+                                $('#totalDiscount').html(formatRupiahOperasi(discount));
+                                $('#totalNetto').html(formatRupiahOperasi(netto));
+
+                                $('#btnSimpanOperasi')
+                                    .off('click')
+                                    .on('click', function() {
+                                        simpanOperasi("{{ route('rawatinap.updateOperasi') }}", true);
+                                    });
+
+                                $('#btnHapusOperasi')
+                                    .show()
+                                    .off('click')
+                                    .on('click', function() {
+                                        hapusOperasi(opeID, $('#operasiJenisOp').val());
+                                    });
+
+                                $('#modalOperasi').modal('show');
+                            }
+
+                            function simpanOperasi(url, isEdit) {
+                                if (!$('#operasiJenisOp').val()) {
+                                    alert('Pilih jenis operasi terlebih dahulu.');
+                                    return;
+                                }
+
+                                if (!$('#operasiOp').val()) {
+                                    alert('Operator wajib diisi.');
+                                    return;
+                                }
+
+                                let data = {
+                                    _token: "{{ csrf_token() }}",
+                                    ID: "{{ $pasien->ID }}",
+                                    JenisOp: $('#operasiJenisOp').val(),
+                                    TgOp: $('#operasiTgOp').val(),
+                                    StartOp: $('#operasiStartOp').val(),
+                                    EndOp: $('#operasiEndOp').val(),
+                                    Op: $('#operasiOp').val(),
+                                    Ass: $('#operasiAss').val(),
+                                    Anes: $('#operasiAnes').val(),
+                                    AssAnes: $('#operasiAssAnes').val(),
+                                    ProsenOp: $('#prosenOp').val() || 0,
+                                    ProsenAss: $('#prosenAss').val() || 0,
+                                    ProsenAnes: $('#prosenAnes').val() || 0,
+                                    ProsenAssAnes: $('#prosenAssAnes').val() || 0,
+                                    ProsenAlat: $('#prosenAlat').val() || 0,
+                                    ProsenBahan: $('#prosenBahan').val() || 0,
+                                    ProsenOk: $('#prosenOk').val() || 0,
+                                    ProsenJasa: $('#prosenJasa').val() || 0,
+                                    AtOk: $('#operasiAtOk').is(':checked') ? 1 : 0,
+                                    Note: $('#operasiNote').val()
+                                };
+
+                                if (isEdit) {
+                                    data.Ope_ID = $('#operasiOpeID').val();
+                                }
+
+                                $.ajax({
+                                    url: url,
+                                    type: "POST",
+                                    data: data,
+                                    success: function() {
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseJSON?.message ?? 'Gagal menyimpan data operasi.');
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function hapusOperasi(opeID, jenisOp) {
+                                if (!confirm('Yakin ingin menghapus data operasi ini?')) {
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{{ route('rawatinap.deleteOperasi') }}",
+                                    type: "POST",
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        ID: "{{ $pasien->ID }}",
+                                        Ope_ID: opeID,
+                                        JenisOp: jenisOp
+                                    },
+                                    success: function() {
+                                        $('#modalOperasi').modal('hide');
+                                        location.reload();
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseJSON?.message ?? 'Gagal menghapus data operasi.');
+                                        console.log(xhr.responseText);
+                                    }
+                                });
+                            }
+
+                            function resetOperasiBiaya() {
+                                $('#biayaOp').val('Rp 0');
+                                $('#biayaAss').val('Rp 0');
+                                $('#biayaAnes').val('Rp 0');
+                                $('#biayaAssAnes').val('Rp 0');
+                                $('#biayaAlat').val('Rp 0');
+                                $('#biayaBahan').val('Rp 0');
+                                $('#biayaOk').val('Rp 0');
+                                $('#biayaJasa').val('Rp 0');
+                                $('#biayaCssd').val('Rp 0');
+                            }
+
+                            function resetOperasiPotongan() {
+                                $('#prosenOp').val(0);
+                                $('#prosenAss').val(0);
+                                $('#prosenAnes').val(0);
+                                $('#prosenAssAnes').val(0);
+                                $('#prosenAlat').val(0);
+                                $('#prosenBahan').val(0);
+                                $('#prosenOk').val(0);
+                                $('#prosenJasa').val(0);
+                            }
+
+                            function resetOperasiTotal() {
+                                $('#totalBrutto').html('Rp 0');
+                                $('#totalDiscount').html('Rp 0');
+                                $('#totalNetto').html('Rp 0');
+                            }
+
+                            function formatRupiahOperasi(angka) {
+                                angka = parseFloat(angka || 0);
+                                return 'Rp ' + angka.toLocaleString('id-ID');
+                            }
+
+                            $(function() {
+                                $('#modalOperasi').on('shown.bs.modal', function() {
+                                    if ($('.select2-operasi').hasClass("select2-hidden-accessible")) {
+                                        $('.select2-operasi').select2('destroy');
+                                    }
+
+                                    $('.select2-operasi').select2({
+                                        dropdownParent: $('#modalOperasi'),
+                                        width: '100%',
+                                        allowClear: true
+                                    });
+                                });
+                            });
+
+                            $('#modalOperasi').on('shown.bs.modal', function() {
+
+                                $('.select2-dokter').select2({
+                                    dropdownParent: $('#modalOperasi'),
+                                    width: '100%'
+                                });
+
+                            });
+                        </script>
 
                     </div>
 

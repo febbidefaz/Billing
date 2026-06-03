@@ -65,15 +65,32 @@
             border-bottom: 1px solid #000;
         }
 
+        .no-print {
+            margin-bottom: 10px;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 7px 12px;
+            background: #17a2b8;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         @media print {
-            body {
-                margin: 10mm;
+            .print-btn {
+                display: none !important;
             }
         }
     </style>
 </head>
 
-<body onload="window.print()">
+<body>
+    <button onclick="window.print()" class="print-btn">Print</button>
 
     <div class="title">RUMAH SAKIT 'AISYIYAH</div>
     <div class="subtitle">JL. KH. ASYHARI 17 BOJONEGORO</div>

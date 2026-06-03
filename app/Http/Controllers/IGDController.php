@@ -234,6 +234,245 @@ class IGDController extends Controller
         ]);
     }
 
+    // Insert Visit Dokter
+    public function insertVisit(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'       => 'required|integer',
+                'DokterID' => 'required|integer',
+                'TglVisit' => 'required|date',
+                'Pot'      => 'nullable|numeric',
+                'MemoVisit'=> 'nullable|string|max:255',
+            ]);
+
+            $result = DB::select("
+                EXEC dbo.WebInsertVisitByID_SP
+                    @ID = ?,
+                    @DokterID = ?,
+                    @TglVisit = ?,
+                    @Pot = ?,
+                    @MemoVisit = ?
+            ", [
+                $request->ID,
+                $request->DokterID,
+                $request->TglVisit,
+                ($request->Pot ?? 0) / 100,
+                $request->MemoVisit,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data visit dokter berhasil ditambahkan.',
+                'visit_id' => $result[0]->Visit_ID_Baru ?? null,
+                'biaya_visit' => $result[0]->BiayaVisit ?? 0,
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+
+        }
+    }
+
+    // Update Visit Dokter
+    public function updateVisit(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'       => 'required|integer',
+                'Visit_ID' => 'required|integer',
+                'DokterID' => 'required|integer',
+                'TglVisit' => 'required|date',
+                'Pot'      => 'nullable|numeric',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebUpdateVisitByVisitID_SP
+                    @ID = ?,
+                    @Visit_ID = ?,
+                    @DokterID = ?,
+                    @TglVisit = ?,
+                    @Pot = ?
+            ", [
+                $request->ID,
+                $request->Visit_ID,
+                $request->DokterID,
+                $request->TglVisit,
+                ($request->Pot ?? 0) / 100,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data visit dokter berhasil diperbarui.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+
+        }
+    }
+
+    // Delete Visit Dokter
+    public function deleteVisit(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'       => 'required|integer',
+                'Visit_ID' => 'required|integer'
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebDeleteVisitByID_SP
+                    @ID = ?,
+                    @Visit_ID = ?
+            ", [
+                $request->ID,
+                $request->Visit_ID
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data visit dokter berhasil dihapus.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+
+        }
+    }
+    
+    // Insert Utilitas
+    public function insertUtilitas(Request $request)
+    {
+        try {
+            $request->validate([
+                'ID'       => 'required|integer',
+                'TindakID' => 'required|integer',
+                'DokterID' => 'nullable|integer',
+                'Tanggal'  => 'required|date',
+                'Jam'      => 'nullable',
+                'Pot'      => 'nullable|numeric',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebInsertUtilitasByID_SP ?, ?, ?, ?, ?, ?
+            ", [
+                $request->ID,
+                $request->TindakID,
+                $request->DokterID,
+                $request->Tanggal,
+                $request->Jam,
+                ($request->Pot ?? 0) / 100,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data utilitas berhasil ditambahkan.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Update Utilitas
+    public function updateUtilitas(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'       => 'required|integer',
+                'ActID'    => 'required|integer',
+                'TindakID' => 'required|integer',
+                'DokterID' => 'nullable|integer',
+                'Tanggal'  => 'required|date',
+                'Jam'      => 'nullable',
+                'Pot'      => 'nullable|numeric',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebUpdateUtilitasByActID_SP
+                    @ID = ?,
+                    @ActID = ?,
+                    @TindakID = ?,
+                    @DokterID = ?,
+                    @Tanggal = ?,
+                    @Jam = ?,
+                    @Pot = ?
+            ", [
+                $request->ID,
+                $request->ActID,
+                $request->TindakID,
+                $request->DokterID,
+                $request->Tanggal,
+                $request->Jam,
+                ($request->Pot ?? 0) / 100,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data utilitas berhasil diperbarui.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+
+        }
+    }
+
+    // Delete Utilitas
+    public function deleteUtilitas(Request $request)
+    {
+        try {
+            $request->validate([
+                'ID'       => 'required|integer',
+                'ActID'    => 'required|integer',
+                'TindakID' => 'required|integer',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebDeleteUtilitasByActID_SP ?, ?, ?
+            ", [
+                $request->ID,
+                $request->ActID,
+                $request->TindakID,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data utilitas berhasil dihapus.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // Insert biaya lain
     public function insertLain(Request $request)
     {
@@ -327,6 +566,125 @@ class IGDController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+     // Insert Operasi
+    public function insertOperasi(Request $request)
+    {
+        try {
+            $request->validate([
+                'ID' => 'required|integer',
+                'JenisOp' => 'required|integer',
+                'TgOp' => 'required|date',
+                'StartOp' => 'nullable',
+                'EndOp' => 'nullable',
+                'Op' => 'required|string|max:45',
+                'Ass' => 'nullable|string|max:45',
+                'Anes' => 'nullable|string|max:45',
+                'AssAnes' => 'nullable|string|max:45',
+                'AtOk' => 'nullable|integer',
+                'Note' => 'nullable|string|max:80',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebInsertOperasiByID_SP ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ", [
+                $request->ID,
+                $request->JenisOp,
+                $request->TgOp,
+                $request->StartOp,
+                $request->EndOp,
+                $request->Op,
+                $request->Ass,
+                $request->Anes,
+                $request->AssAnes,
+                $request->ProsenOp ?? 0,
+                $request->ProsenAss ?? 0,
+                $request->ProsenAnes ?? 0,
+                $request->ProsenAssAnes ?? 0,
+                $request->ProsenAlat ?? 0,
+                $request->ProsenBahan ?? 0,
+                $request->ProsenOk ?? 0,
+                $request->ProsenJasa ?? 0,
+                $request->AtOk ?? 0,
+                $request->Note,
+                session('username'),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Data operasi berhasil ditambahkan.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Update Operasi 
+    public function updateOperasi(Request $request)
+    {
+        try {
+            $request->validate([
+                'ID' => 'required|integer',
+                'Ope_ID' => 'required|integer',
+                'JenisOp' => 'required|integer',
+                'TgOp' => 'required|date',
+                'Op' => 'required|string|max:45',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebUpdateOperasiByOpeID_SP ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ", [
+                $request->ID,
+                $request->Ope_ID,
+                $request->JenisOp,
+                $request->TgOp,
+                $request->StartOp,
+                $request->EndOp,
+                $request->Op,
+                $request->Ass,
+                $request->Anes,
+                $request->AssAnes,
+                $request->ProsenOp ?? 0,
+                $request->ProsenAss ?? 0,
+                $request->ProsenAnes ?? 0,
+                $request->ProsenAssAnes ?? 0,
+                $request->ProsenAlat ?? 0,
+                $request->ProsenBahan ?? 0,
+                $request->ProsenOk ?? 0,
+                $request->ProsenJasa ?? 0,
+                $request->AtOk ?? 0,
+                $request->Note,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Data operasi berhasil diperbarui.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Delete Operasi
+    public function deleteOperasi(Request $request)
+    {
+        try {
+            $request->validate([
+                'ID' => 'required|integer',
+                'Ope_ID' => 'required|integer',
+                'JenisOp' => 'required|integer',
+            ]);
+
+            DB::statement("
+                EXEC dbo.WebDeleteOperasiByOpeID_SP ?, ?, ?
+            ", [
+                $request->ID,
+                $request->Ope_ID,
+                $request->JenisOp,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Data operasi berhasil dihapus.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     // Obat All
@@ -781,12 +1139,16 @@ class IGDController extends Controller
 
     // Utilitas / Tindakan Dokter
     $utilitas = DB::select("EXEC dbo.WebUtilitasBillingByID_SP ?", [$id]);
+    // Nama Utilitas
+    $tindakanList = DB::select("EXEC dbo.cboTindakan_SP");
 
     // Lain - lain
     $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
 
     // Operasi
     $operasi = DB::select("EXEC dbo.WebOperasiBillingByID_SP ?", [$id]);
+    // Nama Operasi
+    $jenisOpList = DB::select("EXEC dbo.cboJenisOp_SP");
 
     // Obat Billing
     $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
@@ -835,6 +1197,7 @@ class IGDController extends Controller
         'pxStateList',
         'visitdokter', 
         'utilitas',
+        'tindakanList',
         'radiologi',
         'radiologiDetail',
         'radiologiDetailFlat', 
@@ -843,6 +1206,7 @@ class IGDController extends Controller
         'labDetailFlat',
         'lainlain', 
         'operasi', 
+        'jenisOpList', 
         'obat',    
         'salesFarmasi',
         'grandTotalFarmasiApi',

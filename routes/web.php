@@ -66,13 +66,37 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/rawatinap/delete-pasinap',[RawatInapController::class, 'deletePasInap']
         )->name('rawatinap.deletePasInap'); 
 
+        // Visite
+    Route::post('/rawatinap/visit/update', [RawatInapController::class, 'updateVisit'])
+        ->name('rawatinap.updateVisit');
+    Route::post('/rawatinap/visit/insert', [RawatInapController::class, 'insertVisit'])
+        ->name('rawatinap.insertVisit');
+    Route::post('/rawatinap/visit/delete', [RawatInapController::class, 'deleteVisit'])
+        ->name('rawatinap.deleteVisit');        
+        
+        // Utilitas
+    Route::post('/rawatinap/utilitas/insert', [RawatInapController::class, 'insertUtilitas'])
+        ->name('rawatinap.insertUtilitas');    
+    Route::post('/rawatinap/utilitas/update', [RawatInapController::class, 'updateUtilitas'])
+        ->name('rawatinap.updateUtilitas');    
+    Route::post('/rawatinap/utilitas/delete', [RawatInapController::class, 'deleteUtilitas'])
+        ->name('rawatinap.deleteUtilitas');    
+
         // Biaya Lain
     Route::post('/rawatinap/insert-lain', [RawatInapController::class, 'insertLain'])
         ->name('rawatinap.insertLain');   
     Route::post('/rawatinap/update-lain', [RawatInapController::class, 'updateLain'])
         ->name('rawatinap.updateLain');
     Route::post('/rawatinap/delete-lain', [RawatInapController::class, 'deleteLain'])
-    ->name('rawatinap.deleteLain');
+        ->name('rawatinap.deleteLain');
+
+        // Operasi
+    Route::post('/rawatinap/operasi/insert', [RawatInapController::class, 'insertOperasi'])
+        ->name('rawatinap.insertOperasi');    
+    Route::post('/rawatinap/operasi/update', [RawatInapController::class, 'updateOperasi'])
+        ->name('rawatinap.updateOperasi');    
+    Route::post('/rawatinap/operasi/delete', [RawatInapController::class, 'deleteOperasi'])
+        ->name('rawatinap.deleteOperasi');    
 
     // User Billing
     Route::get('/user-billing', [UserBillingController::class, 'index'])->name('userbilling.index');
