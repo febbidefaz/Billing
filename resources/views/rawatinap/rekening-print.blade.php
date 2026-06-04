@@ -46,7 +46,7 @@
 
     <style>
         @page {
-            size: legal portrait;
+            size: 210mm 330mm;
             margin: 8mm;
         }
 

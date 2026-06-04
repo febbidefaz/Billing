@@ -1049,6 +1049,119 @@ class RawatInapController extends Controller
         ));
     }
 
+    // Rekening Rinci print
+    public function rekRinciPrint($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+    
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);   
+        $rekeningVisitRinci = DB::select("EXEC dbo.WebRekeningVisitRinciByID_SP ?", [$id]);
+        $rekeningUtilitasRinci = DB::select("EXEC dbo.WebRekeningUtilitasRinciByID_SP ?", [$id]);      
+     
+        $rekeningLaboratRinci = DB::select("EXEC dbo.WebRekeningLaboratRinciByID_SP ?", [$id]);        
+        $totalLab = collect($rekeningLaboratRinci)->sum('Netto');
+
+        $rekeningRadiologiRinci = DB::select("EXEC dbo.WebRekeningRadiologiRinciByID_SP ?", [$id]);        
+        $totalRadiologi = collect($rekeningRadiologiRinci)->sum('Netto');
+
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+        
+        $rekeningOperasiRinci = DB::select("EXEC dbo.WebRekeningOperasiRinciByID_SP ?", [$id]);
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        // Oba Pay
+        $salesFarmasi = [];
+        $grandTotalFarmasiApi = 0;
+    
+        try {
+            $token = $this->getFarmasiToken();
+    
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->get('http://192.168.1.9:8010/api/sales', [
+                    'appointment_id' => $id
+                ]);
+    
+            if ($response->status() == 401) {
+                Cache::forget('farmasi_token');
+    
+                $token = $this->getFarmasiToken();
+    
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->get('http://192.168.1.9:8010/api/sales', [
+                        'appointment_id' => $id
+                    ]);
+            }
+    
+            if ($response->successful()) {
+                $salesFarmasi = $response->json('data.sales') ?? [];
+                $grandTotalFarmasiApi = $response->json('data.grand_total') ?? 0;
+            }
+    
+        } catch (\Exception $e) {
+            Log::error('Farmasi API Rekening Print Error : ' . $e->getMessage());
+    
+            $salesFarmasi = [];
+            $grandTotalFarmasiApi = 0;
+        }
+
+        $totalKamar = collect($kamar)->sum('TotalSewa');
+        $totalAskep = collect($kamar)->sum('TotalAskep');
+        $totalVisit = collect($rekeningVisitRinci)->sum('Netto');
+        $totalUtilitas = collect($rekeningUtilitasRinci)->sum('Netto');
+        $totalLain = collect($lainlain)->sum('TotalLain');
+        $totalOperasi = collect($rekeningOperasiRinci)->sum('Netto');
+        $totalObat = collect($obat)->sum('HutangObat');
+
+        $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+
+        $grandTotal =
+            $karcisJasa +
+            $totalKamar +
+            $totalAskep +
+            $totalVisit +
+            $totalUtilitas +
+            $totalRadiologi +
+            $totalLab +
+            $totalLain +
+            $totalOperasi +
+            $totalObat +
+            $grandTotalFarmasiApi;
+
+        $dijamin = $pasien->DownPay ?? 0;
+        $sisa = $grandTotal - $dijamin;
+
+        $terbilangSisa = strtoupper(
+            trim(
+                preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+            )
+        );
+
+        $tanggalCetak = now()->format('d M Y H:i:s');
+    
+        return view('rawatinap.rek-rinci-print', compact(
+            'pasien',
+            'kamar',
+            'rekeningVisitRinci',
+            'totalVisit',
+            'rekeningUtilitasRinci',
+            'totalUtilitas',
+            'rekeningLaboratRinci',
+            'totalLab',
+            'rekeningRadiologiRinci',
+            'totalRadiologi',
+            'lainlain',
+            'rekeningOperasiRinci',
+            'obat',
+            'salesFarmasi',
+            'grandTotalFarmasiApi',
+            'sisa',
+            'terbilangSisa',
+            'tanggalCetak'
+        ));
+    }
+
     //Ambil Token ObaPay
     private function getFarmasiToken()
     {

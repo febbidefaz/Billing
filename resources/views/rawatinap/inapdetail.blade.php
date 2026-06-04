@@ -513,6 +513,24 @@
                         }
                     </script>
 
+                    {{-- print Rek Rinci --}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingRinci()">
+                        <i class="fas fa-print"></i> Rek Rinci
+                    </button>
+
+                    <script>
+                        function previewBillingRinci() {
+
+                            window.open(
+                                "{{ route('rawatinap.rekRinciPrint', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+
+                        }
+                    </script>
+
+
                     {{-- Print Kwitansi --}}
                     <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
                         <i class="fas fa-print"></i> Kwitansi

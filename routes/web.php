@@ -33,24 +33,32 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rawat-inap/{id}', [RawatInapController::class, 'detail'])->name('rawatinap.detail');
     Route::post('/rawat-inap/{id}/update-pxrs', [RawatInapController::class, 'updatePxRS'])
         ->name('rawatinap.updatePxRS');
+    Route::post('/rawatinap/{id}/simpan-kasir',[RawatInapController::class, 'simpanKasir']
+        )->name('rawatinap.simpanKasir');    
+
+        // Kwitansi Dan Rek
+    Route::get('/rawatinap/{id}/kwitansi-print',[RawatInapController::class, 'kwitansiPrint']
+        )->name('rawatinap.kwitansiPrint');    
     Route::get('/rawat-inap/{id}/rekening-print', [RawatInapController::class, 'rekeningPrint'])
         ->name('rawatinap.rekeningPrint'); 
-    Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
-        ->name('rawatinap.updateKarcisJasa');
-    Route::post('/rawatinap/{id}/hapus-karcis-jasa', [RawatInapController::class, 'hapusKarcisJasa'])
-        ->name('rawatinap.hapusKarcisJasa');             
- 
+    Route::get('/rawat-inap/{id}/rek-rinci-print', [RawatInapController::class, 'rekRinciPrint'])
+        ->name('rawatinap.rekRinciPrint');    
+              
+        // Cek Sep dan BPJS
     Route::get('/sep/detail', [RawatInapController::class, 'sepDetail'])->name('sep.detail');
     Route::get('/bpjs/peserta', [RawatInapController::class, 'cekPesertaBpjs'])->name('bpjs.peserta');
 
+        // Obat Dan ObaPay
     Route::get('/rawatinap/{id}/obat-rinci/{roomId}', [RawatInapController::class, 'obatRinciPrint']
         )->name('rawatinap.obatRinciPrint');
     Route::get('/rawatinap/{id}/obapay-print',[RawatInapController::class, 'obapayPrint']
         )->name('rawatinap.obapayPrint');
-    Route::post('/rawatinap/{id}/simpan-kasir',[RawatInapController::class, 'simpanKasir']
-        )->name('rawatinap.simpanKasir');   
-    Route::get('/rawatinap/{id}/kwitansi-print',[RawatInapController::class, 'kwitansiPrint']
-        )->name('rawatinap.kwitansiPrint');
+   
+        // Karcsi Jasa
+    Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
+    ->name('rawatinap.updateKarcisJasa');
+    Route::post('/rawatinap/{id}/hapus-karcis-jasa', [RawatInapController::class, 'hapusKarcisJasa'])
+    ->name('rawatinap.hapusKarcisJasa');    
 
         // Tgl Bayar
     Route::post('/rawatinap/{id}/update-tgl-bayar',[RawatInapController::class, 'updateTglBayar']

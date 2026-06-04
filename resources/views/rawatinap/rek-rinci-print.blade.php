@@ -6,12 +6,12 @@
 
     $totalKamar = collect($kamar)->sum('TotalSewa');
     $totalAskep = collect($kamar)->sum('TotalAskep');
-    $totalVisit = collect($rekeningVisit)->sum('Netto');
-    $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
-    $totalLab = collect($rekeningLaborat ?? [])->sum('Netto');
-    $totalRadiologi = collect($rekeningRadiologi ?? [])->sum('Netto');
+    $totalVisit = collect($rekeningVisitRinci)->sum('Netto');
+    $totalUtilitas = collect($rekeningUtilitasRinci)->sum('Netto');
+    $totalLab = collect($rekeningLaboratRinci ?? [])->sum('Netto');
+    $totalRadiologi = collect($rekeningRadiologiRinci ?? [])->sum('Netto');
     $totalLain = collect($lainlain)->sum('TotalLain');
-    $totalOperasi = collect($rekeningOperasi ?? [])->sum('Netto');
+    $totalOperasi = collect($rekeningOperasiRinci ?? [])->sum('Netto');
     $totalObat = collect($obat)->sum('HutangObat');
 
     $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
@@ -42,7 +42,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekening IGD</title>
+    <title>Rekening Rawat Inap</title>
 
     <style>
         @page {
@@ -221,7 +221,7 @@
                 <div class="header-sub">
                     JL. KH. HASYIM ASY'ARI 17 BOJONEGORO, TELP. (0353)885978
                 </div>
-                <div class="rekening-title">REKENING IGD</div>
+                <div class="rekening-title">REKENING RAWAT INAP</div>
             </td>
 
             <td style="width:90px;"></td>
@@ -324,24 +324,30 @@
     @endif
 
     {{-- VISIT --}}
-    @if (count($rekeningVisit ?? []))
+    @if (count($rekeningVisitRinci ?? []))
         <div class="section-title">VISIT / KUNJUNGAN DOKTER</div>
         <table class="nb">
             <thead>
                 <tr>
                     <th>DOKTER</th>
+                    <th>TANGGAL</th>
                     <th class="right">JUMLAH</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rekeningVisit as $v)
+                @foreach ($rekeningVisitRinci as $v)
                     <tr>
                         <td>{{ $v->Dokter ?? '-' }}</td>
+
+                        <td class="center">
+                            {{ $fmt($v->TglVisit ?? null) }}
+                        </td>
+
                         <td class="right">{{ $R($v->NTimes ?? 0) }}</td>
                         <td class="right">{{ $R($v->Netto ?? 0) }}</td>
-                        <td class="right">{{ $R(($v->Discount ?? 0) * ($v->Pot ?? 0)) }}</td>
+                        <td class="right">{{ $R($v->Discount ?? 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -358,7 +364,7 @@
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningVisit)->sum('Discount')) }}
+                        {{ $R(collect($rekeningVisitRinci)->sum('Discount')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -367,27 +373,44 @@
     @endif
 
     {{-- UTILITAS --}}
-    @if (count($rekeningUtilitas ?? []))
+    @if (count($rekeningUtilitasRinci ?? []))
         <div class="section-title">UTILITAS</div>
+
         <table class="nb">
             <thead>
                 <tr>
                     <th>UTILITAS</th>
+                    <th>TANGGAL</th>
                     <th class="right">JUMLAH</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
+
             <tbody>
-                @foreach ($rekeningUtilitas as $u)
+                @foreach ($rekeningUtilitasRinci as $u)
                     <tr>
                         <td>{{ $u->Tindak ?? '-' }}</td>
-                        <td class="right">{{ $R($u->NTimes ?? 0) }}</td>
-                        <td class="right">{{ $R($u->Netto ?? 0) }}</td>
-                        <td class="right">{{ $R(($u->Discount ?? 0) * ($u->Pot ?? 0)) }}</td>
+
+                        <td class="center">
+                            {{ $fmt($u->Tanggal ?? null) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($u->NTimes ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($u->Netto ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($u->Discount ?? 0) }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
+
             <tfoot>
                 <tr>
                     <td colspan="2"></td>
@@ -399,10 +422,13 @@
                     <td class="right bold u">
                         {{ $R($totalUtilitas) }}
                     </td>
+
+                    <td class="right bold u">
+                        {{ $R(collect($rekeningUtilitasRinci ?? [])->sum('Discount')) }}
+                    </td>
                 </tr>
             </tfoot>
         </table>
-
     @endif
 
     {{-- PENUNJANG --}}
@@ -411,31 +437,41 @@
     @endif
 
     {{-- LAB --}}
-    @if (count($rekeningLaborat ?? []))
+    @if (count($rekeningLaboratRinci ?? []))
         <div class="section-title">- LABORAT</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>TANGGAL</th>
+                    <th>PEMERIKSAAN</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
+                    <th class="right">NETTO</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningLaborat as $l)
+                @foreach ($rekeningLaboratRinci as $l)
                     <tr>
                         <td class="center">
                             {{ $fmt($l->TLab ?? null) }}
                         </td>
 
+                        <td>
+                            {{ $l->Perik ?? '-' }}
+                        </td>
+
                         <td class="right">
-                            {{ $R($l->Netto ?? 0) }}
+                            {{ $R($l->BiayaLab ?? 0) }}
                         </td>
 
                         <td class="right">
                             {{ $R($l->Discount ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($l->Netto ?? 0) }}
                         </td>
                     </tr>
                 @endforeach
@@ -443,16 +479,18 @@
 
             <tfoot>
                 <tr>
+                    <td colspan="2"></td>
+
                     <td class="right bold u">
                         SUB TOTAL
                     </td>
 
                     <td class="right bold u">
-                        {{ $R($totalLab) }}
+                        {{ $R(collect($rekeningLaboratRinci ?? [])->sum('Discount')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningLaborat)->sum('Discount')) }}
+                        {{ $R($totalLab) }}
                     </td>
                 </tr>
             </tfoot>
@@ -460,31 +498,41 @@
     @endif
 
     {{-- RADIOLOGI --}}
-    @if (count($rekeningRadiologi ?? []))
+    @if (count($rekeningRadiologiRinci ?? []))
         <div class="section-title">- RADIOLOGI</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>TANGGAL</th>
+                    <th>PEMERIKSAAN</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
+                    <th class="right">NETTO</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningRadiologi as $r)
+                @foreach ($rekeningRadiologiRinci as $r)
                     <tr>
                         <td class="center">
                             {{ $fmt($r->TRad ?? null) }}
                         </td>
 
+                        <td>
+                            {{ $r->Periksa ?? '-' }}
+                        </td>
+
                         <td class="right">
-                            {{ $R($r->Netto ?? 0) }}
+                            {{ $R($r->BiayaRad ?? 0) }}
                         </td>
 
                         <td class="right">
                             {{ $R($r->Discount ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($r->Netto ?? 0) }}
                         </td>
                     </tr>
                 @endforeach
@@ -492,17 +540,18 @@
 
             <tfoot>
                 <tr>
+                    <td colspan="2"></td>
 
                     <td class="right bold u">
                         SUB TOTAL
                     </td>
 
                     <td class="right bold u">
-                        {{ $R($totalRadiologi) }}
+                        {{ $R(collect($rekeningRadiologiRinci ?? [])->sum('Discount')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningRadiologi)->sum('Discount')) }}
+                        {{ $R($totalRadiologi) }}
                     </td>
                 </tr>
             </tfoot>
@@ -553,44 +602,65 @@
     @endif
 
     {{-- OPERASI --}}
-    @if (count($rekeningOperasi ?? []))
+    @if (count($rekeningOperasiRinci ?? []))
         <div class="section-title">TINDAKAN / OPERASI</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>TINDAKAN</th>
+                    <th>TANGGAL</th>
                     <th class="right">JUMLAH</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
+                    <th class="right">NETTO</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningOperasi as $o)
+                @foreach ($rekeningOperasiRinci as $o)
                     <tr>
-                        <td>{{ $o->Nama_jenis ?? '-' }}</td>
-                        <td class="right">{{ $o->c ?? 0 }}</td>
-                        <td class="right">{{ $R($o->Netto ?? 0) }}</td>
-                        <td class="right">{{ $R($o->Pot ?? 0) }}</td>
+                        <td>
+                            {{ $o->Nama_jenis ?? '-' }}
+                        </td>
+
+                        <td class="center">
+                            {{ $fmt($o->TgOp ?? null) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $o->c ?? 1 }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($o->Biaya ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($o->Pot ?? 0) }}
+                        </td>
+
+                        <td class="right">
+                            {{ $R($o->Netto ?? 0) }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
 
             <tfoot>
                 <tr>
-                    <td></td>
+                    <td colspan="3"></td>
 
                     <td class="right bold u">
                         SUB TOTAL
                     </td>
 
                     <td class="right bold u">
-                        {{ $R($totalOperasi) }}
+                        {{ $R(collect($rekeningOperasiRinci ?? [])->sum('Pot')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningOperasi)->sum('Pot')) }}
+                        {{ $R($totalOperasi) }}
                     </td>
                 </tr>
             </tfoot>
