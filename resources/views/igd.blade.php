@@ -127,11 +127,64 @@
     <script>
         let tableIGD;
 
+        const userId = "{{ auth()->id() }}";
+        const keyPrefix = "igd_" + userId + "_";
+
+        function simpanFilterIGD() {
+
+            localStorage.setItem(
+                keyPrefix + "tgl_awal",
+                $('#tglAwal').val()
+            );
+
+            localStorage.setItem(
+                keyPrefix + "tgl_akhir",
+                $('#tglAkhir').val()
+            );
+        }
+
+        function loadFilterIGD() {
+
+            let savedAwal = localStorage.getItem(
+                keyPrefix + "tgl_awal"
+            );
+
+            let savedAkhir = localStorage.getItem(
+                keyPrefix + "tgl_akhir"
+            );
+
+            if (savedAwal) {
+                $('#tglAwal').val(savedAwal);
+            }
+
+            if (savedAkhir) {
+                $('#tglAkhir').val(savedAkhir);
+            }
+        }
+
         $(function() {
+
+            loadFilterIGD();
 
             tableIGD = $("#tblIGD").DataTable({
 
                 processing: true,
+                stateSave: true,
+
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem(
+                        keyPrefix + "datatable_state",
+                        JSON.stringify(data)
+                    );
+                },
+
+                stateLoadCallback: function(settings) {
+                    let savedState = localStorage.getItem(
+                        keyPrefix + "datatable_state"
+                    );
+
+                    return savedState ? JSON.parse(savedState) : null;
+                },
 
                 ajax: {
                     url: "{{ route('igd.data') }}",
@@ -181,13 +234,15 @@
                     {
                         data: 'SubLayanan'
                     }
-
                 ],
 
                 createdRow: function(row, data) {
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
+
+                        simpanFilterIGD();
+
                         window.location.href =
                             "{{ route('igd.detail', ':id') }}".replace(':id', data.ID);
                     });
@@ -227,9 +282,16 @@
 
             });
 
+            $('#tglAwal,#tglAkhir').on('change', function() {
+                simpanFilterIGD();
+            });
+
         });
 
         function reloadIGD() {
+
+            simpanFilterIGD();
+
             tableIGD.ajax.reload();
         }
     </script>

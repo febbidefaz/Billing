@@ -100,9 +100,46 @@
     <script>
         let tablePasienPulang;
 
+        const userId = "{{ auth()->id() }}";
+        const keyPrefix = "pasien_pulang_" + userId + "_";
+
+        function simpanFilterPulang() {
+
+            localStorage.setItem(
+                keyPrefix + "tgl_awal",
+                $('#tglAwal').val()
+            );
+
+            localStorage.setItem(
+                keyPrefix + "tgl_akhir",
+                $('#tglAkhir').val()
+            );
+        }
+
+        function loadFilterPulang() {
+
+            let savedAwal = localStorage.getItem(
+                keyPrefix + "tgl_awal"
+            );
+
+            let savedAkhir = localStorage.getItem(
+                keyPrefix + "tgl_akhir"
+            );
+
+            if (savedAwal) {
+                $('#tglAwal').val(savedAwal);
+            }
+
+            if (savedAkhir) {
+                $('#tglAkhir').val(savedAkhir);
+            }
+        }
+
         $(function() {
+            loadFilterPulang();
             tablePasienPulang = $("#tblPasienPulang").DataTable({
                 processing: true,
+                stateSave: true,
 
                 ajax: {
                     url: "{{ route('pulang.data') }}",
@@ -151,6 +188,9 @@
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
+
+                        simpanFilterPulang();
+
                         window.location.href =
                             "{{ route('pulang.detail', ':id') }}".replace(':id', data.ID);
                     });
@@ -188,9 +228,15 @@
                     }
                 }
             });
+
+            $('#tglAwal,#tglAkhir').on('change', function() {
+                simpanFilterPulang();
+            });
+
         });
 
         function reloadPasienPulang() {
+            simpanFilterPulang();
             tablePasienPulang.ajax.reload();
         }
 

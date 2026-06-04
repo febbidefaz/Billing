@@ -107,10 +107,33 @@
 @section('js')
 
     <script>
+        let tableRawatInap;
+
+        const userId = "{{ auth()->id() }}";
+        const keyPrefix = "rawat_inap_" + userId + "_";
+
         $(function() {
-            $("#tblRawatInap").DataTable({
+
+            tableRawatInap = $("#tblRawatInap").DataTable({
 
                 processing: true,
+                stateSave: true,
+
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem(
+                        keyPrefix + "datatable_state",
+                        JSON.stringify(data)
+                    );
+                },
+
+                stateLoadCallback: function(settings) {
+                    let savedState = localStorage.getItem(
+                        keyPrefix + "datatable_state"
+                    );
+
+                    return savedState ? JSON.parse(savedState) : null;
+                },
+
                 ajax: "{{ route('rawatinap.data') }}",
 
                 columns: [{
@@ -162,14 +185,14 @@
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
+
                         window.location.href =
                             "{{ route('rawatinap.index') }}/" + data.ID;
                     });
                 },
+
                 responsive: false,
                 autoWidth: false,
-
-                /* MATIKAN scrollX bawaan DT */
                 scrollX: false,
 
                 paging: true,
@@ -203,6 +226,7 @@
                 }
 
             });
+
         });
     </script>
 

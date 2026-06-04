@@ -846,6 +846,42 @@ class IGDController extends Controller
         ]);
     }
 
+    // Update Dijamin PHK3
+    public function updateDijaminPlafon(Request $request, $id)
+    {
+        DB::statement(
+            "EXEC dbo.WebUpdateDijaminPlafonTherapy_SP ?, ?, ?",
+            [
+                $id,
+                $request->downpay,
+                $request->phk3
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dijamin dan Plafon PHK3 berhasil disimpan'
+        ]);
+    }
+
+    // Hapus Dijamin PHK3
+    public function hapusDijaminPlafon($id)
+    {
+        DB::statement(
+            "EXEC dbo.WebUpdateDijaminPlafonTherapy_SP ?, ?, ?",
+            [
+                $id,
+                0,
+                0
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dijamin dan Plafon PHK3 berhasil dihapus'
+        ]);
+    }
+
     // Terbilang
     private function terbilang($angka)
     {

@@ -58,7 +58,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
     ->name('rawatinap.updateKarcisJasa');
     Route::post('/rawatinap/{id}/hapus-karcis-jasa', [RawatInapController::class, 'hapusKarcisJasa'])
-    ->name('rawatinap.hapusKarcisJasa');    
+    ->name('rawatinap.hapusKarcisJasa');
+    
+        // Dijamin PHK3
+    Route::post('/rawatinap/{id}/update-dijamin-plafon', [RawatInapController::class, 'updateDijaminPlafon'])
+        ->name('rawatinap.updateDijaminPlafon');    
+    Route::post('/rawatinap/{id}/hapus-dijamin-plafon', [RawatInapController::class, 'hapusDijaminPlafon'])
+        ->name('rawatinap.hapusDijaminPlafon');    
 
         // Tgl Bayar
     Route::post('/rawatinap/{id}/update-tgl-bayar',[RawatInapController::class, 'updateTglBayar']

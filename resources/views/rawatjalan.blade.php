@@ -100,9 +100,66 @@
 
 @section('js')
     <script>
+        let tableRawatJalan;
+
+        const userId = "{{ auth()->id() }}";
+        const keyPrefix = "rawat_jalan_" + userId + "_";
+
+        function simpanFilterRawatJalan() {
+
+            localStorage.setItem(
+                keyPrefix + "tgl_awal",
+                $('#tgl1').val()
+            );
+
+            localStorage.setItem(
+                keyPrefix + "tgl_akhir",
+                $('#tgl2').val()
+            );
+        }
+
+        function loadFilterRawatJalan() {
+
+            let savedAwal = localStorage.getItem(
+                keyPrefix + "tgl_awal"
+            );
+
+            let savedAkhir = localStorage.getItem(
+                keyPrefix + "tgl_akhir"
+            );
+
+            if (savedAwal) {
+                $('#tgl1').val(savedAwal);
+            }
+
+            if (savedAkhir) {
+                $('#tgl2').val(savedAkhir);
+            }
+        }
+
         $(function() {
-            let table = $("#tblRawatJalan").DataTable({
+
+            loadFilterRawatJalan();
+
+            tableRawatJalan = $("#tblRawatJalan").DataTable({
                 processing: true,
+                stateSave: true,
+
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem(
+                        keyPrefix + "datatable_state",
+                        JSON.stringify(data)
+                    );
+                },
+
+                stateLoadCallback: function(settings) {
+                    let savedState = localStorage.getItem(
+                        keyPrefix + "datatable_state"
+                    );
+
+                    return savedState ? JSON.parse(savedState) : null;
+                },
+
                 ajax: {
                     url: "{{ route('rawatjalan.data') }}",
                     data: function(d) {
@@ -163,8 +220,7 @@
                     {
                         data: 'NoWA',
                         defaultContent: '-'
-                    },
-
+                    }
                 ],
 
                 createdRow: function(row, data) {
@@ -172,6 +228,8 @@
                     $(row).css('cursor', 'pointer');
 
                     $(row).on('click', function() {
+
+                        simpanFilterRawatJalan();
 
                         window.location.href =
                             "{{ route('rawatjalan.detail', ':id') }}".replace(':id', data.ID);
@@ -183,12 +241,15 @@
                 responsive: false,
                 autoWidth: false,
                 scrollX: false,
+
                 paging: true,
                 pageLength: 200,
+
                 lengthMenu: [
                     [50, 100, 150, 200, -1],
                     [50, 100, 150, 200, "Semua"]
                 ],
+
                 ordering: true,
                 order: [
                     [1, 'desc']
@@ -210,8 +271,13 @@
                 }
             });
 
+            $('#tgl1,#tgl2').on('change', function() {
+                simpanFilterRawatJalan();
+            });
+
             $('#btnFilter').on('click', function() {
-                table.ajax.reload();
+                simpanFilterRawatJalan();
+                tableRawatJalan.ajax.reload();
             });
         });
     </script>

@@ -3987,17 +3987,141 @@
                                 <strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong>
                             </div>
 
-                            <div class="billing-row">
+                            <div class="billing-row billing-clickable" data-toggle="modal"
+                                data-target="#modalDijaminPlafon">
                                 <span>Dijamin / Dibayar</span>
-                                <strong>Rp {{ number_format($dijamin, 0, ',', '.') }}</strong>
+                                <strong id="labelDibyr">
+                                    Rp {{ number_format($pasien->DownPay ?? 0, 0, ',', '.') }}
+                                </strong>
                             </div>
 
-                            <div class="billing-row">
+                            <div class="billing-row billing-clickable" data-toggle="modal"
+                                data-target="#modalDijaminPlafon">
                                 <span>Plafon PHK3</span>
-                                <strong>Rp {{ number_format($plafon, 0, ',', '.') }}</strong>
+                                <strong id="labelPhk3">
+                                    Rp {{ number_format($pasien->Phk3 ?? 0, 0, ',', '.') }}
+                                </strong>
                             </div>
                         </div>
                     </div>
+
+                    {{-- Modal Edit Dijamin Dan PHK3 --}}
+                    <div class="modal fade" id="modalDijaminPlafon" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+                            <div class="modal-content border-0 shadow">
+
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-edit mr-1"></i>
+                                        Edit Dijamin & Plafon PHK3
+                                    </h5>
+
+                                    <button type="button" class="close text-white" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <input type="hidden" id="editID" value="{{ $pasien->ID }}">
+
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Dijamin / DownPay</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Rp</span>
+                                            </div>
+
+                                            <input type="text" class="form-control text-right rupiah-input"
+                                                id="editDownPay"
+                                                value="{{ number_format($pasien->DownPay ?? 0, 0, ',', '.') }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <label class="font-weight-bold">Plafon PHK3</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Rp</span>
+                                            </div>
+
+                                            <input type="text" class="form-control text-right rupiah-input"
+                                                id="editPhk3"
+                                                value="{{ number_format($pasien->Phk3 ?? 0, 0, ',', '.') }}">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        Batal
+                                    </button>
+
+                                    <button type="button" class="btn btn-success" onclick="simpanDijaminPlafon()">
+                                        Simpan
+                                    </button>
+
+                                    <button type="button" class="btn btn-danger" onclick="hapusDijaminPlafon()">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- JS Edit Dijamin Dan PHK3 --}}
+                    <script>
+                        function simpanDijaminPlafon() {
+
+                            $.ajax({
+                                url: "{{ route('rawatinap.updateDijaminPlafon', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    downpay: onlyNumber($('#editDownPay').val()),
+                                    phk3: onlyNumber($('#editPhk3').val())
+                                },
+                                success: function(response) {
+
+                                    $('#modalDijaminPlafon').modal('hide');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 300);
+                                },
+                                error: function(xhr) {
+                                    alert(xhr.responseText);
+                                    console.log(xhr.responseText);
+                                }
+                            });
+                        }
+
+                        function hapusDijaminPlafon() {
+
+                            if (!confirm('Yakin ingin menghapus Dijamin dan Plafon PHK3?')) {
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('rawatinap.hapusDijaminPlafon', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(response) {
+
+                                    $('#modalDijaminPlafon').modal('hide');
+
+                                    location.reload();
+                                },
+                                error: function(xhr) {
+                                    alert(xhr.responseText);
+                                }
+                            });
+                        }
+                    </script>
 
                     <div class="col-md-4">
                         <div class="billing-box billing-final">

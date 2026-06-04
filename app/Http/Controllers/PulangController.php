@@ -797,38 +797,75 @@ class PulangController extends Controller
     }
 
     // Update Karcis Jasa 
-    public function updateKarcisJasa(Request $request)
+    public function updateKarcisJasa(Request $request, $id)
     {
-        $request->validate([
-            'id' => 'required|integer',
-            'biaya' => 'required|numeric',
-            'jasa' => 'required|numeric',
+        DB::statement(
+            "EXEC dbo.WebUpdateKarcisJasaTherapy_SP ?, ?, ?",
+            [
+                $id,
+                $request->biaya,
+                $request->jasa
+            ]
+        );
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Karcis dan Jasa berhasil disimpan'
         ]);
+    }
 
-        try {
+    // Hapus Karcis dan Jasa
+    public function hapusKarcisJasa($id)
+    {
+        DB::statement(
+            "EXEC dbo.WebUpdateKarcisJasaTherapy_SP ?, ?, ?",
+            [
+                $id,
+                0, // Biaya
+                0  // JasaPrk
+            ]
+        );
 
-            DB::statement(
-                "EXEC dbo.WebUpdateKarcisJasaTherapy_SP ?, ?, ?",
-                [
-                    $request->id,
-                    $request->biaya,
-                    $request->jasa
-                ]
-            );
+        return response()->json([
+            'success' => true,
+            'message' => 'Karcis dan Jasa berhasil dihapus'
+        ]);
+    }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Karcis dan Jasa berhasil diperbarui'
-            ]);
+    // Update Dijamin PHK3
+    public function updateDijaminPlafon(Request $request, $id)
+    {
+        DB::statement(
+            "EXEC dbo.WebUpdateDijaminPlafonTherapy_SP ?, ?, ?",
+            [
+                $id,
+                $request->downpay,
+                $request->phk3
+            ]
+        );
 
-        } catch (\Exception $e) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Dijamin dan Plafon PHK3 berhasil disimpan'
+        ]);
+    }
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+    // Hapus Dijamin PHK3
+    public function hapusDijaminPlafon($id)
+    {
+        DB::statement(
+            "EXEC dbo.WebUpdateDijaminPlafonTherapy_SP ?, ?, ?",
+            [
+                $id,
+                0,
+                0
+            ]
+        );
 
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Dijamin dan Plafon PHK3 berhasil dihapus'
+        ]);
     }
 
     // Terbilang
