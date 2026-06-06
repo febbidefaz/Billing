@@ -530,6 +530,23 @@
                         }
                     </script>
 
+                    {{-- print Rek Rinci Keu --}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
+                        <i class="fas fa-print"></i> Rek Keu
+                    </button>
+
+                    <script>
+                        function previewBillingKeu() {
+
+                            window.open(
+                                "{{ route('rawatinap.rekKeuPrint', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+
+                        }
+                    </script>
+
 
                     {{-- Print Kwitansi --}}
                     <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
@@ -4074,7 +4091,7 @@
                     {{-- JS Edit Dijamin Dan PHK3 --}}
                     <script>
                         function simpanDijaminPlafon() {
-                    
+
                             $.ajax({
                                 url: "{{ route('rawatinap.updateDijaminPlafon', $pasien->ID) }}",
                                 type: "POST",
@@ -4084,9 +4101,9 @@
                                     phk3: onlyNumber($('#editPhk3').val())
                                 },
                                 success: function(response) {
-                    
+
                                     $('#modalDijaminPlafon').modal('hide');
-                    
+
                                     setTimeout(function() {
                                         location.reload();
                                     }, 300);
@@ -4097,13 +4114,13 @@
                                 }
                             });
                         }
-                    
+
                         function hapusDijaminPlafon() {
-                    
+
                             if (!confirm('Yakin ingin menghapus Dijamin dan Plafon PHK3?')) {
                                 return;
                             }
-                    
+
                             $.ajax({
                                 url: "{{ route('rawatinap.hapusDijaminPlafon', $pasien->ID) }}",
                                 type: "POST",
@@ -4111,9 +4128,9 @@
                                     _token: "{{ csrf_token() }}"
                                 },
                                 success: function(response) {
-                    
+
                                     $('#modalDijaminPlafon').modal('hide');
-                    
+
                                     location.reload();
                                 },
                                 error: function(xhr) {

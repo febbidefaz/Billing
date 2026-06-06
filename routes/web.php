@@ -42,7 +42,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rawat-inap/{id}/rekening-print', [RawatInapController::class, 'rekeningPrint'])
         ->name('rawatinap.rekeningPrint'); 
     Route::get('/rawat-inap/{id}/rek-rinci-print', [RawatInapController::class, 'rekRinciPrint'])
-        ->name('rawatinap.rekRinciPrint');    
+        ->name('rawatinap.rekRinciPrint');
+    Route::get('/rawat-inap/{id}/rek-keu-print', [RawatInapController::class, 'rekKeuPrint'])
+        ->name('rawatinap.rekKeuPrint');         
               
         // Cek Sep dan BPJS
     Route::get('/sep/detail', [RawatInapController::class, 'sepDetail'])->name('sep.detail');

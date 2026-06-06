@@ -6,12 +6,14 @@
 
     $totalKamar = collect($kamar)->sum('TotalSewa');
     $totalAskep = collect($kamar)->sum('TotalAskep');
-    $totalVisit = collect($rekeningVisitRinci)->sum('Netto');
-    $totalUtilitas = collect($rekeningUtilitasRinci)->sum('Netto');
-    $totalLab = collect($rekeningLaboratRinci ?? [])->sum('Netto');
-    $totalRadiologi = collect($rekeningRadiologiRinci ?? [])->sum('Netto');
+    $totalVisit = collect($rekeningVisitKeu)->sum('Biaya');
+    $totalUtilitas = collect($rekeningUtilitasKeu)->sum('Netto');
+    $totalLab = collect($rekeningLaboratKeu ?? [])->sum('Netto');
+    $totalRadiologi = collect($rekeningRadiologiKeu ?? [])->sum('Netto');
     $totalLain = collect($lainlain)->sum('TotalLain');
-    $totalOperasi = collect($rekeningOperasiRinci ?? [])->sum('Netto');
+    $totalOperasi = collect($rekeningOperasiKeu ?? [])->sum('Biaya');
+    $totalOperasiIgd = collect($rekeningOperasiIgdKeu)->sum('Biaya');
+    $totalOperasiPoli = collect($rekeningOperasiPoliKeu)->sum('Biaya');
     $totalObat = collect($obat)->sum('HutangObat');
 
     $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
@@ -26,6 +28,8 @@
         $totalLab +
         $totalLain +
         $totalOperasi +
+        $totalOperasiIgd +
+        $totalOperasiPoli +
         $totalObat +
         ($grandTotalFarmasiApi ?? 0);
 
@@ -73,6 +77,10 @@
 
         .right {
             text-align: right;
+        }
+
+        .left {
+            text-align: left;
         }
 
         .bold {
@@ -324,47 +332,47 @@
     @endif
 
     {{-- VISIT --}}
-    @if (count($rekeningVisitRinci ?? []))
+    @if (count($rekeningVisitKeu ?? []))
         <div class="section-title">VISIT / KUNJUNGAN DOKTER</div>
         <table class="nb">
             <thead>
                 <tr>
                     <th>DOKTER</th>
-                    <th>TANGGAL</th>
+                    <th class="left">KELAS</th>
+                    <th class="left">RUANG</th>
                     <th class="right">JUMLAH</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rekeningVisitRinci as $v)
+                @foreach ($rekeningVisitKeu as $v)
                     <tr>
                         <td>{{ $v->Dokter ?? '-' }}</td>
-
-                        <td class="center">
-                            {{ $fmt($v->TglVisit ?? null) }}
-                        </td>
-
+                        <td>{{ $v->Kelas ?? '-' }}</td>
+                        <td>{{ $v->RoomName ?? '-' }}</td>
                         <td class="right">{{ $R($v->NTimes ?? 0) }}</td>
-                        <td class="right">{{ $R($v->Netto ?? 0) }}</td>
+                        <td class="right">{{ $R($v->Biaya ?? 0) }}</td>
                         <td class="right">{{ $R($v->Discount ?? 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
-                    <td></td>
+                    <td colspan="3" class="right bold u">
+
+                    </td>
 
                     <td class="right bold u">
                         SUB TOTAL
                     </td>
 
                     <td class="right bold u">
-                        {{ $R($totalVisit) }}
+                        {{ $R(collect($rekeningVisitKeu ?? [])->sum('Biaya')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningVisitRinci)->sum('Discount')) }}
+                        {{ $R(collect($rekeningVisitKeu ?? [])->sum('Discount')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -373,14 +381,16 @@
     @endif
 
     {{-- UTILITAS --}}
-    @if (count($rekeningUtilitasRinci ?? []))
+    @if (count($rekeningUtilitasKeu ?? []))
         <div class="section-title">UTILITAS</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>UTILITAS</th>
-                    <th>TANGGAL</th>
+                    <th class="left">KELAS</th>
+                    <th class="left">RUANG</th>
+                    <th>DOKTER</th>
                     <th class="right">JUMLAH</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
@@ -388,22 +398,18 @@
             </thead>
 
             <tbody>
-                @foreach ($rekeningUtilitasRinci as $u)
+                @foreach ($rekeningUtilitasKeu as $u)
                     <tr>
                         <td>{{ $u->Tindak ?? '-' }}</td>
-
-                        <td class="center">
-                            {{ $fmt($u->Tanggal ?? null) }}
-                        </td>
-
+                        <td class="left">{{ $u->Kelas ?? '-' }}</td>
+                        <td class="left">{{ $u->RoomName ?? '-' }}</td>
+                        <td>{{ $u->Dokter ?? '-' }}</td>
                         <td class="right">
                             {{ $R($u->NTimes ?? 0) }}
                         </td>
-
                         <td class="right">
-                            {{ $R($u->Netto ?? 0) }}
+                            {{ $R($u->BiayaTindak ?? 0) }}
                         </td>
-
                         <td class="right">
                             {{ $R($u->Discount ?? 0) }}
                         </td>
@@ -413,18 +419,16 @@
 
             <tfoot>
                 <tr>
-                    <td colspan="2"></td>
-
-                    <td class="right bold u">
+                    <td colspan="5" class="right bold u">
                         SUB TOTAL
                     </td>
 
                     <td class="right bold u">
-                        {{ $R($totalUtilitas) }}
+                        {{ $R(collect($rekeningUtilitasKeu ?? [])->sum('BiayaTindak')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningUtilitasRinci ?? [])->sum('Discount')) }}
+                        {{ $R(collect($rekeningUtilitasKeu ?? [])->sum('Discount')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -437,103 +441,197 @@
     @endif
 
     {{-- LAB --}}
-    @if (count($rekeningLaboratRinci ?? []))
+    @if (count($rekeningLaboratKeu ?? []))
         <div class="section-title">- LABORAT</div>
-
         <table class="nb">
             <thead>
                 <tr>
                     <th>TANGGAL</th>
-                    <th>PEMERIKSAAN</th>
+                    <th class="left">ID LAB</th>
+                    <th class="right">PELAYANAN</th>
+                    <th class="right">PERUJUK</th>
+                    <th class="right">RSA</th>
+                    <th class="right">PEMBACA</th>
+                    <th class="right">REAGEN</th>
+                    <th class="left">ANALIS</th>
+                    <th class="left">USER</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningLaboratRinci as $l)
+                @foreach (collect($rekeningLaboratKeu)->groupBy('Dokter') as $dokter => $items)
                     <tr>
-                        <td class="center">
-                            {{ $fmt($l->TLab ?? null) }}
+                        <td colspan="7" class="bold">
+                            {{ $dokter ?: 'DOKTER TIDAK DIISI' }}
+                        </td>
+                    </tr>
+
+                    @foreach ($items as $l)
+                        <tr>
+                            <td class="center">{{ $fmt($l->TLab ?? null) }}</td>
+                            <td>{{ $l->IDLab ?? '-' }}</td>
+                            <td class="right">{{ $R($l->JasaPelayanan ?? 0) }}</td>
+                            <td class="right">{{ $R($l->JasaPerujuk ?? 0) }}</td>
+                            <td class="right">{{ $R($l->JasaRS ?? 0) }}</td>
+                            <td class="right">{{ $R($l->Pembaca ?? 0) }}</td>
+                            <td class="right">{{ $R($l->BHPReagen ?? 0) }}</td>
+                            <td>{{ $l->nama ?? '-' }}</td>
+                            <td>{{ $l->Usr ?? '-' }}</td>
+                            <td class="right">{{ $R($l->BiayaLab ?? 0) }}</td>
+                            <td class="right">{{ $R($l->Discount ?? 0) }}</td>
+                        </tr>
+                    @endforeach
+
+                    <tr>
+                        <td colspan="2" class="right bold u">
+                            SUB {{ $dokter ?: 'DOKTER TIDAK DIISI' }}
                         </td>
 
-                        <td>
-                            {{ $l->Perik ?? '-' }}
-                        </td>
+                        <td class="right bold u">{{ $R($items->sum('JasaPelayanan')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('JasaPerujuk')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('JasaRS')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('Pembaca')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('BHPReagen')) }}</td>
 
-                        <td class="right">
-                            {{ $R($l->BiayaLab ?? 0) }}
-                        </td>
+                        <td colspan="2"></td>
 
-                        <td class="right">
-                            {{ $R($l->Discount ?? 0) }}
-                        </td>
+                        <td class="right bold u">{{ $R($items->sum('BiayaLab')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('Discount')) }}</td>
                     </tr>
                 @endforeach
             </tbody>
 
             <tfoot>
                 <tr>
+                    <td colspan="2" class="right bold u">
+                        SUB TOTAL LAB
+                    </td>
+
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('JasaPelayanan')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('JasaPerujuk')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('JasaRS')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('Pembaca')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('BHPReagen')) }}</td>
+
                     <td colspan="2"></td>
 
-                    <td class="right bold u">
-                        SUB TOTAL
-                    </td>
-
-                    <td class="right bold u">
-                        {{ $R(collect($rekeningLaboratRinci ?? [])->sum('Discount')) }}
-                    </td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('BiayaLab')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningLaboratKeu ?? [])->sum('Discount')) }}</td>
                 </tr>
             </tfoot>
         </table>
     @endif
 
     {{-- RADIOLOGI --}}
-    @if (count($rekeningRadiologiRinci ?? []))
+    @if (count($rekeningRadiologiKeu ?? []))
         <div class="section-title">- RADIOLOGI</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>TANGGAL</th>
-                    <th>PEMERIKSAAN</th>
+                    <th class="right">PELAKSANA</th>
+                    <th class="right">PERUJUK</th>
+                    <th class="right">DOKTER</th>
+                    <th class="right">FILM</th>
+                    <th class="right">RSA</th>
+                    <th class="left">USER</th>
                     <th class="right">BIAYA</th>
                     <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningRadiologiRinci as $r)
+
+                @foreach (collect($rekeningRadiologiKeu)->groupBy('Dokter') as $dokter => $items)
                     <tr>
-                        <td class="center">
-                            {{ $fmt($r->TRad ?? null) }}
-                        </td>
-
-                        <td>
-                            {{ $r->Periksa ?? '-' }}
-                        </td>
-
-                        <td class="right">
-                            {{ $R($r->BiayaRad ?? 0) }}
-                        </td>
-
-                        <td class="right">
-                            {{ $R($r->Discount ?? 0) }}
+                        <td colspan="10" class="bold">
+                            {{ $dokter ?: 'DOKTER TIDAK DIISI' }}
                         </td>
                     </tr>
+
+                    @foreach ($items as $r)
+                        <tr>
+                            <td class="center">
+                                {{ $fmt($r->TRad ?? null) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->JasaPelaksana ?? 0) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->JasaPerujuk ?? 0) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->JasaDokter ?? 0) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->Film ?? 0) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->RSA ?? 0) }}
+                            </td>
+
+                            <td>
+                                {{ $r->Usr ?? '-' }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->BiayaRad ?? 0) }}
+                            </td>
+
+                            <td class="right">
+                                {{ $R($r->Discount ?? 0) }}
+                            </td>
+                        </tr>
+                    @endforeach
+
+                    <tr>
+                        <td colspan="1" class="right bold u">
+                            SUB {{ $dokter }}
+                        </td>
+
+                        <td class="right bold u">{{ $R($items->sum('JasaPelaksana')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('JasaPerujuk')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('JasaDokter')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('Film')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('RSA')) }}</td>
+
+                        <td></td>
+
+                        <td class="right bold u">{{ $R($items->sum('BiayaRad')) }}</td>
+                        <td class="right bold u">{{ $R($items->sum('Discount')) }}</td>
+                    </tr>
                 @endforeach
+
             </tbody>
 
             <tfoot>
                 <tr>
-                    <td colspan="2"></td>
+                    <td colspan="1" class="right bold u">
+                        SUB TOTAL RADIOLOGI
+                    </td>
+
+                    <td class="right bold u">{{ $R(collect($rekeningRadiologiKeu)->sum('JasaPelaksana')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningRadiologiKeu)->sum('JasaPerujuk')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningRadiologiKeu)->sum('JasaDokter')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningRadiologiKeu)->sum('Film')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningRadiologiKeu)->sum('RSA')) }}</td>
+
+                    <td></td>
 
                     <td class="right bold u">
-                        SUB TOTAL
+                        {{ $R(collect($rekeningRadiologiKeu)->sum('BiayaRad')) }}
                     </td>
 
                     <td class="right bold u">
-                        {{ $R(collect($rekeningRadiologiRinci ?? [])->sum('Discount')) }}
+                        {{ $R(collect($rekeningRadiologiKeu)->sum('Discount')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -584,57 +682,162 @@
     @endif
 
     {{-- OPERASI --}}
-    @if (count($rekeningOperasiRinci ?? []))
+    @if (count($rekeningOperasiKeu ?? []))
         <div class="section-title">TINDAKAN / OPERASI</div>
 
         <table class="nb">
             <thead>
                 <tr>
                     <th>TINDAKAN</th>
-                    <th>TANGGAL</th>
-                    <th class="right">JUMLAH</th>
+                    <th class="left">RUANG</th>
+                    <th class="left">KELAS</th>
+                    <th class="left">NAMA OP</th>
+                    <th class="right">OPER</th>
+                    <th class="right">ASS</th>
+                    <th class="right">BAHAN</th>
+                    <th class="right">ALAT</th>
+                    <th class="right">JRS</th>
+                    <th class="right">CSSD</th>
+                    <th class="right">JML</th>
                     <th class="right">BIAYA</th>
-                    <th class="right">DISCOUNT</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($rekeningOperasiRinci as $o)
+                @foreach ($rekeningOperasiKeu as $o)
                     <tr>
-                        <td>
-                            {{ $o->Nama_jenis ?? '-' }}
-                        </td>
-
-                        <td class="center">
-                            {{ $fmt($o->TgOp ?? null) }}
-                        </td>
-
-                        <td class="right">
-                            {{ $o->c ?? 1 }}
-                        </td>
-
-                        <td class="right">
-                            {{ $R($o->Biaya ?? 0) }}
-                        </td>
-
-                        <td class="right">
-                            {{ $R($o->Pot ?? 0) }}
-                        </td>
+                        <td>{{ $o->Nama_jenis ?? '-' }}</td>
+                        <td class="left">{{ $o->RoomName ?? '-' }}</td>
+                        <td class="left">{{ $o->Kelas ?? '-' }}</td>
+                        <td class="left">{{ $o->Op ?? '-' }}</td>
+                        <td class="right">{{ $R($o->Oper ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Ass ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Bahan ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Alat ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Jasa ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Cssd ?? 0) }}</td>
+                        <td class="right">{{ $R($o->c ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>
 
             <tfoot>
                 <tr>
-                    <td colspan="3"></td>
-
-                    <td class="right bold u">
-                        SUB TOTAL
+                    <td colspan="4" class="right bold u">
+                        SUB TOTAL OPERASI
                     </td>
 
-                    <td class="right bold u">
-                        {{ $R(collect($rekeningOperasiRinci ?? [])->sum('Pot')) }}
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Oper')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Ass')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Bahan')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Alat')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Jasa')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Cssd')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('c')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiKeu ?? [])->sum('Biaya')) }}</td>
+            </tfoot>
+        </table>
+    @endif
+
+    {{-- OPERASI IGD --}}
+    @if (count($rekeningOperasiIgdKeu ?? []))
+        <div class="section-title">TINDAKAN / OPERASI IGD</div>
+
+        <table class="nb">
+            <thead>
+                <tr>
+                    <th>TINDAKAN</th>
+                    <th class="left">RUANG</th>
+                    <th class="left">KELAS</th>
+                    <th class="right">JML</th>
+                    <th class="right">OPER</th>
+                    <th class="right">ASS</th>
+                    <th class="right">BAHAN</th>
+                    <th class="right">ALAT</th>
+                    <th class="right">BIAYA</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach ($rekeningOperasiIgdKeu as $o)
+                    <tr>
+                        <td>{{ $o->Nama_jenis ?? '-' }}</td>
+                        <td class="left">{{ $o->RoomName ?? '-' }}</td>
+                        <td class="left">{{ $o->Kelas ?? '-' }}</td>
+                        <td class="right">{{ $R($o->c ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Oper ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Ass ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Bahan ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Alat ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="right bold u">
+                        SUB TOTAL OPERASI IGD
                     </td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('c')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Oper')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Ass')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Bahan')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Alat')) }}</td>
+                    <td class="right bold u">{{ $R($totalOperasiIgd) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    @endif
+
+    {{-- OPERASI Poli --}}
+    @if (count($rekeningOperasiPoliKeu ?? []))
+        <div class="section-title">TINDAKAN / OPERASI POLI</div>
+
+        <table class="nb">
+            <thead>
+                <tr>
+                    <th>TINDAKAN</th>
+                    <th class="left">RUANG</th>
+                    <th class="left">KELAS</th>
+                    <th class="right">JML</th>
+                    <th class="right">OPER</th>
+                    <th class="right">ASS</th>
+                    <th class="right">BAHAN</th>
+                    <th class="right">ALAT</th>
+                    <th class="right">BIAYA</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach ($rekeningOperasiPoliKeu as $o)
+                    <tr>
+                        <td>{{ $o->Nama_jenis ?? '-' }}</td>
+                        <td class="left">{{ $o->RoomName ?? '-' }}</td>
+                        <td class="left">{{ $o->Kelas ?? '-' }}</td>
+                        <td class="right">{{ $R($o->c ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Oper ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Ass ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Bahan ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Alat ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="right bold u">
+                        SUB TOTAL OPERASI IGD
+                    </td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('c')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Oper')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Ass')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Bahan')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Alat')) }}</td>
+                    <td class="right bold u">{{ $R($totalOperasiPoli) }}</td>
+                </tr>
             </tfoot>
         </table>
     @endif

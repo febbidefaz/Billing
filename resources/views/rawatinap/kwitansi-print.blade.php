@@ -99,6 +99,8 @@
         $R = fn($v) => number_format($v ?? 0, 0, ',', '.');
     @endphp
 
+    <br><br><br><br><br>
+
     <div class="kwitansi">
 
         <table class="box">
