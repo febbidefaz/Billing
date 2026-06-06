@@ -247,7 +247,7 @@
 
                 <td></td>
 
-                <td class="center small">
+                <td class="center">
                     {{ $tanggalCetak }}
                 </td>
             </tr>

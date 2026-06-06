@@ -530,6 +530,23 @@
                         }
                     </script>
 
+                    {{-- print Rek Rinci Keu --}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
+                        <i class="fas fa-print"></i> Rek Keu
+                    </button>
+
+                    <script>
+                        function previewBillingKeu() {
+
+                            window.open(
+                                "{{ route('rawatinap.rekKeuPrint', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+
+                        }
+                    </script>
+
                     {{-- Print Kwitansi --}}
                     <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
                         <i class="fas fa-print"></i> Kwitansi
@@ -564,6 +581,23 @@
                             printWindow.onafterprint = function() {
                                 printWindow.close();
                             };
+                        }
+                    </script>
+
+                    {{-- Print Kwitansi PHK3 --}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansiPhk3()">
+                        <i class="fas fa-print"></i> Kwi Phk3
+                    </button>
+
+                    <script>
+                        function previewKwitansiPhk3() {
+
+                            window.open(
+                                "{{ route('rawatinap.kwitansiPhk3Print', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+
                         }
                     </script>
 

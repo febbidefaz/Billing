@@ -38,7 +38,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Kwitansi Dan Rek
     Route::get('/rawatinap/{id}/kwitansi-print',[RawatInapController::class, 'kwitansiPrint']
-        )->name('rawatinap.kwitansiPrint');    
+        )->name('rawatinap.kwitansiPrint');
+    Route::get('/rawatinap/{id}/kwitansiphk3-print',[RawatInapController::class, 'kwitansiPhk3Print']
+        )->name('rawatinap.kwitansiPhk3Print');     
     Route::get('/rawat-inap/{id}/rekening-print', [RawatInapController::class, 'rekeningPrint'])
         ->name('rawatinap.rekeningPrint'); 
     Route::get('/rawat-inap/{id}/rek-rinci-print', [RawatInapController::class, 'rekRinciPrint'])

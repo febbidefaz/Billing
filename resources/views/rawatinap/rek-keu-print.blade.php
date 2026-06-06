@@ -750,11 +750,11 @@
                     <th>TINDAKAN</th>
                     <th class="left">RUANG</th>
                     <th class="left">KELAS</th>
-                    <th class="right">JML</th>
                     <th class="right">OPER</th>
                     <th class="right">ASS</th>
                     <th class="right">BAHAN</th>
                     <th class="right">ALAT</th>
+                    <th class="right">JML</th>
                     <th class="right">BIAYA</th>
                 </tr>
             </thead>
@@ -765,11 +765,11 @@
                         <td>{{ $o->Nama_jenis ?? '-' }}</td>
                         <td class="left">{{ $o->RoomName ?? '-' }}</td>
                         <td class="left">{{ $o->Kelas ?? '-' }}</td>
-                        <td class="right">{{ $R($o->c ?? 0) }}</td>
                         <td class="right">{{ $R($o->Oper ?? 0) }}</td>
                         <td class="right">{{ $R($o->Ass ?? 0) }}</td>
                         <td class="right">{{ $R($o->Bahan ?? 0) }}</td>
                         <td class="right">{{ $R($o->Alat ?? 0) }}</td>
+                        <td class="right">{{ $R($o->c ?? 0) }}</td>
                         <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
                     </tr>
                 @endforeach
@@ -780,11 +780,11 @@
                     <td colspan="3" class="right bold u">
                         SUB TOTAL OPERASI IGD
                     </td>
-                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('c')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Oper')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Ass')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Bahan')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('Alat')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiIgdKeu ?? [])->sum('c')) }}</td>
                     <td class="right bold u">{{ $R($totalOperasiIgd) }}</td>
                 </tr>
             </tfoot>
@@ -801,11 +801,11 @@
                     <th>TINDAKAN</th>
                     <th class="left">RUANG</th>
                     <th class="left">KELAS</th>
-                    <th class="right">JML</th>
                     <th class="right">OPER</th>
                     <th class="right">ASS</th>
                     <th class="right">BAHAN</th>
                     <th class="right">ALAT</th>
+                    <th class="right">JML</th>
                     <th class="right">BIAYA</th>
                 </tr>
             </thead>
@@ -816,11 +816,11 @@
                         <td>{{ $o->Nama_jenis ?? '-' }}</td>
                         <td class="left">{{ $o->RoomName ?? '-' }}</td>
                         <td class="left">{{ $o->Kelas ?? '-' }}</td>
-                        <td class="right">{{ $R($o->c ?? 0) }}</td>
                         <td class="right">{{ $R($o->Oper ?? 0) }}</td>
                         <td class="right">{{ $R($o->Ass ?? 0) }}</td>
                         <td class="right">{{ $R($o->Bahan ?? 0) }}</td>
                         <td class="right">{{ $R($o->Alat ?? 0) }}</td>
+                        <td class="right">{{ $R($o->c ?? 0) }}</td>
                         <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
                     </tr>
                 @endforeach
@@ -831,11 +831,11 @@
                     <td colspan="3" class="right bold u">
                         SUB TOTAL OPERASI IGD
                     </td>
-                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('c')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Oper')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Ass')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Bahan')) }}</td>
                     <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('Alat')) }}</td>
+                    <td class="right bold u">{{ $R(collect($rekeningOperasiPoliKeu ?? [])->sum('c')) }}</td>
                     <td class="right bold u">{{ $R($totalOperasiPoli) }}</td>
                 </tr>
             </tfoot>
