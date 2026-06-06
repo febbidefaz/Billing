@@ -26,7 +26,7 @@ Route::get('/', function () {
     return redirect()->route('rawatinap.index');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'casemix.readonly'])->group(function () {
 
     Route::get('/rawat-inap', [RawatInapController::class, 'index'])->name('rawatinap.index');
     Route::get('/rawat-inap-data', [RawatInapController::class, 'data'])->name('rawatinap.data');

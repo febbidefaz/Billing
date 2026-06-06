@@ -63,6 +63,7 @@
                             <select name="Role" class="form-control" required>
                                 <option value="admin">Admin</option>
                                 <option value="kasir">Kasir</option>
+                                <option value="casemix">Casemix</option>
                                 <option value="user">User</option>
                             </select>
                         </div>
@@ -172,6 +173,9 @@
                                                         Admin</option>
                                                     <option value="kasir" {{ $u->Role == 'kasir' ? 'selected' : '' }}>
                                                         Kasir</option>
+                                                    <option value="casemix" {{ $u->Role == 'casemix' ? 'selected' : '' }}>
+                                                        Casemix
+                                                    </option>
                                                     <option value="user" {{ $u->Role == 'user' ? 'selected' : '' }}>User
                                                     </option>
                                                 </select>
