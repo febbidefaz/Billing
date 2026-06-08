@@ -63,7 +63,6 @@
         }
 
         .ttd-kasir {
-            padding-top: 25px;
             text-align: center;
         }
 
@@ -263,14 +262,6 @@
             </tr>
 
             <tr>
-                <td colspan="3"></td>
-
-                <td class="ttd-kasir">
-                    <span class="u">{{ $pasien->Kasir }}</span>
-                </td>
-            </tr>
-
-            <tr>
                 <td>SHIFT</td>
 
                 <td class="center bold">
@@ -279,6 +270,22 @@
 
                 <td colspan="2"></td>
             </tr>
+
+            <tr>
+                <td colspan="3"></td>
+                <td style="height:1.2cm;">&nbsp;</td>
+            </tr>
+
+            <tr>
+                <td colspan="3"></td>
+
+                <td class="center">
+                    <span class="u">{{ $pasien->Kasir }}</span>
+                </td>
+            </tr>
+
+
+
         </table>
 
     </div>
