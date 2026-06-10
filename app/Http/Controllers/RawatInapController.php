@@ -1031,9 +1031,8 @@ class RawatInapController extends Controller
         $terbilangSisa = strtoupper(trim(preg_replace('/\s+/', ' ', $this->terbilang($sisa))));
 
         $dijaminPhk3 = $pasien->Phk3 ?? 0;
-        $sisaPhk3 = $grandTotal - $dijaminPhk3;
-
-        $terbilangSisaPhk3 = strtoupper(trim(preg_replace('/\s+/', ' ', $this->terbilang($sisaPhk3))));
+        
+        $terbilangdijaminPhk3 = strtoupper(trim(preg_replace('/\s+/', ' ', $this->terbilang($dijaminPhk3))));
 
         $tanggalCetak = now()
         ->locale('id')
@@ -1051,12 +1050,12 @@ class RawatInapController extends Controller
             'totalLain',
             'grandTotal',
             'dijamin',
+            'dijaminPhk3',
             'sisa',
             'terbilangSisa',
-            'terbilangSisaPhk3',
+            'terbilangdijaminPhk3',
             'tanggalCetak',
             'kasir',
-            'sisaPhk3'
         ));
     }
 

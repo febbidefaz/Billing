@@ -145,7 +145,7 @@
                 <td class="label">Uang sejumlah</td>
                 <td class="colon">:</td>
                 <td class="italic">
-                    {{ strtolower($terbilangSisaPhk3) }} rupiah
+                    {{ strtolower($terbilangdijaminPhk3) }} rupiah
                 </td>
             </tr>
 
@@ -180,7 +180,7 @@
                 <td class="colon">:</td>
                 <td>
                     <span class="nominal-box">
-                        Rp {{ number_format($sisaPhk3 ?? 0, 0, ',', '.') }}
+                        Rp {{ number_format($dijaminPhk3 ?? 0, 0, ',', '.') }}
                     </span>
                 </td>
             </tr>
