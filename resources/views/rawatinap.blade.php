@@ -104,8 +104,7 @@
 
 @stop
 
-@section('js')
-
+@push('scripts')
     <script>
         let tableRawatInap;
 
@@ -229,5 +228,4 @@
 
         });
     </script>
-
-@stop
+@endpush

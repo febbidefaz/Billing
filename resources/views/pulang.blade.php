@@ -96,7 +96,7 @@
     </style>
 @stop
 
-@section('js')
+@push('scripts')
     <script>
         let tablePasienPulang;
 
@@ -251,4 +251,4 @@
             return dd + '/' + mm + '/' + yyyy;
         }
     </script>
-@stop
+@endpush

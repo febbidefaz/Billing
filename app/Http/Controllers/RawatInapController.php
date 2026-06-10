@@ -79,6 +79,29 @@ class RawatInapController extends Controller
         return response()->noContent();
     }
 
+    // Cari Pasien
+    public function cariPasien(Request $request)
+    {
+        $id = $request->id;
+
+        $pasien = DB::selectOne(
+            "EXEC dbo.WebCariPasienByID_SP ?",
+            [$id]
+        );
+
+        if (!$pasien) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pasien tidak ditemukan'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $pasien
+        ]);
+    }
+
     // Insert PasInap
     public function insertPasInap(Request $request)
     {

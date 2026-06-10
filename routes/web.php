@@ -33,8 +33,8 @@ Route::middleware(['auth', 'casemix.readonly'])->group(function () {
     Route::get('/rawat-inap/{id}', [RawatInapController::class, 'detail'])->name('rawatinap.detail');
     Route::post('/rawat-inap/{id}/update-pxrs', [RawatInapController::class, 'updatePxRS'])
         ->name('rawatinap.updatePxRS');
-    Route::post('/rawatinap/{id}/simpan-kasir',[RawatInapController::class, 'simpanKasir']
-        )->name('rawatinap.simpanKasir');    
+    Route::post('/rawatinap/{id}/simpan-kasir',[RawatInapController::class, 'simpanKasir'])->name('rawatinap.simpanKasir'); 
+    Route::get('/cari-pasien-id', [RawatInapController::class, 'cariPasien'])->name('cari.pasien.id');       
 
         // Kwitansi Dan Rek
     Route::get('/rawatinap/{id}/kwitansi-print',[RawatInapController::class, 'kwitansiPrint']

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('title', 'Bil jalan')
 
@@ -18,7 +18,7 @@
     </div>
 @stop
 
-@section('content')
+@section('page-content')
 
     @if (!$pasien)
 
@@ -4400,7 +4400,7 @@
 
 
 {{-- JS Modal Update PXRS --}}
-@section('js')
+@push('scripts')
     <script>
         $(function() {
 
@@ -4430,4 +4430,4 @@
 
         });
     </script>
-@stop
+@endpush

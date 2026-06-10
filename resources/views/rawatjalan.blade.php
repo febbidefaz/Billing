@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
 
@@ -32,7 +32,7 @@
     </div>
 @stop
 
-@section('content')
+@section('page-content')
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
@@ -98,7 +98,7 @@
     </style>
 @stop
 
-@section('js')
+@push('scripts')
     <script>
         let tableRawatJalan;
 
@@ -281,4 +281,4 @@
             });
         });
     </script>
-@stop
+@endpush

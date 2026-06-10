@@ -2,6 +2,38 @@
 
 @section('content')
     @yield('page-content')
+
+    {{-- Modal Cari --}}
+    <div class="modal fade" id="modalCariPasien" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Cari Pasien</h4>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="text" id="cariPasien" class="form-control" placeholder="Ketikkan ID pasien">
+
+                    <div id="hasilCariPasien" class="mt-3"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Batal
+                    </button>
+
+                    <button type="button" class="btn btn-primary" onclick="cariPasien()">
+                        Cari
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -9,5 +41,56 @@
 @stop
 
 @section('js')
-    @yield('js')
+    @stack('scripts')
+
+    <script>
+        function cariPasien() {
+
+            let id = $('#cariPasien').val();
+
+            if (id == '') {
+                alert('Masukkan ID Pasien');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('cari.pasien.id') }}",
+                type: "GET",
+                data: {
+                    id: id
+                },
+                success: function(res) {
+                    let p = res.data;
+
+                    $('#hasilCariPasien').html(`
+                        <table class="table table-bordered table-sm mt-3">
+                            <tr><th>ID</th><td>${p.ID}</td></tr>
+                            <tr><th>RM</th><td>${p.RegNum}</td></tr>
+                            <tr><th>Nama</th><td>${p.Nama}</td></tr>
+                            <tr><th>Alamat</th><td>${p.Addr ?? '-'}</td></tr>
+                            <tr><th>Gender</th><td>${p.Jenis_Kelamin == 'P' ? 'Perempuan' : 'Laki-laki'}</td></tr>
+                            <tr><th>Tanggal Lahir</th><td>${p.Tanggal_Lahir ? p.Tanggal_Lahir.substring(0,10) : '-'}</td></tr>
+                            <tr><th>Layanan</th><td>${p.Layanan ?? '-'}</td></tr>
+                            <tr><th>Spesialis</th><td>${p.SubLayanan ?? '-'}</td></tr>
+                            <tr><th>Status</th><td>${p.FollowUp ?? '-'}</td></tr>
+                        </table>
+
+                        <div class="mt-3">
+                            <a href="/rawat-inap/${p.ID}" class="btn btn-success">
+                                <i class="fas fa-book"></i> Rawat Inap
+                            </a>
+
+                            <a href="/rawatjalan/${p.ID}" class="btn btn-warning">
+                                <i class="fas fa-book"></i> Rawat Jalan
+                            </a>
+
+                            <a href="/igd/${p.ID}" class="btn btn-danger">
+                                <i class="fas fa-book"></i> IGD
+                            </a>
+                        </div>
+                    `);
+                }
+            });
+        }
+    </script>
 @stop

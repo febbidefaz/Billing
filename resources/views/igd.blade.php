@@ -122,8 +122,7 @@
 
 @stop
 
-@section('js')
-
+@push('scripts')
     <script>
         let tableIGD;
 
@@ -295,5 +294,4 @@
             tableIGD.ajax.reload();
         }
     </script>
-
-@stop
+@endpush

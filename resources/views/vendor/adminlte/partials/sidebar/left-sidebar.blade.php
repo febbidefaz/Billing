@@ -59,6 +59,14 @@
                     </a>
                 </li>
 
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="$('#modalCariPasien').modal('show'); return false;">
+                        <i class="nav-icon fas fa-search"></i>
+                        <p>Cari ID</p>
+                    </a>
+                </li>
+
                 @if (auth()->user() && auth()->user()->Role == 'admin')
                     <li class="nav-item">
                         <a href="{{ route('userbilling.index') }}"
