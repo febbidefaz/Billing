@@ -61,6 +61,10 @@
                 },
                 success: function(res) {
                     let p = res.data;
+                    let urlRawatInap = "{{ route('rawatinap.detail', ':id') }}".replace(':id', p.ID);
+                    let urlRawatJalan = "{{ route('rawatjalan.detail', ':id') }}".replace(':id', p.ID);
+                    let urlIgd = "{{ route('igd.detail', ':id') }}".replace(':id', p.ID);
+
 
                     $('#hasilCariPasien').html(`
                         <table class="table table-bordered table-sm mt-3">
@@ -76,16 +80,16 @@
                         </table>
 
                         <div class="mt-3">
-                            <a href="/rawat-inap/${p.ID}" class="btn btn-success">
-                                <i class="fas fa-book"></i> Rawat Inap
+                            <a href="${urlRawatInap}" class="btn btn-success">
+                                <i class="fas fa-bed"></i> Rawat Inap
                             </a>
 
-                            <a href="/rawatjalan/${p.ID}" class="btn btn-warning">
+                            <a href="${urlRawatJalan}" class="btn btn-warning">
                                 <i class="fas fa-book"></i> Rawat Jalan
                             </a>
 
-                            <a href="/igd/${p.ID}" class="btn btn-danger">
-                                <i class="fas fa-book"></i> IGD
+                            <a href="${urlIgd}" class="btn btn-danger">
+                                <i class="fas fa-ambulance"></i> IGD
                             </a>
                         </div>
                     `);
