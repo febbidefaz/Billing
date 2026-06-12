@@ -338,7 +338,7 @@
                                     <tr>
                                         <td>{{ $k->NamaKamar ?? '-' }}</td>
                                         <td class="center">{{ $fmt($k->TMasuk ?? null) }}</td>
-                                        <td class="center">{{ $fmt($k->TKeluar ?? null) }}</td>
+                                        <td class="center">{{ $fmt($k->TKeluar ?? now()) }}</td>
                                         <td class="right">{{ $k->LamaRawat ?? 0 }}</td>
                                         <td class="right">{{ $R($k->TotalSewa ?? 0) }}</td>
                                         <td class="right">{{ $R($k->TotalDisc ?? 0) }}</td>
