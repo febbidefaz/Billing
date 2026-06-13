@@ -1094,6 +1094,39 @@ class PulangController extends Controller
         ));
     }
 
+    // Print Rincian Biaya Operasi
+    public function operasiPrint($id, $ope_id)
+    {
+        $pasien = DB::selectOne(
+            "EXEC dbo.WebPasienRawatInapDetailByID_SP ?",
+            [$id]
+        );
+
+        $operasiList = DB::select(
+            "EXEC dbo.WebOperasiBillingByID_SP ?",
+            [$id]
+        );
+
+        $operasi = collect($operasiList)->firstWhere('Ope_ID', $ope_id);
+
+        if (!$pasien || !$operasi) {
+            abort(404, 'Data operasi tidak ditemukan.');
+        }
+
+        $terbilang = strtoupper(
+            trim(
+                preg_replace('/\s+/', ' ', $this->terbilang($operasi->Netto ?? 0))
+            )
+        );
+
+        return view('rawatinap.operasi-print', compact(
+            'pasien',
+            'operasi',
+            'terbilang'
+        ));
+    }
+    
+
     //Ambil Token ObaPay
     private function getFarmasiToken()
     {

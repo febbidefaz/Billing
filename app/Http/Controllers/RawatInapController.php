@@ -1425,7 +1425,7 @@ class RawatInapController extends Controller
         ));
     }
 
-  // Print Rincian Biaya Operasi
+    // Print Rincian Biaya Operasi
     public function operasiPrint($id, $ope_id)
     {
         $pasien = DB::selectOne(
@@ -1456,6 +1456,7 @@ class RawatInapController extends Controller
             'terbilang'
         ));
     }
+    
     //Ambil Token ObaPay
     private function getFarmasiToken()
     {

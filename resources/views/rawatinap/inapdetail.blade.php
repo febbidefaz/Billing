@@ -3396,24 +3396,14 @@
                                         hapusOperasi(opeID, $('#operasiJenisOp').val());
                                     });
                                 if (atOk == 1) {
-
                                     $('#btnPrintOperasi')
                                         .show()
                                         .off('click')
                                         .on('click', function() {
-
-                                            window.open(
-                                                "{{ route('rawatinap.operasiPrint', ['id' => $pasien->ID, 'ope_id' => '__OPE__']) }}"
-                                                .replace('__OPE__', opeID),
-                                                '_blank'
-                                            );
-
+                                            previewOperasi(opeID);
                                         });
-
                                 } else {
-
                                     $('#btnPrintOperasi').hide();
-
                                 }
                                 $('#modalOperasi').modal('show');
                             }
@@ -3551,6 +3541,15 @@
                                 });
 
                             });
+
+                            function previewOperasi(opeID) {
+                                window.open(
+                                    "{{ route('rawatinap.operasiPrint', ['id' => $pasien->ID, 'ope_id' => '__OPE__']) }}"
+                                    .replace('__OPE__', opeID),
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
+                            }
                         </script>
 
                     </div>

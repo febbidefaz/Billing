@@ -3263,6 +3263,11 @@
                                             Tutup
                                         </button>
 
+                                        <button type="button" id="btnPrintOperasi" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-print mr-1"></i>
+                                            Print
+                                        </button>
+
                                         <button type="button" id="btnSimpanOperasi" class="btn btn-success btn-sm">
                                             <i class="fas fa-save mr-1"></i>
                                             Simpan
@@ -3312,7 +3317,7 @@
                                     });
 
                                 $('#btnHapusOperasi').hide();
-
+                                $('#btnPrintOperasi').hide();
                                 $('#modalOperasi').modal('show');
                             }
 
@@ -3411,6 +3416,16 @@
                                     .on('click', function() {
                                         hapusOperasi(opeID, $('#operasiJenisOp').val());
                                     });
+                                if (atOk == 1) {
+                                    $('#btnPrintOperasi')
+                                        .show()
+                                        .off('click')
+                                        .on('click', function() {
+                                            previewOperasi(opeID);
+                                        });
+                                } else {
+                                    $('#btnPrintOperasi').hide();
+                                }
 
                                 $('#modalOperasi').modal('show');
                             }
@@ -3548,6 +3563,15 @@
                                 });
 
                             });
+
+                            function previewOperasi(opeID) {
+                                window.open(
+                                    "{{ route('rawatinap.operasiPrint', ['id' => $pasien->ID, 'ope_id' => '__OPE__']) }}"
+                                    .replace('__OPE__', opeID),
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
+                            }
                         </script>
 
                     </div>
