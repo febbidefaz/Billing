@@ -259,11 +259,14 @@
                         <td style="width:90px;">NOMER</td>
                         <td style="width:10px;">:</td>
                         <td class="bold">{{ $pasien->ID ?? '-' }}</td>
-                    </tr>
-                    <tr>
                         <td>L/P</td>
                         <td>:</td>
                         <td class="bold">{{ $pasien->Jenis_Kelamin ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Dokter</td>
+                        <td>:</td>
+                        <td class="bold">{{ $pasien->Dokter ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td>TGL LAHIR</td>

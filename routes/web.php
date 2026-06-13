@@ -114,8 +114,10 @@ Route::middleware(['auth', 'casemix.readonly'])->group(function () {
     Route::post('/rawatinap/operasi/update', [RawatInapController::class, 'updateOperasi'])
         ->name('rawatinap.updateOperasi');    
     Route::post('/rawatinap/operasi/delete', [RawatInapController::class, 'deleteOperasi'])
-        ->name('rawatinap.deleteOperasi');    
-
+        ->name('rawatinap.deleteOperasi'); 
+    Route::get('/rawatinap/{id}/operasi/{ope_id}/print', [RawatInapController::class, 'operasiPrint'])
+        ->name('rawatinap.operasiPrint');     
+    
     // User Billing
     Route::get('/user-billing', [UserBillingController::class, 'index'])->name('userbilling.index');
     Route::post('/user-billing/store', [UserBillingController::class, 'store'])->name('userbilling.store');

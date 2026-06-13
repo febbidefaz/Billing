@@ -27,16 +27,26 @@
 
         <div class="card-header bg-light">
 
-            <div class="row align-items-end">
+            <div class="row align-items-center">
 
                 <div class="col-md-3">
-                    <label>Tanggal Awal</label>
-                    <input type="date" id="tglAwal" class="form-control" value="{{ date('Y-m-d') }}">
+                    <div class="form-group row mb-0">
+                        <label class="col-sm-4 col-form-label">TGL Awal</label>
+                        <div class="col-sm-8">
+                            <input type="text" id="tglAwal" class="form-control datepicker" value="{{ date('d-m-Y') }}"
+                                autocomplete="off">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-3">
-                    <label>Tanggal Akhir</label>
-                    <input type="date" id="tglAkhir" class="form-control" value="{{ date('Y-m-d') }}">
+                    <div class="form-group row mb-0">
+                        <label class="col-sm-4 col-form-label">TGL Akhir</label>
+                        <div class="col-sm-8">
+                            <input type="text" id="tglAkhir" class="form-control datepicker" value="{{ date('d-m-Y') }}"
+                                autocomplete="off">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-2">
@@ -81,7 +91,8 @@
 @stop
 
 @section('css')
-
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css">
     <style>
         .table-wrap {
             width: 100%;
@@ -123,6 +134,10 @@
 @stop
 
 @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.id.min.js">
+    </script>
     <script>
         let tableIGD;
 
@@ -163,6 +178,13 @@
 
         $(function() {
 
+            $('.datepicker').datepicker({
+                format: 'dd-mm-yyyy',
+                autoclose: true,
+                todayHighlight: true,
+                language: 'id'
+            });
+
             loadFilterIGD();
 
             tableIGD = $("#tblIGD").DataTable({
@@ -188,8 +210,8 @@
                 ajax: {
                     url: "{{ route('igd.data') }}",
                     data: function(d) {
-                        d.tgl_awal = $('#tglAwal').val();
-                        d.tgl_akhir = $('#tglAkhir').val();
+                        d.tgl_awal = toDbDate($('#tglAwal').val());
+                        d.tgl_akhir = toDbDate($('#tglAkhir').val());
                     }
                 },
 
@@ -292,6 +314,16 @@
             simpanFilterIGD();
 
             tableIGD.ajax.reload();
+        }
+
+        function toDbDate(tgl) {
+            if (!tgl) return '';
+
+            let p = tgl.split('-'); // 12-06-2026
+
+            if (p.length !== 3) return tgl;
+
+            return p[2] + '-' + p[1] + '-' + p[0]; // 2026-06-12
         }
     </script>
 @endpush

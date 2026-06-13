@@ -3235,10 +3235,16 @@
                                     </div>
 
                                     <div class="modal-footer bg-light">
+
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             data-dismiss="modal">
                                             <i class="fas fa-times-circle mr-1"></i>
                                             Tutup
+                                        </button>
+
+                                        <button type="button" id="btnPrintOperasi" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-print mr-1"></i>
+                                            Print
                                         </button>
 
                                         <button type="button" id="btnSimpanOperasi" class="btn btn-success btn-sm">
@@ -3290,7 +3296,7 @@
                                     });
 
                                 $('#btnHapusOperasi').hide();
-
+                                $('#btnPrintOperasi').hide();
                                 $('#modalOperasi').modal('show');
                             }
 
@@ -3389,7 +3395,26 @@
                                     .on('click', function() {
                                         hapusOperasi(opeID, $('#operasiJenisOp').val());
                                     });
+                                if (atOk == 1) {
 
+                                    $('#btnPrintOperasi')
+                                        .show()
+                                        .off('click')
+                                        .on('click', function() {
+
+                                            window.open(
+                                                "{{ route('rawatinap.operasiPrint', ['id' => $pasien->ID, 'ope_id' => '__OPE__']) }}"
+                                                .replace('__OPE__', opeID),
+                                                '_blank'
+                                            );
+
+                                        });
+
+                                } else {
+
+                                    $('#btnPrintOperasi').hide();
+
+                                }
                                 $('#modalOperasi').modal('show');
                             }
 

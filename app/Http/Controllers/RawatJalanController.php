@@ -1213,7 +1213,7 @@ class RawatJalanController extends Controller
         $grandTotalFarmasiApi = 0;
     }
 
-     //Get Upx
+    //Get Upx
     $upxList = DB::select("EXEC dbo.cboUpx_sp");
     //Room Obat
     $roomObatList = DB::select("EXEC dbo.cboRoom_SP");
