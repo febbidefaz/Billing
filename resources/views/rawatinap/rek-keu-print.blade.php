@@ -50,7 +50,7 @@
 
     <style>
         @page {
-            size: 210mm 330mm;
+            size: auto;
             margin: 8mm;
         }
 

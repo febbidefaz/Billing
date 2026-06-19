@@ -325,35 +325,42 @@
 
                     </div>
 
-                    {{-- Js TGL bayar --}}
-                    <script>
+                     {{-- Js TGL bayar --}}
+                     <script>
                         function updateTglBayar() {
+
+                            let tglByr = $('#TglByr').val();
+
+                            if (!tglByr) {
+                                toastr.warning('Tanggal bayar belum diisi');
+                                $('#TglByr').focus();
+                                return;
+                            }
 
                             $.ajax({
                                 url: "{{ route('rawatinap.updateTglBayar', $pasien->ID) }}",
                                 type: "POST",
                                 data: {
                                     _token: "{{ csrf_token() }}",
-                                    TglByr: $('#TglByr').val()
+                                    TglByr: tglByr
                                 },
-
                                 success: function(response) {
+                                    toastr.success(response.message);
 
-                                    location.reload();
-
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 1000);
                                 },
-
                                 error: function(xhr) {
+                                    console.log(xhr.responseText);
 
-                                    alert('Gagal menyimpan tanggal bayar');
-
+                                    toastr.error(
+                                        xhr.responseJSON?.message ?? 'Gagal menyimpan tanggal bayar'
+                                    );
                                 }
                             });
-
                         }
-                    </script>
 
-                    <script>
                         function hapusTglBayar() {
 
                             if (!confirm('Hapus tanggal bayar ?')) {
@@ -366,21 +373,19 @@
                                 data: {
                                     _token: "{{ csrf_token() }}"
                                 },
-                                success: function() {
-
+                                success: function(response) {
                                     $('#TglByr').val('');
 
-                                    toastr.success(
-                                        'Tanggal bayar berhasil dihapus'
-                                    );
+                                    toastr.success(response.message ?? 'Tanggal bayar berhasil dihapus');
 
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 1000);
                                 },
-                                error: function() {
-
+                                error: function(xhr) {
                                     toastr.error(
-                                        'Gagal menghapus tanggal bayar'
+                                        xhr.responseJSON?.message ?? 'Gagal menghapus tanggal bayar'
                                     );
-
                                 }
                             });
                         }
