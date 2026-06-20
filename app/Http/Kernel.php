@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
 
          // ReadOnly
         'casemix.readonly' => \App\Http\Middleware\CasemixReadOnly::class,
+        'perawat.readonly' => \App\Http\Middleware\PerawatReadOnly::class,
     ];
 }
