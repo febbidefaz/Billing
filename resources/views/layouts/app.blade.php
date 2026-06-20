@@ -38,10 +38,23 @@
 
 @section('css')
     @yield('css')
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 @stop
 
 @section('js')
     @stack('scripts')
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: "2000"
+        };
+    </script>
 
     <script>
         function cariPasien() {

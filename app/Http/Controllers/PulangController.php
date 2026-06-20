@@ -1147,6 +1147,16 @@ class PulangController extends Controller
 
     public function detail($id) 
     {
+    // Koder
+    $koder = DB::select("EXEC dbo.cbokoder_SP");    
+    // Koding Awal
+    $kodingAwal = DB::selectOne("
+         SELECT TOP 1 *
+         FROM dbo.KodingAwal
+         WHERE ID = ?
+         AND ISNULL(del,0) = 0
+         ORDER BY IDPX DESC
+         ", [$id]);    
     // pasien
     $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
 
@@ -1245,6 +1255,8 @@ class PulangController extends Controller
     $kasirList = DB::select("EXEC dbo.cboKasirRS_SP");
 
     return view('pulang.pulangdetail', compact(
+        'koder',
+        'kodingAwal',
         'pasien', 
         'dokterList',
         'kamar', 

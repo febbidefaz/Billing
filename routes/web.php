@@ -62,13 +62,7 @@ Route::middleware(['auth', 'casemix.readonly', 'perawat.readonly'])->group(funct
     Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
     ->name('rawatinap.updateKarcisJasa');
     Route::post('/rawatinap/{id}/hapus-karcis-jasa', [RawatInapController::class, 'hapusKarcisJasa'])
-    ->name('rawatinap.hapusKarcisJasa');
-    
-        // Dijamin PHK3
-    Route::post('/rawatinap/{id}/update-dijamin-plafon', [RawatInapController::class, 'updateDijaminPlafon'])
-        ->name('rawatinap.updateDijaminPlafon');    
-    Route::post('/rawatinap/{id}/hapus-dijamin-plafon', [RawatInapController::class, 'hapusDijaminPlafon'])
-        ->name('rawatinap.hapusDijaminPlafon');    
+    ->name('rawatinap.hapusKarcisJasa');         
 
         // Tgl Bayar
     Route::post('/rawatinap/{id}/update-tgl-bayar',[RawatInapController::class, 'updateTglBayar']
@@ -156,6 +150,19 @@ Route::middleware(['auth', 'casemix.readonly', 'perawat.readonly'])->group(funct
     Route::get('/pulang', [PulangController::class, 'index'])->name('pulang.index');
     Route::get('/pulang/data', [PulangController::class, 'data'])->name('pulang.data');
     Route::get('/pulang/{id}', [PulangController::class, 'detail'])->name('pulang.detail');
+       
+});
+
+Route::middleware(['auth' ])->group(function () {
+    // Dijamin PHK3
+    Route::post('/rawatinap/{id}/update-dijamin-plafon', [RawatInapController::class, 'updateDijaminPlafon'])->name('rawatinap.updateDijaminPlafon');    
+    Route::post('/rawatinap/{id}/hapus-dijamin-plafon', [RawatInapController::class, 'hapusDijaminPlafon'])
+      ->name('rawatinap.hapusDijaminPlafon');   
+
+    // Koding Awal
+    Route::post('/rawatinap/{id}/koding-awal', [RawatInapController::class, 'simpanKodingAwal'])
+        ->name('rawatinap.simpanKodingAwal');
+
 });
 
 Route::get('/home', function () {

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class RawatInapController extends Controller
 {
@@ -100,6 +101,74 @@ class RawatInapController extends Controller
             'success' => true,
             'data' => $pasien
         ]);
+    }
+
+    // Koding Awal  
+    public function simpanKodingAwal(Request $request, $id)
+    {
+        if (Auth::user()->Role == 'Kasir') {
+            abort(403, 'Kasir tidak memiliki hak mengubah Koding Awal');
+        }
+        try {
+
+            $request->validate([
+                'KoderID'  => 'required|integer',
+                'Diagnosa' => 'nullable|string|max:50',
+                'Tindakan' => 'nullable|string|max:50',
+                'Kelas1'   => 'nullable|numeric',
+                'Kelas2'   => 'nullable|numeric',
+                'Kelas3'   => 'nullable|numeric',
+                'Kelas1C'  => 'nullable|boolean',
+                'Kelas2C'  => 'nullable|boolean',
+                'Kelas3C'  => 'nullable|boolean',
+            ]);
+
+            $koder = DB::selectOne(
+                "SELECT Id, Nama FROM dbo.koder WHERE Id = ?",
+                [$request->KoderID]
+            );
+
+            if (!$koder) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Koder tidak ditemukan.'
+                ], 404);
+            }
+
+            DB::statement(
+                "EXEC dbo.WebInsertKodingAwal_SP ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?",
+                [
+                    $id,
+                    $koder->Nama,
+                    $koder->Id,
+                    $request->Diagnosa,
+                    $request->Tindakan,
+                    $request->filled('Kelas1') ? $request->Kelas1 : null,
+                    $request->filled('Kelas2') ? $request->Kelas2 : null,
+                    $request->filled('Kelas3') ? $request->Kelas3 : null,
+                    $request->Kelas1C ?? 0,
+                    $request->Kelas2C ?? 0,
+                    $request->Kelas3C ?? 0
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Koding awal berhasil disimpan'
+            ]);
+
+        } catch (\Exception $e) {
+
+            \Log::error('ERROR simpanKodingAwal', [
+                'id' => $id,
+                'message' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Insert PasInap
@@ -1616,6 +1685,17 @@ class RawatInapController extends Controller
 
     public function detail($id) 
     {
+    // Koder
+    $koder = DB::select("EXEC dbo.cbokoder_SP");    
+    // Koding Awal
+    $kodingAwal = DB::selectOne("
+        SELECT TOP 1 *
+        FROM dbo.KodingAwal
+        WHERE ID = ?
+        AND ISNULL(del,0) = 0
+        ORDER BY IDPX DESC
+        ", [$id]);
+
     // pasien
     $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
 
@@ -1714,6 +1794,8 @@ class RawatInapController extends Controller
     $kasirList = DB::select("EXEC dbo.cboKasirRS_SP");
 
     return view('rawatinap.inapdetail', compact(
+        'koder',
+        'kodingAwal',
         'pasien', 
         'dokterList',
         'kamar', 
@@ -1740,5 +1822,7 @@ class RawatInapController extends Controller
         'kasirList',));
         }
     }
+
+    
     
 

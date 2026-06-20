@@ -19,6 +19,9 @@
 @stop
 
 @section('page-content')
+    @php
+    $isKasir = Auth::user()->Role == 'kasir';
+    @endphp
 
     @if (!$pasien)
 
@@ -325,8 +328,8 @@
 
                     </div>
 
-                     {{-- Js TGL bayar --}}
-                     <script>
+                    {{-- Js TGL bayar --}}
+                    <script>
                         function updateTglBayar() {
 
                             let tglByr = $('#TglByr').val();
@@ -662,7 +665,369 @@
                         }
                     </script>
 
+                    {{-- Koding Awal --}}
+                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+                        data-target="#modalKodingAwal">
+                        <i class="fas fa-file-medical"></i>
+                        Koding Awal
+                    </button>
 
+                    <div class="modal fade" id="modalKodingAwal" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg">
+
+                                <div class="modal-header bg-warning">
+                                    <div>
+                                        <h5 class="modal-title font-weight-bold mb-0">
+                                            <i class="fas fa-file-medical mr-2"></i>
+                                            Koding Awal
+                                        </h5>
+                                    </div>
+
+                                    <button type="button" class="close" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body bg-light">
+
+                                    <div class="card border-0 shadow-sm mb-3">
+                                        <div class="card-body">
+
+                                            <div class="form-group mb-0">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-user-edit text-warning mr-1"></i>
+                                                    Nama Koder
+                                                </label>
+
+                                                <select class="form-control" id="KoderID" name="KoderID">
+                                                    <option value="">-- Pilih Koder --</option>
+
+                                                    @foreach ($koder as $k)
+                                                        <option value="{{ $k->Id }}"
+                                                            {{ ($kodingAwal->KoderID ?? '') == $k->Id ? 'selected' : '' }}>
+                                                            {{ $k->Nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-0 shadow-sm mb-3">
+                                        <div class="card-header bg-white py-2">
+                                            <strong>
+                                                <i class="fas fa-money-bill-wave text-success mr-1"></i>
+                                                Estimasi Tarif INA-CBG
+                                            </strong>
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            {{-- Kelas I --}}
+                                            <div class="form-group row align-items-center">
+                                                <label class="col-sm-3 col-form-label font-weight-bold">
+                                                    Kelas I
+                                                </label>
+
+                                                <div class="col-sm-2">
+                                                    <div class="custom-control custom-switch">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="Kelas1C"
+                                                            {{ !empty($kodingAwal->Kelas1C) ? 'checked' : '' }}>
+                                                        <label class="custom-control-label" for="Kelas1C">Pilih</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-7">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-white">Rp</span>
+                                                        </div>
+
+                                                        <input type="text" class="form-control text-right rupiah"
+                                                            id="Kelas1"
+                                                            value="{{ !empty($kodingAwal->Kelas1) ? number_format($kodingAwal->Kelas1, 0, ',', '.') : '' }}"
+                                                            placeholder="0">
+
+                                                        <div class="input-group-append">
+                                                            @if (!$isKasir)
+                                                                <button type="button" class="btn btn-outline-success"
+                                                                    title="Simpan dan masukkan nominal ini ke Plafon PHK3"
+                                                                    onclick="simpanKodingAwalDanPhk3('Kelas1')">
+                                                                    <i class="fas fa-arrow-circle-right mr-1"></i>
+                                                                    PHK3
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Kelas II --}}
+                                            <div class="form-group row align-items-center">
+                                                <label class="col-sm-3 col-form-label font-weight-bold">
+                                                    Kelas II
+                                                </label>
+
+                                                <div class="col-sm-2">
+                                                    <div class="custom-control custom-switch">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="Kelas2C"
+                                                            {{ !empty($kodingAwal->Kelas2C) ? 'checked' : '' }}>
+                                                        <label class="custom-control-label" for="Kelas2C">Pilih</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-7">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-white">Rp</span>
+                                                        </div>
+
+                                                        <input type="text" class="form-control text-right rupiah"
+                                                            id="Kelas2"
+                                                            value="{{ !empty($kodingAwal->Kelas2) ? number_format($kodingAwal->Kelas2, 0, ',', '.') : '' }}"
+                                                            placeholder="0">
+
+                                                        <div class="input-group-append">
+                                                            @if (!$isKasir)
+                                                                <button type="button" class="btn btn-outline-success"
+                                                                    title="Simpan dan masukkan nominal ini ke Plafon PHK3"
+                                                                    onclick="simpanKodingAwalDanPhk3('Kelas2')">
+                                                                    <i class="fas fa-arrow-circle-right mr-1"></i>
+                                                                    PHK3
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Kelas III --}}
+                                            <div class="form-group row align-items-center mb-0">
+                                                <label class="col-sm-3 col-form-label font-weight-bold">
+                                                    Kelas III
+                                                </label>
+
+                                                <div class="col-sm-2">
+                                                    <div class="custom-control custom-switch">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="Kelas3C"
+                                                            {{ !empty($kodingAwal->Kelas3C) ? 'checked' : '' }}>
+                                                        <label class="custom-control-label" for="Kelas3C">Pilih</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-7">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-white">Rp</span>
+                                                        </div>
+
+                                                        <input type="text" class="form-control text-right rupiah"
+                                                            id="Kelas3"
+                                                            value="{{ !empty($kodingAwal->Kelas3) ? number_format($kodingAwal->Kelas3, 0, ',', '.') : '' }}"
+                                                            placeholder="0">
+
+                                                        <div class="input-group-append">
+                                                            @if (!$isKasir)
+                                                                <button type="button" class="btn btn-outline-success"
+                                                                    title="Simpan dan masukkan nominal ini ke Plafon PHK3"
+                                                                    onclick="simpanKodingAwalDanPhk3('Kelas3')">
+                                                                    <i class="fas fa-arrow-circle-right mr-1"></i>
+                                                                    PHK3
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-0 shadow-sm mb-0">
+                                        <div class="card-header bg-white py-2">
+                                            <strong>
+                                                <i class="fas fa-code text-info mr-1"></i>
+                                                Kode Diagnosa & Tindakan
+                                            </strong>
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    Diagnosa
+                                                    <small class="text-muted">(Kode ICD-10)</small>
+                                                </label>
+
+                                                <textarea class="form-control" id="Diagnosa" rows="3" placeholder="Contoh: J18.9; E11.9">{{ $kodingAwal->Diagnosa ?? '' }}</textarea>
+                                            </div>
+
+                                            <div class="form-group mb-0">
+                                                <label class="font-weight-bold">
+                                                    Tindakan
+                                                    <small class="text-muted">(Kode ICD-9-CM)</small>
+                                                </label>
+
+                                                <textarea class="form-control" id="Tindakan" rows="3" placeholder="Contoh: 87.44; 99.04">{{ $kodingAwal->Tindakan ?? '' }}</textarea>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer bg-white">
+                                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times-circle mr-1"></i>
+                                        Batal
+                                    </button>
+
+                                    @if (!$isKasir)
+                                        <button type="button" class="btn btn-success" onclick="simpanKodingAwal()">
+                                            <i class="fas fa-save mr-1"></i>
+                                            Simpan
+                                        </button>
+                                    @endif
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function simpanKodingAwal() {
+
+                            if (!$('#KoderID').val()) {
+
+                                toastr.warning('Nama koder wajib dipilih');
+
+                                $('#KoderID').focus();
+
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('rawatinap.simpanKodingAwal', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    KoderID: $('#KoderID').val(),
+                                    Diagnosa: $('#Diagnosa').val(),
+                                    Tindakan: $('#Tindakan').val(),
+                                    Kelas1: $('#Kelas1').val().replace(/\./g, ''),
+                                    Kelas2: $('#Kelas2').val().replace(/\./g, ''),
+                                    Kelas3: $('#Kelas3').val().replace(/\./g, ''),
+                                    Kelas1C: $('#Kelas1C').is(':checked') ? 1 : 0,
+                                    Kelas2C: $('#Kelas2C').is(':checked') ? 1 : 0,
+                                    Kelas3C: $('#Kelas3C').is(':checked') ? 1 : 0
+                                },
+
+                                success: function(response) {
+
+                                    toastr.success(
+                                        response.message ?? 'Koding awal berhasil disimpan'
+                                    );
+
+                                    $('#modalKodingAwal').modal('hide');
+
+                                    $('body').removeClass('modal-open');
+                                    $('.modal-backdrop').remove();
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 1000);
+                                },
+
+                                error: function(xhr) {
+
+                                    let msg = 'Gagal menyimpan koding awal';
+
+                                    try {
+
+                                        if (xhr.responseJSON?.message) {
+                                            msg = xhr.responseJSON.message;
+                                        }
+
+                                    } catch (e) {}
+
+                                    toastr.error(msg);
+                                }
+                            });
+                        }
+
+                        function simpanKodingAwalDanPhk3(kelasId) {
+
+                            if (!$('#KoderID').val()) {
+                                toastr.warning('Nama koder wajib dipilih');
+                                $('#KoderID').focus();
+                                return;
+                            }
+
+                            let nominal = $('#' + kelasId).val();
+
+                            if (!nominal) {
+                                toastr.warning('Nominal belum diisi');
+                                $('#' + kelasId).focus();
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('rawatinap.simpanKodingAwal', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    KoderID: $('#KoderID').val(),
+                                    Diagnosa: $('#Diagnosa').val(),
+                                    Tindakan: $('#Tindakan').val(),
+                                    Kelas1: $('#Kelas1').val().replace(/\./g, ''),
+                                    Kelas2: $('#Kelas2').val().replace(/\./g, ''),
+                                    Kelas3: $('#Kelas3').val().replace(/\./g, ''),
+                                    Kelas1C: $('#Kelas1C').is(':checked') ? 1 : 0,
+                                    Kelas2C: $('#Kelas2C').is(':checked') ? 1 : 0,
+                                    Kelas3C: $('#Kelas3C').is(':checked') ? 1 : 0
+                                },
+                                success: function() {
+
+                                    $.ajax({
+                                        url: "{{ route('rawatinap.updateDijaminPlafon', $pasien->ID) }}",
+                                        type: "POST",
+                                        data: {
+                                            _token: "{{ csrf_token() }}",
+                                            downpay: onlyNumber($('#editDownPay').val()),
+                                            phk3: nominal.replace(/\./g, '')
+                                        },
+                                        success: function(response) {
+                                            toastr.success('Koding awal tersimpan dan nominal masuk ke PHK3');
+
+                                            $('#modalKodingAwal').modal('hide');
+                                            $('body').removeClass('modal-open');
+                                            $('.modal-backdrop').remove();
+
+                                            setTimeout(function() {
+                                                location.reload();
+                                            }, 1000);
+                                        },
+                                        error: function(xhr) {
+                                            toastr.error(
+                                                xhr.responseJSON?.message ??
+                                                'Koding tersimpan, tetapi gagal update PHK3'
+                                            );
+                                        }
+                                    });
+                                },
+                                error: function(xhr) {
+                                    toastr.error(
+                                        xhr.responseJSON?.message ?? 'Gagal menyimpan koding awal'
+                                    );
+                                }
+                            });
+                        }
+                    </script>
 
                 </div>
 
@@ -3191,7 +3556,8 @@
                                                         <div class="form-group row mb-1">
                                                             <label class="col-7 col-form-label-sm">Ass Anes</label>
                                                             <div class="col-5">
-                                                                <input type="number" step="0.01" id="prosenAssAnes"
+                                                                <input type="number" step="0.01"
+                                                                    id="prosenAssAnes"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
                                                         </div>
@@ -3746,7 +4112,8 @@
                             $sudahAdaKasir = !empty($k);
                         @endphp
 
-                        <form id="formKasir" action="{{ route('rawatinap.simpanKasir', $pasien->ID) }}" method="POST">
+                        <form id="formKasir" action="{{ route('rawatinap.simpanKasir', $pasien->ID) }}"
+                            method="POST">
 
                             @csrf
 
