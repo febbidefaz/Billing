@@ -738,15 +738,33 @@ class PulangController extends Controller
         ));
     }
 
-    // Simpan Otoritas Kasir
+    // Simpan Otoritas Kasir   
     public function simpanKasir(Request $request, $id)
     {
+        $kasirAda = DB::table('dbo.Otoritas')
+            ->where('ID', $id)
+            ->first();
+
+        if ($kasirAda) {
+            $request->validate([
+                'payBy' => 'nullable|string|max:60',
+            ]);
+
+            DB::table('dbo.Otoritas')
+                ->where('ID', $id)
+                ->update([
+                    'payBy' => $request->payBy
+                ]);
+
+            return back()->with('success', 'Dibayar oleh berhasil diperbarui.');
+        }
+
         $request->validate([
             'KasirID' => 'required|integer',
             'payBy'   => 'nullable|string|max:60',
             'Shift'   => 'nullable|string|max:2',
         ]);
-    
+
         try {
             DB::statement("EXEC dbo.WebInsertKasirByID_SP ?, ?, ?, ?", [
                 $id,
@@ -754,9 +772,8 @@ class PulangController extends Controller
                 $request->payBy,
                 $request->Shift
             ]);
-    
+
             return back()->with('success', 'Data kasir berhasil disimpan.');
-    
         } catch (\Exception $e) {
             return back()->with('error', 'Data kasir sudah ada dan tidak dapat diubah.');
         }
@@ -1124,8 +1141,7 @@ class PulangController extends Controller
             'operasi',
             'terbilang'
         ));
-    }
-    
+    }    
 
     //Ambil Token ObaPay
     private function getFarmasiToken()
@@ -1218,11 +1234,11 @@ class PulangController extends Controller
     // Obat Billing
     $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
 
-     // ObaPay
-     $salesFarmasi = [];
-     $grandTotalFarmasiApi = 0;
+    // ObaPay
+    $salesFarmasi = [];
+    $grandTotalFarmasiApi = 0;
  
-     try {
+    try {
 
         $token = $this->getFarmasiToken();
     
@@ -1245,7 +1261,31 @@ class PulangController extends Controller
         $grandTotalFarmasiApi = 0;
     }
 
-     //Get Upx
+    //ObaPayEdit
+    $obapayEdit = DB::select("
+        SELECT *
+        FROM dbo.WebObapayEdit
+        WHERE ID = ?
+        ORDER BY Tanggal DESC, SaleID DESC, IDObapay ASC
+        ", [$id]);
+
+    $obapayGroup = collect($obapayEdit)->groupBy('SaleID');
+
+    //ObaPayEdit Print
+    $obapayEditPrint = DB::table('dbo.WebObapayEdit')
+    ->select(
+        'SaleID',
+        DB::raw('MIN(Tanggal) as Tanggal'),
+        DB::raw('SUM(TotalEdit) as Total')
+    )
+    ->where('ID', $id)
+    ->groupBy('SaleID')
+    ->orderBy(DB::raw('MIN(Tanggal)'))
+    ->get();
+
+    $grandTotalObapayEdit = $obapayEditPrint->sum('Total');
+
+    //Get Upx
     $upxList = DB::select("EXEC dbo.cboUpx_sp");
     //Room Obat
     $roomObatList = DB::select("EXEC dbo.cboRoom_SP");
@@ -1280,6 +1320,10 @@ class PulangController extends Controller
         'upxList',
         'roomObatList',
         'kasir',
-        'kasirList',));
+        'kasirList',
+        'obapayEdit',
+        'obapayGroup',
+        'obapayEditPrint',
+        'grandTotalObapayEdit'));
         }
 }

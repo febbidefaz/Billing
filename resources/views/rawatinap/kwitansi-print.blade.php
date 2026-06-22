@@ -149,7 +149,7 @@
 
                     @if (!empty(optional($kasir)->payBy))
                         <span class="bold" style="font-size:10px;">
-                            Bapak/Ibu {{ $kasir->payBy }}
+                            {{ $kasir->payBy }}
                         </span>
                     @endif
                 </td>

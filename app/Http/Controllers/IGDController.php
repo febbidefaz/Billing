@@ -741,12 +741,30 @@ class IGDController extends Controller
     // Simpan Otoritas Kasir
     public function simpanKasir(Request $request, $id)
     {
+        $kasirAda = DB::table('dbo.Otoritas')
+            ->where('ID', $id)
+            ->first();
+
+        if ($kasirAda) {
+            $request->validate([
+                'payBy' => 'nullable|string|max:60',
+            ]);
+
+            DB::table('dbo.Otoritas')
+                ->where('ID', $id)
+                ->update([
+                    'payBy' => $request->payBy
+                ]);
+
+            return back()->with('success', 'Dibayar oleh berhasil diperbarui.');
+        }
+
         $request->validate([
             'KasirID' => 'required|integer',
             'payBy'   => 'nullable|string|max:60',
             'Shift'   => 'nullable|string|max:2',
         ]);
-    
+
         try {
             DB::statement("EXEC dbo.WebInsertKasirByID_SP ?, ?, ?, ?", [
                 $id,
@@ -754,13 +772,13 @@ class IGDController extends Controller
                 $request->payBy,
                 $request->Shift
             ]);
-    
+
             return back()->with('success', 'Data kasir berhasil disimpan.');
-    
         } catch (\Exception $e) {
             return back()->with('error', 'Data kasir sudah ada dan tidak dapat diubah.');
         }
     }
+
 
     // Update Tanggal Pulang
     public function updateTglBayar(Request $request, $id)

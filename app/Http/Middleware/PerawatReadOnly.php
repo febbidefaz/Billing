@@ -9,7 +9,12 @@ use Symfony\Component\HttpFoundation\Response;
 class PerawatReadOnly
 {
     public function handle(Request $request, Closure $next): Response
-    {
+    {   
+        $allowedRoutes = [
+            'rawatinap.updateDijaminPlafon',
+            'rawatinap.hapusDijaminPlafon',
+        ];
+        
         if (
             auth()->check() &&
             auth()->user()->Role === 'perawat' &&

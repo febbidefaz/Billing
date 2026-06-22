@@ -824,12 +824,30 @@ class RawatInapController extends Controller
     // Simpan Otoritas Kasir
     public function simpanKasir(Request $request, $id)
     {
+        $kasirAda = DB::table('dbo.Otoritas')
+            ->where('ID', $id)
+            ->first();
+
+        if ($kasirAda) {
+            $request->validate([
+                'payBy' => 'nullable|string|max:60',
+            ]);
+
+            DB::table('dbo.Otoritas')
+                ->where('ID', $id)
+                ->update([
+                    'payBy' => $request->payBy
+                ]);
+
+            return back()->with('success', 'Dibayar oleh berhasil diperbarui.');
+        }
+
         $request->validate([
             'KasirID' => 'required|integer',
             'payBy'   => 'nullable|string|max:60',
             'Shift'   => 'nullable|string|max:2',
         ]);
-    
+
         try {
             DB::statement("EXEC dbo.WebInsertKasirByID_SP ?, ?, ?, ?", [
                 $id,
@@ -837,9 +855,8 @@ class RawatInapController extends Controller
                 $request->payBy,
                 $request->Shift
             ]);
-    
+
             return back()->with('success', 'Data kasir berhasil disimpan.');
-    
         } catch (\Exception $e) {
             return back()->with('error', 'Data kasir sudah ada dan tidak dapat diubah.');
         }
@@ -1636,6 +1653,7 @@ class RawatInapController extends Controller
     // Print Rincian Biaya Operasi
     public function operasiPrint($id, $ope_id)
     {
+        
         $pasien = DB::selectOne(
             "EXEC dbo.WebPasienRawatInapDetailByID_SP ?",
             [$id]
@@ -1664,7 +1682,94 @@ class RawatInapController extends Controller
             'terbilang'
         ));
     }
-    
+
+    // Rekening Edit ObaPay print 
+    public function rekEditObapayPrint($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+     
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);
+        $rekeningVisit = DB::select("EXEC dbo.WebRekeningVisitByID_SP ?", [$id]);
+        $rekeningUtilitas = DB::select("EXEC dbo.WebRekeningUtilitasByID_SP ?", [$id]);
+        $rekeningLaborat = DB::select("EXEC dbo.WebRekeningLaboratByID_SP ?", [$id]);        
+        $totalLab = collect($rekeningLaborat)->sum('Netto');
+ 
+        $rekeningRadiologi = DB::select("EXEC dbo.WebRekeningRadiologiByID_SP ?", [$id]);
+        $totalRadiologi = collect($rekeningRadiologi)->sum('Netto');
+ 
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+        $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+ 
+        // ObaPay Edit
+        $obapayEditPrint = DB::table('dbo.WebObapayEdit')
+            ->select(
+                'SaleID',
+                DB::raw('MIN(Tanggal) as Tanggal'),
+                DB::raw('SUM(TotalEdit) as Total')
+            )
+            ->where('ID', $id)
+            ->groupBy('SaleID')
+            ->orderBy(DB::raw('MIN(Tanggal)'))
+            ->get();
+
+        $grandTotalObapayEdit = $obapayEditPrint->sum('Total');
+        
+ 
+         $totalKamar = collect($kamar)->sum('TotalSewa');
+         $totalAskep = collect($kamar)->sum('TotalAskep');
+         $totalVisit = collect($rekeningVisit)->sum('Netto');
+         $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+         $totalLain = collect($lainlain)->sum('TotalLain');
+         $totalOperasi = collect($rekeningOperasi)->sum('Netto');
+         $totalObat = collect($obat)->sum('HutangObat');
+ 
+         $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+ 
+         $grandTotal =
+             $karcisJasa +
+             $totalKamar +
+             $totalAskep +
+             $totalVisit +
+             $totalUtilitas +
+             $totalRadiologi +
+             $totalLab +
+             $totalLain +
+             $totalOperasi +
+             $totalObat +
+             $grandTotalObapayEdit;
+ 
+         $dijamin = $pasien->DownPay ?? 0;
+         $sisa = $grandTotal - $dijamin;
+ 
+         $terbilangSisa = strtoupper(
+             trim(
+                 preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+             )
+         );
+ 
+         $tanggalCetak = now()->format('d M Y H:i:s');
+     
+         return view('rawatinap.rek-edit-obapay-print', compact(
+             'pasien',
+             'kamar',
+             'rekeningVisit',
+             'rekeningUtilitas',
+             'rekeningLaborat',
+             'totalLab',
+             'rekeningRadiologi',
+             'totalRadiologi',
+             'lainlain',
+             'rekeningOperasi',
+             'obat',
+             'obapayEditPrint',
+             'grandTotalObapayEdit',
+             'sisa',
+             'terbilangSisa',
+             'tanggalCetak'
+         ));
+    } 
+
     //Ambil Token ObaPay
     private function getFarmasiToken()
     {
@@ -1784,7 +1889,31 @@ class RawatInapController extends Controller
         $grandTotalFarmasiApi = 0;
     }
 
-     //Get Upx
+    //ObaPayEdit
+    $obapayEdit = DB::select("
+     SELECT *
+     FROM dbo.WebObapayEdit
+     WHERE ID = ?
+     ORDER BY Tanggal DESC, SaleID DESC, IDObapay ASC
+     ", [$id]);
+
+    $obapayGroup = collect($obapayEdit)->groupBy('SaleID');
+
+    //ObaPayEdit Print
+    $obapayEditPrint = DB::table('dbo.WebObapayEdit')
+    ->select(
+        'SaleID',
+        DB::raw('MIN(Tanggal) as Tanggal'),
+        DB::raw('SUM(TotalEdit) as Total')
+    )
+    ->where('ID', $id)
+    ->groupBy('SaleID')
+    ->orderBy(DB::raw('MIN(Tanggal)'))
+    ->get();
+
+    $grandTotalObapayEdit = $obapayEditPrint->sum('Total');
+
+    //Get Upx
     $upxList = DB::select("EXEC dbo.cboUpx_sp");
     //Room Obat
     $roomObatList = DB::select("EXEC dbo.cboRoom_SP");
@@ -1819,7 +1948,11 @@ class RawatInapController extends Controller
         'upxList',
         'roomObatList',
         'kasir',
-        'kasirList',));
+        'kasirList',
+        'obapayEdit',
+        'obapayGroup',
+        'obapayEditPrint',
+        'grandTotalObapayEdit'));
         }
     }
 

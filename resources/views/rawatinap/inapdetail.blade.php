@@ -522,72 +522,80 @@
                     </script>
 
                     {{-- print Rek Rinci --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingRinci()">
-                        <i class="fas fa-print"></i> Rek Rinci
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewBillingRinci()">
+                            <i class="fas fa-print"></i> Rek Rinci
+                        </button>
 
-                    <script>
-                        function previewBillingRinci() {
+                        <script>
+                            function previewBillingRinci() {
 
-                            window.open(
-                                "{{ route('rawatinap.rekRinciPrint', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
+                                window.open(
+                                    "{{ route('rawatinap.rekRinciPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
 
-                        }
-                    </script>
+                            }
+                        </script>
+                    @endif
 
                     {{-- print Rek Rinci Keu --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
-                        <i class="fas fa-print"></i> Rek Keu
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
+                            <i class="fas fa-print"></i> Rek Keu
+                        </button>
 
-                    <script>
-                        function previewBillingKeu() {
+                        <script>
+                            function previewBillingKeu() {
 
-                            window.open(
-                                "{{ route('rawatinap.rekKeuPrint', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
+                                window.open(
+                                    "{{ route('rawatinap.rekKeuPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
 
-                        }
-                    </script>
+                            }
+                        </script>
+                    @endif
 
                     {{-- Print Kwitansi --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
-                        <i class="fas fa-print"></i> Kwitansi
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
+                            <i class="fas fa-print"></i> Kwitansi
+                        </button>
 
-                    <script>
-                        function previewKwitansi() {
+                        <script>
+                            function previewKwitansi() {
 
-                            window.open(
-                                "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
+                                window.open(
+                                    "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
 
-                        }
-                    </script>
+                            }
+                        </script>
+                    @endif
 
                     {{-- Print Kwitansi PHK3 --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansiPhk3()">
-                        <i class="fas fa-print"></i> Kwi Phk3
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansiPhk3()">
+                            <i class="fas fa-print"></i> Kwi Phk3
+                        </button>
 
-                    <script>
-                        function previewKwitansiPhk3() {
+                        <script>
+                            function previewKwitansiPhk3() {
 
-                            window.open(
-                                "{{ route('rawatinap.kwitansiPhk3Print', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
+                                window.open(
+                                    "{{ route('rawatinap.kwitansiPhk3Print', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
 
-                        }
-                    </script>
+                            }
+                        </script>
+                    @endif
 
                     {{-- print Obat All --}}
                     <div class="dropdown d-inline">
@@ -1075,6 +1083,16 @@
                             Kasir
                         </a>
                     </li>
+
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <li class="nav-item">
+                            <a class="nav-link font-weight-bold" style="color:#2E8B57 !important;" data-toggle="pill"
+                                href="#tab-editfarmasi">
+
+                                <i class="fas fa-pills"></i> Edit Far
+                            </a>
+                        </li>
+                    @endif
 
                 </ul>
 
@@ -4069,7 +4087,7 @@
                                 <tfoot>
                                     <tr class="font-weight-bold bg-light">
                                         <td colspan="2" class="text-right">
-                                            Total Obat Pay
+                                            Total ObaPay
                                         </td>
 
                                         <td>
@@ -4145,8 +4163,7 @@
                                                     <input type="text" name="payBy"
                                                         class="form-control form-control-sm"
                                                         value="{{ $k->payBy ?? '' }}"
-                                                        placeholder="Nama pembayar / keluarga pasien" maxlength="60"
-                                                        {{ $sudahAdaKasir ? 'readonly' : '' }}>
+                                                        placeholder="Nama pembayar / keluarga pasien" maxlength="60">
                                                 </div>
                                             </div>
 
@@ -4190,20 +4207,564 @@
 
                                 </div>
 
-                                @if (!$sudahAdaKasir)
-                                    <div class="card-footer text-left">
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fas fa-save mr-1"></i>
-                                            Simpan
-                                        </button>
-                                    </div>
-                                @endif
+                                <div class="card-footer text-left">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-save mr-1"></i>
+                                        Simpan
+                                    </button>
+                                </div>
 
                             </div>
 
                         </form>
 
                     </div>
+
+                    {{-- Tab Edit Farmasi --}}
+                    <div class="tab-pane fade" id="tab-editfarmasi">
+
+                        <div class="p-3">
+
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-success btn-sm" onclick="confirmSyncObapay()">
+                                    <i class="fas fa-sync"></i> Sync ObaPay
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered table-striped">
+
+                                    <thead class="bg-success">
+                                        <tr>
+                                            <th>Tanggal Invoice</th>
+                                            <th>No Transaksi</th>
+                                            <th colspan="4" class="text-left">Jumlah Hutang Obat</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        @forelse($obapayGroup as $saleId => $items)
+                                            @php
+                                                $first = $items->first();
+                                                $key = md5($saleId);
+                                                $collapseId = 'detailObapay_' . $key;
+                                            @endphp
+
+                                            {{-- HEADER INVOICE --}}
+                                            <tr style="cursor:pointer;" class="font-weight-bold bg-light"
+                                                data-toggle="collapse" data-target="#{{ $collapseId }}">
+
+                                                <td>
+                                                    {{ $first->Tanggal ? date('d/m/Y H:i', strtotime($first->Tanggal)) : '-' }}
+                                                </td>
+
+                                                <td>
+                                                    {{ $saleId }}
+                                                </td>
+
+                                                <td colspan="4">
+                                                    Rp {{ number_format($items->sum('Total'), 0, ',', '.') }}
+                                                </td>
+
+                                            </tr>
+
+                                            {{-- DETAIL --}}
+                                            <tr>
+                                                <td colspan="6" class="p-0 border-0">
+
+                                                    <div id="{{ $collapseId }}" class="collapse p-2">
+
+                                                        {{-- FORM TAMBAH OBAT PER TRANSAKSI --}}
+                                                        <div class="row mb-3">
+
+                                                            <div class="col-md-5">
+                                                                <input type="text"
+                                                                    id="obat_baru_{{ $key }}"
+                                                                    class="form-control obat-baru"
+                                                                    placeholder="Ketik nama obat..." autocomplete="off"
+                                                                    onkeyup="cariObatManual('{{ $key }}')">
+
+                                                                <div id="list_obat_{{ $key }}"
+                                                                    class="list-group position-absolute"
+                                                                    style="z-index:99999; width:95%; display:none;">
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-2">
+                                                                <input type="number"
+                                                                    id="qty_baru_{{ $key }}"
+                                                                    class="form-control text-right" value="1"
+                                                                    min="1" step="1">
+                                                            </div>
+
+                                                            <div class="col-md-2">
+                                                                <input type="text"
+                                                                    id="harga_baru_view_{{ $key }}"
+                                                                    class="form-control text-right" readonly>
+
+                                                                <input type="hidden"
+                                                                    id="harga_baru_{{ $key }}">
+                                                                <input type="hidden"
+                                                                    id="nama_obat_baru_{{ $key }}">
+                                                            </div>
+
+                                                            <div class="col-md-2">
+                                                                <button type="button" class="btn btn-success"
+                                                                    onclick="tambahObapay('{{ $key }}', '{{ $saleId }}')">
+                                                                    <i class="fas fa-plus"></i> Tambah
+                                                                </button>
+                                                            </div>
+
+                                                        </div>
+
+                                                        <table class="table table-sm table-bordered mb-0">
+
+                                                            <thead class="bg-success">
+                                                                <tr>
+                                                                    <th>Nama Obat</th>
+                                                                    <th width="100">Qty</th>
+                                                                    <th width="120">Harga</th>
+                                                                    <th width="120">Subtotal</th>
+                                                                    <th width="140">Aksi</th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <tbody>
+
+                                                                @foreach ($items as $item)
+                                                                    <tr>
+
+                                                                        <td>
+                                                                            <a href="javascript:void(0)"
+                                                                                class="text-primary font-weight-bold"
+                                                                                onclick="editObat(
+                                                                                    '{{ $item->IDObapay }}',
+                                                                                    '{{ addslashes($item->NamaItem) }}',
+                                                                                    '{{ $item->Harga }}',
+                                                                                    '{{ $item->Qty }}'
+                                                                                )">
+                                                                                {{ $item->NamaItem }}
+                                                                            </a>
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <input type="number"
+                                                                                class="form-control form-control-sm text-right"
+                                                                                id="qty_{{ $item->IDObapay }}"
+                                                                                value="{{ (int) $item->Qty }}"
+                                                                                min="0" step="1"
+                                                                                oninput="hitungSubtotalObapay({{ $item->IDObapay }})">
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <input type="number"
+                                                                                class="form-control form-control-sm text-right"
+                                                                                id="harga_{{ $item->IDObapay }}"
+                                                                                value="{{ (int) $item->Harga }}"
+                                                                                min="0" step="1"
+                                                                                oninput="hitungSubtotalObapay({{ $item->IDObapay }})"
+                                                                                readonly>
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <input type="text"
+                                                                                class="form-control form-control-sm text-right"
+                                                                                id="subtotal_{{ $item->IDObapay }}"
+                                                                                value="{{ number_format($item->Total, 0, ',', '.') }}"
+                                                                                readonly>
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <button type="button"
+                                                                                class="btn btn-success btn-sm"
+                                                                                onclick="updateObapay({{ $item->IDObapay }})">
+                                                                                <i class="fas fa-save"></i>
+                                                                            </button>
+
+                                                                            <button type="button"
+                                                                                class="btn btn-danger btn-sm"
+                                                                                onclick="hapusObapay({{ $item->IDObapay }})">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </td>
+
+                                                                    </tr>
+                                                                @endforeach
+
+                                                            </tbody>
+
+                                                        </table>
+
+                                                    </div>
+
+
+
+                                                </td>
+                                            </tr>
+
+                                        @empty
+
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Belum ada data ObaPay.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+
+                                    </tbody>
+
+                                    <tfoot>
+                                        <tr class="font-weight-bold bg-light">
+                                            <td colspan="4" class="text-right">Total ObaPay</td>
+                                            <td colspan="3">
+                                                Rp {{ number_format(collect($obapayEdit)->sum('Total'), 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                    <script>
+                        function confirmSyncObapay() {
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Sinkronisasi ObaPay',
+                                html: `
+                                    Data ObaPay akan disinkronkan ulang dari Farmasi.<br><br>
+                                    <b>Data yang sudah ada dapat berubah sesuai data terbaru.</b><br>
+                                    
+                                `,
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Sinkronkan',
+                                cancelButtonText: 'Batal',
+                                confirmButtonColor: '#28a745'
+                            }).then((result) => {
+
+                                if (result.isConfirmed) {
+                                    syncObapay();
+                                }
+
+                            });
+                        }
+
+                        function syncObapay() {
+                            $.ajax({
+                                url: "{{ route('obapay.sync', $pasien->ID) }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                beforeSend: function() {
+                                    toastr.info('Sedang sinkron data ObaPay...');
+                                },
+                                success: function(res) {
+                                    toastr.success(res.message ?? 'Sync ObaPay berhasil');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 800);
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr.responseText);
+                                    toastr.error(xhr.responseJSON?.message ?? 'Gagal sync ObaPay');
+                                }
+                            });
+                        }
+
+                        function hitungSubtotalObapay(id) {
+                            let qty = parseInt($('#qty_' + id).val()) || 0;
+                            let harga = parseFloat($('#harga_' + id).val()) || 0;
+                            let subtotal = qty * harga;
+
+                            $('#subtotal_' + id).val(formatRupiahObapay(subtotal));
+                        }
+
+                        function formatRupiahObapay(angka) {
+                            angka = Math.round(angka || 0);
+                            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                        }
+
+                        function updateObapay(id) {
+                            $.ajax({
+                                url: "{{ route('obapay.update') }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    IDObapay: id,
+                                    NamaItem: $('#nama_' + id).val(),
+                                    Qty: $('#qty_' + id).val(),
+                                    Harga: $('#harga_' + id).val()
+                                },
+                                success: function(res) {
+                                    toastr.success(res.message ?? 'Data ObaPay berhasil diupdate');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 500);
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr.responseText);
+                                    toastr.error(xhr.responseJSON?.message ?? 'Gagal update ObaPay');
+                                }
+                            });
+                        }
+
+                        function hapusObapay(id) {
+                            if (!confirm('Hapus item farmasi ini?')) {
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('obapay.delete') }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    IDObapay: id
+                                },
+                                success: function(res) {
+                                    toastr.success(res.message ?? 'Data ObaPay berhasil dihapus');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 500);
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr.responseText);
+                                    toastr.error(xhr.responseJSON?.message ?? 'Gagal hapus ObaPay');
+                                }
+                            });
+                        }
+
+                        function tambahObapay(key, saleId) {
+
+                            let namaObat = $('#nama_obat_baru_' + key).val();
+                            let qty = $('#qty_baru_' + key).val();
+                            let harga = $('#harga_baru_' + key).val();
+
+                            if (!namaObat) {
+                                toastr.warning('Pilih obat terlebih dahulu');
+                                return;
+                            }
+
+                            if (!qty || parseInt(qty) < 1) {
+                                toastr.warning('Qty minimal 1');
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('obapay.store') }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    ID: "{{ $pasien->ID }}",
+                                    SaleID: saleId,
+                                    Tanggal: "{{ now()->format('Y-m-d H:i:s') }}",
+                                    NamaItem: namaObat,
+                                    Qty: qty,
+                                    Harga: harga
+                                },
+                                success: function(res) {
+                                    toastr.success(res.message ?? 'Obat berhasil ditambahkan');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 500);
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr.responseText);
+                                    toastr.error(xhr.responseJSON?.message ?? 'Gagal tambah obat');
+                                }
+                            });
+                        }
+
+                        function cariObatManual(key) {
+                            let keyword = $('#obat_baru_' + key).val();
+
+                            if (keyword.length < 2) {
+                                $('#list_obat_' + key).html('').hide();
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('obapay.medicines.search') }}",
+                                type: "GET",
+                                data: {
+                                    search: keyword
+                                },
+                                success: function(res) {
+                                    let html = '';
+
+                                    (res.data || []).forEach(function(item) {
+                                        let baseUnit = null;
+
+                                        if (item.units && item.units.length > 0) {
+                                            baseUnit = item.units.find(function(u) {
+                                                return u.is_base == true || u.is_base == 1;
+                                            });
+
+                                            if (!baseUnit) {
+                                                baseUnit = item.units[0];
+                                            }
+                                        }
+
+                                        let nama = item.name || '-';
+                                        let harga = parseFloat(baseUnit?.price2 || 0);
+
+                                        html += `
+                                            <button type="button"
+                                                class="list-group-item list-group-item-action text-left"
+                                                onclick="pilihObatManual('${key}', '${nama.replace(/'/g, "\\'")}', '${harga}')">
+                                                <strong>${nama}</strong>
+                                                <small class="text-muted d-block">
+                                                    Rp ${formatRupiahObapay(harga)}
+                                                </small>
+                                            </button>
+                                        `;
+                                    });
+
+                                    $('#list_obat_' + key).html(html).show();
+                                }
+                            });
+                        }
+
+                        $(document).on('click', '.pilih-obat-baru', function() {
+                            let key = $(this).data('key');
+                            let nama = $(this).data('nama');
+                            let harga = $(this).data('harga');
+
+                            $('#obat_baru_' + key).val(nama);
+                            $('#nama_obat_baru_' + key).val(nama);
+                            $('#harga_baru_' + key).val(harga);
+                            $('#harga_baru_view_' + key).val(formatRupiahObapay(harga));
+
+                            $('#list_obat_' + key).html('').hide();
+                        });
+
+                        function editObat(id, nama, harga, qty) {
+                            $('#edit_IDObapay').val(id);
+                            $('#edit_search_obat').val(nama);
+                            $('#edit_nama_obat').val(nama);
+                            $('#edit_harga').val(harga);
+                            $('#edit_qty').val(qty);
+                            $('#edit_list_obat').html('').hide();
+
+                            $('#modalEditObat').modal('show');
+                        }
+
+                        $(document).on('input', '#edit_search_obat', function() {
+                            let keyword = $(this).val();
+
+                            if (keyword.length < 2) {
+                                $('#edit_list_obat').html('').hide();
+                                return;
+                            }
+
+                            $.ajax({
+                                url: "{{ route('obapay.medicines.search') }}",
+                                type: "GET",
+                                data: {
+                                    search: keyword
+                                },
+                                success: function(res) {
+                                    let html = '';
+
+                                    (res.data || []).forEach(function(item) {
+                                        let baseUnit = null;
+
+                                        if (item.units && item.units.length > 0) {
+                                            baseUnit = item.units.find(function(u) {
+                                                return u.is_base == true || u.is_base == 1;
+                                            });
+
+                                            if (!baseUnit) {
+                                                baseUnit = item.units[0];
+                                            }
+                                        }
+
+                                        let nama = item.name || '-';
+                                        let harga = parseFloat(baseUnit?.price2 || 0);
+
+                                        html += `
+                                        <button type="button"
+                                            class="list-group-item list-group-item-action text-left pilih-edit-obat"
+                                            data-nama="${nama}"
+                                            data-harga="${harga}">
+                                            <strong>${nama}</strong>
+                                            <small class="d-block text-muted">
+                                                Rp ${formatRupiahObapay(harga)}
+                                            </small>
+                                        </button>
+                                    `;
+                                    });
+
+                                    $('#edit_list_obat').html(html).show();
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr.responseText);
+                                    toastr.error('Gagal mencari obat');
+                                }
+                            });
+                        });
+
+                        $(document).on('click', '.pilih-edit-obat', function() {
+                            let nama = $(this).data('nama');
+                            let harga = $(this).data('harga');
+
+                            $('#edit_search_obat').val(nama);
+                            $('#edit_nama_obat').val(nama);
+                            $('#edit_harga').val(harga);
+                            $('#edit_list_obat').html('').hide();
+                        });
+
+                        function pilihObatManual(key, nama, harga) {
+                            $('#obat_baru_' + key).val(nama);
+                            $('#nama_obat_baru_' + key).val(nama);
+                            $('#harga_baru_' + key).val(harga);
+                            $('#harga_baru_view_' + key).val(formatRupiahObapay(harga));
+
+                            $('#list_obat_' + key).html('').hide();
+                        }
+
+                        function pilihEditObat(nama, harga) {
+                            $('#edit_search_obat').val(nama);
+                            $('#edit_nama_obat').val(nama);
+                            $('#edit_harga').val(harga);
+                            $('#edit_list_obat').html('').hide();
+                        }
+
+                        function simpanEditObat() {
+                            $.ajax({
+                                url: "{{ route('obapay.update') }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    IDObapay: $('#edit_IDObapay').val(),
+                                    NamaItem: $('#edit_nama_obat').val(),
+                                    Qty: $('#edit_qty').val(),
+                                    Harga: $('#edit_harga').val()
+                                },
+                                success: function(res) {
+
+                                    toastr.success('Obat berhasil diupdate');
+
+                                    $('#modalEditObat').modal('hide');
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 500);
+                                }
+                            });
+                        }
+                    </script>
 
                 </div>
 
@@ -4512,25 +5073,26 @@
                     {{-- JS Edit Dijamin Dan PHK3 --}}
                     <script>
                         function simpanDijaminPlafon() {
+                            let downpay = "{{ $isKasir ? '1' : '0' }}" === "1" ?
+                                onlyNumber($('#editDownPay').val()) :
+                                "{{ $pasien->DownPay ?? 0 }}";
+
+                            let phk3 = onlyNumber($('#editPhk3').val());
 
                             $.ajax({
                                 url: "{{ route('rawatinap.updateDijaminPlafon', $pasien->ID) }}",
                                 type: "POST",
                                 data: {
                                     _token: "{{ csrf_token() }}",
-                                    downpay: {{ $isKasir ? "onlyNumber($('#editDownPay').val())" : $pasien->DownPay ?? 0 }},
-                                    phk3: onlyNumber($('#editPhk3').val())
+                                    downpay: downpay,
+                                    phk3: phk3
                                 },
                                 success: function(response) {
-
                                     $('#modalDijaminPlafon').modal('hide');
-
-                                    setTimeout(function() {
-                                        location.reload();
-                                    }, 300);
+                                    location.reload();
                                 },
                                 error: function(xhr) {
-                                    alert(xhr.responseText);
+                                    alert(xhr.responseJSON?.message ?? xhr.responseText ?? 'Gagal menyimpan data');
                                     console.log(xhr.responseText);
                                 }
                             });
@@ -4582,6 +5144,160 @@
         </div>
 
     @endif
+
+    {{--  Modal Edit ObaPay --}}
+    <div class="modal fade" id="modalEditObat" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title">Edit Obat</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="edit_IDObapay">
+                    <input type="hidden" id="edit_nama_obat">
+
+                    <label>Nama Obat</label>
+                    <input type="text" id="edit_search_obat" class="form-control"
+                        placeholder="Ketik nama obat..." autocomplete="off" onkeyup="cariObatEditManual()">
+
+                    <div id="edit_list_obat" class="list-group mt-1"
+                        style="max-height:300px; overflow:auto; display:none;">
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label>Qty</label>
+                            <input type="number" id="edit_qty" class="form-control" min="1"
+                                step="1">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Harga</label>
+                            <input type="number" id="edit_harga" class="form-control" min="1"
+                                step="1" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" onclick="simpanEditObat()">
+                        Simpan
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function editObat(id, nama, harga, qty) {
+            $('#edit_IDObapay').val(id);
+            $('#edit_search_obat').val(nama);
+            $('#edit_nama_obat').val(nama);
+            $('#edit_harga').val(parseInt(harga));
+            $('#edit_qty').val(parseInt(qty));
+            $('#edit_list_obat').html('').hide();
+
+            $('#modalEditObat').modal('show');
+        }
+
+        function cariObatEditManual() {
+            let keyword = $('#edit_search_obat').val();
+
+            if (keyword.length < 2) {
+                $('#edit_list_obat').html('').hide();
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('obapay.medicines.search') }}",
+                type: "GET",
+                data: {
+                    search: keyword
+                },
+                success: function(res) {
+                    let html = '';
+
+                    (res.data || []).forEach(function(item) {
+                        let baseUnit = null;
+
+                        if (item.units && item.units.length > 0) {
+                            baseUnit = item.units.find(function(u) {
+                                return u.is_base == true || u.is_base == 1;
+                            });
+
+                            if (!baseUnit) {
+                                baseUnit = item.units[0];
+                            }
+                        }
+
+                        let nama = item.name || '-';
+                        let harga = parseFloat(baseUnit?.price2 || 0);
+
+                        html += `
+                    <button type="button"
+                        class="list-group-item list-group-item-action text-left"
+                        onclick="pilihEditObatManual(this)"
+                        data-nama="${nama}"
+                        data-harga="${harga}">
+                        <strong>${nama}</strong>
+                        <small class="d-block text-muted">
+                            Rp ${formatRupiahObapay(harga)}
+                        </small>
+                    </button>
+                `;
+                    });
+
+                    $('#edit_list_obat').html(html).show();
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
+                    toastr.error('Gagal mencari obat');
+                }
+            });
+        }
+
+        function pilihEditObatManual(el) {
+            let nama = $(el).data('nama');
+            let harga = $(el).data('harga');
+
+            $('#edit_search_obat').val(nama);
+            $('#edit_nama_obat').val(nama);
+            $('#edit_harga').val(harga);
+            $('#edit_list_obat').html('').hide();
+        }
+
+        function simpanEditObat() {
+            $.ajax({
+                url: "{{ route('obapay.update') }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    IDObapay: $('#edit_IDObapay').val(),
+                    NamaItem: $('#edit_nama_obat').val(),
+                    Qty: $('#edit_qty').val(),
+                    Harga: $('#edit_harga').val()
+                },
+                success: function(res) {
+                    toastr.success(res.message ?? 'Obat berhasil diupdate');
+                    $('#modalEditObat').modal('hide');
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 500);
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
+                    toastr.error(xhr.responseJSON?.message ?? 'Gagal update obat');
+                }
+            });
+        }
+    </script>
 
 @stop
 

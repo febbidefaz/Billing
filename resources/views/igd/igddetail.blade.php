@@ -519,21 +519,23 @@
                     </script>
 
                     {{-- Print Kwitansi --}}
-                    <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
-                        <i class="fas fa-print"></i> Kwitansi
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">
+                            <i class="fas fa-print"></i> Kwitansi
+                        </button>
 
-                    <script>
-                        function previewKwitansi() {
+                        <script>
+                            function previewKwitansi() {
 
-                            window.open(
-                                "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
+                                window.open(
+                                    "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
 
-                        }
-                    </script>
+                            }
+                        </script>
+                    @endif
 
                     {{-- print Obat All --}}
                     <div class="dropdown d-inline">
@@ -3701,8 +3703,7 @@
                                                     <input type="text" name="payBy"
                                                         class="form-control form-control-sm"
                                                         value="{{ $k->payBy ?? '' }}"
-                                                        placeholder="Nama pembayar / keluarga pasien" maxlength="60"
-                                                        {{ $sudahAdaKasir ? 'readonly' : '' }}>
+                                                        placeholder="Nama pembayar / keluarga pasien" maxlength="60">
                                                 </div>
                                             </div>
 
@@ -3746,14 +3747,12 @@
 
                                 </div>
 
-                                @if (!$sudahAdaKasir)
-                                    <div class="card-footer text-left">
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fas fa-save mr-1"></i>
-                                            Simpan
-                                        </button>
-                                    </div>
-                                @endif
+                                <div class="card-footer text-left">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-save mr-1"></i>
+                                        Simpan
+                                    </button>
+                                </div>
 
                             </div>
 

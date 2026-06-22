@@ -10,6 +10,11 @@ class CasemixReadOnly
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $allowedRoutes = [
+            'rawatinap.updateDijaminPlafon',
+            'rawatinap.hapusDijaminPlafon',
+        ];
+        
         if (
             auth()->check() &&
             auth()->user()->Role === 'casemix' &&
