@@ -42,70 +42,48 @@ class ObapayEditController extends Controller
 
             $sales = $response->json('data.sales') ?? [];
 
-            foreach ($sales as $sale) {
-                $items = $sale['items'] ?? [];
+            DB::beginTransaction();
 
-                foreach ($items as $item) {
-                    DB::statement("
-                    IF EXISTS (
-                        SELECT 1 FROM dbo.WebObapayEdit
-                        WHERE ID = ?
-                        AND SaleID = ?
-                        AND NamaItem = ?
-                    )
-                    BEGIN
-                        UPDATE dbo.WebObapayEdit
-                        SET Tanggal = ?,
-                            Qty = ?,
-                            Harga = ?,
-                            Total = ?,
-                            TotalEdit = CASE 
-                                WHEN ISNULL(IsEdited, 0) = 1 THEN TotalEdit
-                                ELSE ?
-                            END,
-                            UpdatedAt = GETDATE()
-                        WHERE ID = ?
-                        AND SaleID = ?
-                        AND NamaItem = ?
-                    END
-                    ELSE
-                    BEGIN
-                        INSERT INTO dbo.WebObapayEdit
-                        (
-                            ID, SaleID, Tanggal, NamaItem, Qty, Harga,
-                            Total, TotalEdit, IsEdited, CreatedAt
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, GETDATE())
-                    END
-                ", [
-                    // IF EXISTS
-                    $id,
-                    $sale['transaction_no'] ?? null,
-                    $item['name'] ?? null,
-                
-                    // UPDATE
-                    $sale['date'] ?? null,
-                    $item['qty'] ?? 0,
-                    $item['unit_price'] ?? 0,
-                    $item['subtotal'] ?? 0,
-                    $item['subtotal'] ?? 0,
-                    $id,
-                    $sale['transaction_no'] ?? null,
-                    $item['name'] ?? null,
-                
-                    // INSERT
-                    $id,
-                    $sale['transaction_no'] ?? null,
-                    $sale['date'] ?? null,
-                    $item['name'] ?? null,
-                    $item['qty'] ?? 0,
-                    $item['unit_price'] ?? 0,
-                    $item['subtotal'] ?? 0,
-                    $item['subtotal'] ?? 0,
-                ]);
+            try {
+            
+                // Hapus seluruh data ObaPay pasien ini
+                DB::table('dbo.WebObapayEdit')
+                    ->where('ID', $id)
+                    ->delete();
+            
+                // Insert ulang dari API ObaPay
+                foreach ($sales as $sale) {
+            
+                    $items = $sale['items'] ?? [];
+            
+                    foreach ($items as $item) {
+            
+                        DB::table('dbo.WebObapayEdit')->insert([
+                            'ID'        => $id,
+                            'SaleID'    => $sale['transaction_no'] ?? null,
+                            'Tanggal'   => $sale['date'] ?? null,
+                            'NamaItem'  => $item['name'] ?? null,
+                            'Code'      => $item['code'] ?? null,
+                            'Unit'      => $item['unit'] ?? null,
+                            'Qty'       => $item['qty'] ?? 0,
+                            'Harga'     => $item['unit_price'] ?? 0,
+                            'Total'     => $item['subtotal'] ?? 0,
+                            'TotalEdit' => $item['subtotal'] ?? 0,
+                            'IsEdited'  => 0,
+                            'CreatedAt' => DB::raw('GETDATE()'),
+                        ]);
+            
+                    }
                 }
+            
+                DB::commit();
+            
+            } catch (\Exception $e) {
+            
+                DB::rollBack();
+                throw $e;
+            
             }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Data ObaPay berhasil disinkronkan.'
@@ -133,6 +111,8 @@ class ObapayEditController extends Controller
         $request->validate([
             'IDObapay' => 'required|integer',
             'NamaItem' => 'required|string',
+            'Code'     => 'nullable|string|max:100',
+            'Unit'     => 'nullable|string|max:50',
             'Qty'      => 'required|integer|min:0',
             'Harga'    => 'required|numeric|min:0',
         ]);
@@ -144,6 +124,8 @@ class ObapayEditController extends Controller
         DB::statement("
             UPDATE dbo.WebObapayEdit
             SET NamaItem = ?,
+                Code = ?,
+                Unit = ?,
                 Qty = ?,
                 Harga = ?,
                 Total = ?,
@@ -153,6 +135,8 @@ class ObapayEditController extends Controller
             WHERE IDObapay = ?
         ", [
             $request->NamaItem,
+            $request->Code,
+            $request->Unit,
             $qty,
             $harga,
             $total,
@@ -253,6 +237,8 @@ class ObapayEditController extends Controller
             'SaleID'   => 'required',
             'Tanggal'  => 'nullable',
             'NamaItem' => 'required',
+            'Code'     => 'nullable|string|max:100',
+            'Unit'     => 'nullable|string|max:50',
             'Qty'      => 'required|integer|min:1',
             'Harga'    => 'required|numeric|min:0',
         ]);
@@ -264,6 +250,8 @@ class ObapayEditController extends Controller
             'SaleID'    => $request->SaleID,
             'Tanggal'   => $request->Tanggal ?? now(),
             'NamaItem'  => $request->NamaItem,
+            'Code'      => $request->Code,
+            'Unit'      => $request->Unit,
             'Qty'       => $request->Qty,
             'Harga'     => $request->Harga,
             'Total'     => $total,

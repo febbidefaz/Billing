@@ -779,38 +779,177 @@ class PulangController extends Controller
         }
     }
 
-    // Update Tanggal Pulang
+     // Update Tanggal Pulang
     public function updateTglBayar(Request $request, $id)
     {
-        $request->validate([
-            'TglByr' => 'required|date'
+        Log::info('MASUK updateTglBayar', [
+            'id' => $id,
+            'request' => $request->all()
         ]);
 
-        DB::statement(
-            "EXEC dbo.WebUpdateTglBayarByID_SP ?, ?",
-            [
-                $id,
-                $request->TglByr
-            ]
-        );
+        try {
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Tanggal bayar berhasil disimpan'
-        ]);
+            $request->validate([
+                'TglByr' => 'required|date'
+            ]);
+
+            DB::statement(
+                "EXEC dbo.WebUpdateTglBayarByID_SP ?, ?",
+                [
+                    $id,
+                    $request->TglByr
+                ]
+            );
+
+            Log::info('SIMRS TglByr berhasil update', [
+                'id' => $id,
+                'TglByr' => $request->TglByr
+            ]);
+
+            $token = $this->getFarmasiToken();
+
+            $dischargedAt = Carbon::parse($request->TglByr, 'Asia/Jakarta')
+                ->setTimeFrom(Carbon::now('Asia/Jakarta'))
+                ->format('Y-m-d H:i:s');
+
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                    'discharged_at' => $dischargedAt
+                ]);
+
+            Log::info('RESPON ObaPay Discharge', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->status() == 401) {
+                Cache::forget('farmasi_token');
+
+                $token = $this->getFarmasiToken();
+
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                        'discharged_at' => $dischargedAt
+                    ]);
+            }
+
+            if (!$response->successful()) {
+                Log::error('ObaPay Discharge Error : ' . $response->body());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tanggal tersimpan di SIMRS, tetapi gagal update ObaPay.',
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tanggal pulang berhasil disimpan dan ObaPay berhasil diperbarui'
+            ]);
+
+        } catch (\Exception $e) {
+
+            Log::error('ERROR updateTglBayar', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    // Hapus Tanggl Pulang
+    // Hapus Tanggal Pulang
     public function hapusTglBayar($id)
     {
-        DB::statement(
-            "EXEC dbo.WebHapusTglBayarByID_SP ?",
-            [$id]
-        );
-
-        return response()->json([
-            'success' => true
+        Log::info('MASUK hapusTglBayar', [
+            'id' => $id
         ]);
+
+        try {
+
+            DB::statement(
+                "EXEC dbo.WebHapusTglBayarByID_SP ?",
+                [$id]
+            );
+
+            Log::info('SIMRS TglByr berhasil dihapus', [
+                'id' => $id
+            ]);
+
+            $token = $this->getFarmasiToken();
+
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                    'discharged_at' => null
+                ]);
+
+            Log::info('RESPON ObaPay Undischarge', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->status() == 401) {
+
+                Cache::forget('farmasi_token');
+
+                $token = $this->getFarmasiToken();
+
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                        'discharged_at' => null
+                    ]);
+
+                Log::info('RESPON ULANG ObaPay Undischarge', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
+
+            if (!$response->successful()) {
+
+                Log::error('ObaPay Undischarge Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tanggal berhasil dihapus di SIMRS, tetapi gagal update ObaPay.',
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tanggal pulang berhasil dihapus dan ObaPay berhasil diperbarui'
+            ]);
+
+        } catch (\Exception $e) {
+
+            Log::error('ERROR hapusTglBayar', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Update Karcis Jasa 

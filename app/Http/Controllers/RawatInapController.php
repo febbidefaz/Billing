@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use iio\libmergepdf\Merger;
+use setasign\Fpdi\Fpdi;
 
 class RawatInapController extends Controller
 {
@@ -63,6 +66,7 @@ class RawatInapController extends Controller
         return response()->json($response->json());
     }    
 
+    // Update PXRS
     public function updatePxRS(Request $request, $id)
     {
         $request->validate([
@@ -815,6 +819,33 @@ class RawatInapController extends Controller
         }
 
         return view('rawatinap.obapay-print', compact(
+            'id',
+            'salesFarmasi',
+            'grandTotalFarmasiApi'
+        ));
+    }
+
+    // ObaPay Edit All
+    public function obapayEditPrint($id)
+    {
+        $rows = DB::table('dbo.WebObapayEdit')
+            ->where('ID', $id)
+            ->orderByDesc('Tanggal')
+            ->orderByDesc('SaleID')
+            ->get();
+    
+        $salesFarmasi = $rows->groupBy('SaleID')->map(function ($items) {
+            return (object) [
+                'SaleID'  => $items->first()->SaleID,
+                'Tanggal' => $items->first()->Tanggal,
+                'items'   => $items,
+                'Total'   => $items->sum('TotalEdit'),
+            ];
+        });
+    
+        $grandTotalFarmasiApi = $rows->sum('TotalEdit');
+    
+        return view('rawatinap.obapay-edit-print', compact(
             'id',
             'salesFarmasi',
             'grandTotalFarmasiApi'
@@ -1700,6 +1731,22 @@ class RawatInapController extends Controller
         $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
         $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
         $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        // ObaPay Edit Full Detail
+        $rowsObapayEdit = DB::table('dbo.WebObapayEdit')
+            ->where('ID', $id)
+            ->orderByDesc('Tanggal')
+            ->orderByDesc('SaleID')
+            ->get();
+
+        $obapayEditFull = $rowsObapayEdit->groupBy('SaleID')->map(function ($items, $saleId) {
+        return (object) [
+            'SaleID'  => $saleId,
+            'Tanggal' => $items->first()->Tanggal,
+            'items'   => $items,
+            'Total'   => $items->sum('TotalEdit'),
+        ];
+        })->values();
  
         // ObaPay Edit
         $obapayEditPrint = DB::table('dbo.WebObapayEdit')
@@ -1763,12 +1810,244 @@ class RawatInapController extends Controller
              'rekeningOperasi',
              'obat',
              'obapayEditPrint',
+             'obapayEditFull',
              'grandTotalObapayEdit',
              'sisa',
              'terbilangSisa',
              'tanggalCetak'
          ));
     } 
+  
+    // Rekening Edit ObaPay PDF
+    public function rekEditObapayPdfPotrait($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);
+        $rekeningVisit = DB::select("EXEC dbo.WebRekeningVisitByID_SP ?", [$id]);
+        $rekeningUtilitas = DB::select("EXEC dbo.WebRekeningUtilitasByID_SP ?", [$id]);
+        $rekeningLaborat = DB::select("EXEC dbo.WebRekeningLaboratByID_SP ?", [$id]);
+        $totalLab = collect($rekeningLaborat)->sum('Netto');
+
+        $rekeningRadiologi = DB::select("EXEC dbo.WebRekeningRadiologiByID_SP ?", [$id]);
+        $totalRadiologi = collect($rekeningRadiologi)->sum('Netto');
+
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+        $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        $rowsObapayEdit = DB::table('dbo.WebObapayEdit')
+            ->where('ID', $id)
+            ->orderByDesc('Tanggal')
+            ->orderByDesc('SaleID')
+            ->get();
+
+        $obapayEditFull = $rowsObapayEdit->groupBy('SaleID')->map(function ($items, $saleId) {
+            return (object) [
+                'SaleID'  => $saleId,
+                'Tanggal' => $items->first()->Tanggal,
+                'items'   => $items,
+                'Total'   => $items->sum('TotalEdit'),
+                ];
+            })->values();
+
+        $obapayEditPrint = DB::table('dbo.WebObapayEdit')
+            ->select(
+                'SaleID',
+                DB::raw('MIN(Tanggal) as Tanggal'),
+                DB::raw('SUM(TotalEdit) as Total')
+            )
+            ->where('ID', $id)
+            ->groupBy('SaleID')
+            ->orderBy(DB::raw('MIN(Tanggal)'))
+            ->get();
+
+        $grandTotalObapayEdit = $obapayEditPrint->sum('Total');
+
+        $totalKamar = collect($kamar)->sum('TotalSewa');
+        $totalAskep = collect($kamar)->sum('TotalAskep');
+        $totalVisit = collect($rekeningVisit)->sum('Netto');
+        $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+        $totalLain = collect($lainlain)->sum('TotalLain');
+        $totalOperasi = collect($rekeningOperasi)->sum('Netto');
+        $totalObat = collect($obat)->sum('HutangObat');
+
+        $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+
+        $grandTotal =
+            $karcisJasa +
+            $totalKamar +
+            $totalAskep +
+            $totalVisit +
+            $totalUtilitas +
+            $totalRadiologi +
+            $totalLab +
+            $totalLain +
+            $totalOperasi +
+            $totalObat +
+            $grandTotalObapayEdit;
+
+        $dijamin = $pasien->DownPay ?? 0;
+        $sisa = $grandTotal - $dijamin;
+
+        $terbilangSisa = strtoupper(
+                trim(
+                    preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+                )
+            );
+
+        $tanggalCetak = now()->format('d M Y H:i:s');
+        $isPdf = true;
+
+        $pdf = Pdf::loadView('rawatinap.rek-edit-obapay-print', compact(
+                'pasien',
+                'kamar',
+                'rekeningVisit',
+                'rekeningUtilitas',
+                'rekeningLaborat',
+                'totalLab',
+                'rekeningRadiologi',
+                'totalRadiologi',
+                'lainlain',
+                'rekeningOperasi',
+                'obat',
+                'obapayEditPrint',
+                'obapayEditFull',
+                'grandTotalObapayEdit',
+                'sisa',
+                'terbilangSisa',
+                'tanggalCetak',
+                'isPdf'
+            ));
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream('rekening-edit-obapay-' . $id . '.pdf');
+    }
+
+   
+   // Rekening Edit ObaPay PDF
+    public function rekEditObapayPdf($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);
+        $rekeningVisit = DB::select("EXEC dbo.WebRekeningVisitByID_SP ?", [$id]);
+        $rekeningUtilitas = DB::select("EXEC dbo.WebRekeningUtilitasByID_SP ?", [$id]);
+        $rekeningLaborat = DB::select("EXEC dbo.WebRekeningLaboratByID_SP ?", [$id]);
+        $totalLab = collect($rekeningLaborat)->sum('Netto');
+
+        $rekeningRadiologi = DB::select("EXEC dbo.WebRekeningRadiologiByID_SP ?", [$id]);
+        $totalRadiologi = collect($rekeningRadiologi)->sum('Netto');
+
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+        $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        $rowsObapayEdit = DB::table('dbo.WebObapayEdit')
+            ->where('ID', $id)
+            ->orderByDesc('Tanggal')
+            ->orderByDesc('SaleID')
+            ->get();
+
+        $obapayEditFull = $rowsObapayEdit->groupBy('SaleID')->map(function ($items, $saleId) {
+            return (object) [
+                'SaleID'  => $saleId,
+                'Tanggal' => $items->first()->Tanggal,
+                'items'   => $items,
+                'Total'   => $items->sum('TotalEdit'),
+            ];
+        })->values();
+
+        $obapayEditPrint = DB::table('dbo.WebObapayEdit')
+            ->select(
+                'SaleID',
+                DB::raw('MIN(Tanggal) as Tanggal'),
+                DB::raw('SUM(TotalEdit) as Total')
+            )
+            ->where('ID', $id)
+            ->groupBy('SaleID')
+            ->orderBy(DB::raw('MIN(Tanggal)'))
+            ->get();
+
+        $grandTotalObapayEdit = $obapayEditPrint->sum('Total');
+
+        $totalKamar = collect($kamar)->sum('TotalSewa');
+        $totalAskep = collect($kamar)->sum('TotalAskep');
+        $totalVisit = collect($rekeningVisit)->sum('Netto');
+        $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+        $totalLain = collect($lainlain)->sum('TotalLain');
+        $totalOperasi = collect($rekeningOperasi)->sum('Netto');
+        $totalObat = collect($obat)->sum('HutangObat');
+
+        $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+
+        $grandTotal =
+            $karcisJasa +
+            $totalKamar +
+            $totalAskep +
+            $totalVisit +
+            $totalUtilitas +
+            $totalRadiologi +
+            $totalLab +
+            $totalLain +
+            $totalOperasi +
+            $totalObat +
+            $grandTotalObapayEdit;
+
+        $dijamin = $pasien->DownPay ?? 0;
+        $sisa = $grandTotal - $dijamin;
+
+        $terbilangSisa = strtoupper(
+            trim(
+                preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+            )
+        );
+
+        $tanggalCetak = now()->format('d M Y H:i:s');
+        $isPdf = true;
+
+        $rekeningPdf = Pdf::loadView('rawatinap.rek-edit-obapay-print', compact(
+            'pasien',
+            'kamar',
+            'rekeningVisit',
+            'rekeningUtilitas',
+            'rekeningLaborat',
+            'totalLab',
+            'rekeningRadiologi',
+            'totalRadiologi',
+            'lainlain',
+            'rekeningOperasi',
+            'obat',
+            'obapayEditPrint',
+            'grandTotalObapayEdit',
+            'sisa',
+            'terbilangSisa',
+            'tanggalCetak',
+            'isPdf'
+        ))->setPaper('A4', 'portrait');
+
+        $merger = new Merger();
+
+        $merger->addRaw($rekeningPdf->output());
+
+        if ($obapayEditFull->count() > 0) {
+            $obapayPdf = Pdf::loadView('rawatinap.rek-edit-obapay-detail', compact(
+                'pasien',
+                'obapayEditFull',
+                'grandTotalObapayEdit'
+            ))->setPaper('A4', 'landscape');
+
+            $merger->addRaw($obapayPdf->output());
+        }
+
+        $finalBytes = $merger->merge();
+
+        return response($finalBytes, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="rekening-edit-obapay-' . $id . '.pdf"',
+        ]);
+    }
 
     //Ambil Token ObaPay
     private function getFarmasiToken()

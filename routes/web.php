@@ -48,7 +48,9 @@ Route::middleware(['auth', 'casemix.readonly', 'perawat.readonly'])->group(funct
     Route::get('/rawat-inap/{id}/rek-keu-print', [RawatInapController::class, 'rekKeuPrint'])
         ->name('rawatinap.rekKeuPrint');
     Route::get('/rawat-inap/{id}/rek-edit-obapay-print', [RawatInapController::class, 'rekEditObapayPrint'])
-        ->name('rawatinap.rekEditObapayPrint');            
+        ->name('rawatinap.rekEditObapayPrint');          
+    Route::get('/rawat-inap/{id}/rek-edit-obapay-pdf', [RawatInapController::class, 'rekEditObapayPdf'])
+        ->name('rawatinap.rekEditObapayPdf');          
               
         // Cek Sep dan BPJS
     Route::get('/sep/detail', [RawatInapController::class, 'sepDetail'])->name('sep.detail');
@@ -59,7 +61,9 @@ Route::middleware(['auth', 'casemix.readonly', 'perawat.readonly'])->group(funct
         )->name('rawatinap.obatRinciPrint');
     Route::get('/rawatinap/{id}/obapay-print',[RawatInapController::class, 'obapayPrint']
         )->name('rawatinap.obapayPrint');
-   
+    Route::get('/rawatinap/{id}/obapay-edit-print', [RawatInapController::class, 'obapayEditPrint'])
+        ->name('rawatinap.obapayEditPrint');   
+      
         // Karcsi Jasa
     Route::post('/rawatinap/{id}/update-karcis-jasa',[RawatInapController::class, 'updateKarcisJasa'])
     ->name('rawatinap.updateKarcisJasa');

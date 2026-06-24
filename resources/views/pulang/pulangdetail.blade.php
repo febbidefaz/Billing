@@ -1041,23 +1041,21 @@
                     </script>
 
                     {{-- print Rek Edit ObaPay --}}
-                    <button type="button" class="btn btn-success btn-sm" onclick="previewBillingEditObaPay()"
-                        style="display:none;">
-                        <i class="fas fa-print"></i> Rek E. ObaPay
-                    </button>
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <button type="button" class="btn btn-success btn-sm" onclick="createPdfRekeningObapay()">
+                            <i class="fas fa-print"></i> Rek E. ObaPay
+                        </button>
 
-                    <script>
-                        function previewBillingEditObaPay() {
-
-                            window.open(
-                                "{{ route('rawatinap.rekEditObapayPrint', $pasien->ID) }}",
-                                "_blank",
-                                "height=800,width=1000"
-                            );
-
-                        }
-                    </script>
-
+                        <script>
+                            function createPdfRekeningObapay() {
+                                window.open(
+                                    "{{ route('rawatinap.rekEditObapayPdf', $pasien->ID) }}",
+                                    "PreviewObapay",
+                                    "width=1200,height=900,resizable=yes,scrollbars=yes"
+                                );
+                            }
+                        </script>
+                    @endif
                 </div>
 
             </div>
@@ -4349,6 +4347,13 @@
                                                                     id="harga_baru_{{ $key }}">
                                                                 <input type="hidden"
                                                                     id="nama_obat_baru_{{ $key }}">
+                                                                <input type="hidden"
+                                                                    id="tanggal_obapay_{{ $key }}"
+                                                                    value=" {{ $first->Tanggal }}">
+                                                                <input type="hidden"
+                                                                    id="code_baru_{{ $key }}">
+                                                                <input type="hidden"
+                                                                    id="unit_baru_{{ $key }}">
                                                             </div>
 
                                                             <div class="col-md-2">
@@ -4383,8 +4388,11 @@
                                                                                 onclick="editObat(
                                                                                     '{{ $item->IDObapay }}',
                                                                                     '{{ addslashes($item->NamaItem) }}',
+                                                                                    '{{ $item->Code }}',
+                                                                                    '{{ $item->Unit }}',
                                                                                     '{{ $item->Harga }}',
                                                                                     '{{ $item->Qty }}'
+                                                                                
                                                                                 )">
                                                                                 {{ $item->NamaItem }}
                                                                             </a>
@@ -4608,8 +4616,10 @@
                                     _token: "{{ csrf_token() }}",
                                     ID: "{{ $pasien->ID }}",
                                     SaleID: saleId,
-                                    Tanggal: "{{ now()->format('Y-m-d H:i:s') }}",
+                                    Tanggal: $('#tanggal_obapay_' + key).val(),
                                     NamaItem: namaObat,
+                                    Code: $('#code_baru_' + key).val(),
+                                    Unit: $('#unit_baru_' + key).val(),
                                     Qty: qty,
                                     Harga: harga
                                 },
@@ -4658,12 +4668,15 @@
                                         }
 
                                         let nama = item.name || '-';
+                                        let code = item.code || '';
+                                        let unit = baseUnit?.name || baseUnit?.unit || baseUnit?.unit_name || item
+                                            .unit || '';
                                         let harga = parseFloat(baseUnit?.price2 || 0);
 
                                         html += `
                                             <button type="button"
                                                 class="list-group-item list-group-item-action text-left"
-                                                onclick="pilihObatManual('${key}', '${nama.replace(/'/g, "\\'")}', '${harga}')">
+                                                onclick="pilihObatManual('${key}', '${nama.replace(/'/g, "\\'")}', '${harga}', '${code}', '${unit}')">
                                                 <strong>${nama}</strong>
                                                 <small class="text-muted d-block">
                                                     Rp ${formatRupiahObapay(harga)}
@@ -4766,11 +4779,13 @@
                             $('#edit_list_obat').html('').hide();
                         });
 
-                        function pilihObatManual(key, nama, harga) {
+                        function pilihObatManual(key, nama, harga, code, unit) {
                             $('#obat_baru_' + key).val(nama);
                             $('#nama_obat_baru_' + key).val(nama);
                             $('#harga_baru_' + key).val(harga);
                             $('#harga_baru_view_' + key).val(formatRupiahObapay(harga));
+                            $('#code_baru_' + key).val(code);
+                            $('#unit_baru_' + key).val(unit);
 
                             $('#list_obat_' + key).html('').hide();
                         }
@@ -5201,6 +5216,8 @@
                 <div class="modal-body">
                     <input type="hidden" id="edit_IDObapay">
                     <input type="hidden" id="edit_nama_obat">
+                    <input type="hidden" id="edit_code">
+                    <input type="hidden" id="edit_unit">
 
                     <label>Nama Obat</label>
                     <input type="text" id="edit_search_obat" class="form-control"
@@ -5236,10 +5253,12 @@
     </div>
 
     <script>
-        function editObat(id, nama, harga, qty) {
+        function editObat(id, nama, code, unit, harga, qty) {
             $('#edit_IDObapay').val(id);
             $('#edit_search_obat').val(nama);
             $('#edit_nama_obat').val(nama);
+            $('#edit_code').val(code);
+            $('#edit_unit').val(unit);
             $('#edit_harga').val(parseInt(harga));
             $('#edit_qty').val(parseInt(qty));
             $('#edit_list_obat').html('').hide();
@@ -5278,6 +5297,9 @@
                         }
 
                         let nama = item.name || '-';
+                        let code = item.code || '';
+                        let unit = baseUnit?.name || baseUnit?.unit || baseUnit?.unit_name || item
+                            .unit || '';
                         let harga = parseFloat(baseUnit?.price2 || 0);
 
                         html += `
@@ -5285,6 +5307,8 @@
                         class="list-group-item list-group-item-action text-left"
                         onclick="pilihEditObatManual(this)"
                         data-nama="${nama}"
+                        data-code="${code}"
+                        data-unit="${unit}"
                         data-harga="${harga}">
                         <strong>${nama}</strong>
                         <small class="d-block text-muted">
@@ -5306,10 +5330,14 @@
         function pilihEditObatManual(el) {
             let nama = $(el).data('nama');
             let harga = $(el).data('harga');
+            let code = $(el).data('code');
+            let unit = $(el).data('unit');
 
             $('#edit_search_obat').val(nama);
             $('#edit_nama_obat').val(nama);
             $('#edit_harga').val(harga);
+            $('#edit_code').val(code);
+            $('#edit_unit').val(unit);
             $('#edit_list_obat').html('').hide();
         }
 
@@ -5321,6 +5349,8 @@
                     _token: "{{ csrf_token() }}",
                     IDObapay: $('#edit_IDObapay').val(),
                     NamaItem: $('#edit_nama_obat').val(),
+                    Code: $('#edit_code').val(),
+                    Unit: $('#edit_unit').val(),
                     Qty: $('#edit_qty').val(),
                     Harga: $('#edit_harga').val()
                 },

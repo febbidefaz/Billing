@@ -160,10 +160,10 @@
             </tr>
 
             <tr>
-                <td class="label">PxRS</td>
+                <td class="label">PxRS / ID</td>
                 <td class="colon">:</td>
                 <td class="italic">
-                    {{ $pasien->PxRS ?? '-' }}
+                    {{ $pasien->PxRS ?? '-' }} &nbsp;&nbsp;/&nbsp;&nbsp; {{ $pasien->ID ?? '-' }}
                 </td>
             </tr>
 
