@@ -46,6 +46,7 @@
                             <th style="width:60px">NoSEP</th>
                             <th style="width:10px">Kls</th>
                             <th style="width:100px">Alamat</th>
+                            <th style="width:10px">Phk3</th>
                         </tr>
                     </thead>
 
@@ -177,6 +178,14 @@
                     },
                     {
                         data: 'Addr'
+                    },
+                    {
+                        data: 'Phk3',
+                        render: function(data) {
+                            return Number(data).toLocaleString('id-ID', {
+                                maximumFractionDigits: 0
+                            });
+                        }
                     }
                 ],
 

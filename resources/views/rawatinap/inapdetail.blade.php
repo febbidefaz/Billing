@@ -212,6 +212,16 @@
 
                     <div class="col">
                         <small class="text-muted d-block" style="font-size:13px">
+                            Plavon BPJS
+                        </small>
+
+                        <div class="font-weight-bold" style="font-size:16px">
+                            {{ $pasien->Plavon_kls }}
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <small class="text-muted d-block" style="font-size:13px">
                             PxRS
                         </small>
 
@@ -309,7 +319,8 @@
                             <div class="input-group-append">
 
                                 {{-- Simpan --}}
-                                <button type="button" class="btn btn-success" onclick="updateTglBayar()" title="Simpan">
+                                <button type="button" class="btn btn-success" onclick="updateTglBayar()"
+                                    title="Simpan">
 
                                     <i class="fas fa-save"></i>
 
