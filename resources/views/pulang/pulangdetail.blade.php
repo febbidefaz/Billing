@@ -542,7 +542,7 @@
                     @endif
 
                     {{-- print Rek Rinci Keu --}}
-                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                    @if (in_array(strtolower(Auth::user()->Role), ['kasir', 'casemix']))
                         <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
                             <i class="fas fa-print"></i> Rek Keu
                         </button>
