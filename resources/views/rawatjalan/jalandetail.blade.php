@@ -516,6 +516,25 @@
                         }
                     </script>
 
+                    {{-- print Rek Rinci Keu --}}
+                    @if (in_array(strtolower(Auth::user()->Role), ['kasir', 'casemix']))
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">
+                            <i class="fas fa-print"></i> Rek Keu
+                        </button>
+
+                        <script>
+                            function previewBillingKeu() {
+
+                                window.open(
+                                    "{{ route('rawatjalan.rekKeuPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
+
+                            }
+                        </script>
+                    @endif
+
                     {{-- Print Kwitansi --}}
                     @if (strtolower(Auth::user()->Role) == 'kasir')
                         <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansi()">

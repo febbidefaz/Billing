@@ -132,6 +132,8 @@ Route::middleware(['auth', 'casemix.readonly', 'perawat.readonly'])->group(funct
     Route::get('/rawatjalan/{id}', [RawatJalanController::class, 'detail'])->name('rawatjalan.detail');
     Route::get('/rawatjalan/{id}/rekening-print', [RawatJalanController::class, 'rekeningPrint'])
         ->name('rawatjalan.rekeningPrint');
+    Route::get('/rawatjalan/{id}/rek-keu-print', [RawatJalanController::class, 'rekKeuPrint'])
+        ->name('rawatjalan.rekKeuPrint');    
     Route::post('/rawatjalan/{id}/update-karcis-jasa',[RawatJalanController::class, 'updateKarcisJasa'])
         ->name('rawatjalan.updateKarcisJasa');
     Route::post('/rawatjalan/{id}/hapus-karcis-jasa', [RawatJalanController::class, 'hapusKarcisJasa'])

@@ -1261,6 +1261,127 @@ class RawatJalanController extends Controller
         ));
     }
 
+    // Rekening Keu print
+    public function rekKeuPrint($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+    
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);         
+        $rekeningVisitKeu = DB::select("EXEC dbo.WebRekeningVisitKeuByID_SP ?", [$id]); 
+        $rekeningUtilitasKeu = DB::select("EXEC dbo.WebRekeningUtilitasKeuByID_SP ?", [$id]);        
+        $rekeningLaboratKeu = DB::select("EXEC dbo.WebRekeningLaboratKeuByID_SP ?", [$id]);        
+        $rekeningRadiologiKeu = DB::select("EXEC dbo.WebRekeningRadiologiKeuByID_SP ?", [$id]);     
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);      
+        $rekeningOperasiKeu = DB::select("EXEC dbo.WebRekeningOperasiKeuByID_SP ?", [$id]);
+        $rekeningOperasiIgdKeu = DB::select("EXEC dbo.WebRekeningOperasiIgdKeuByID_SP ?", [$id]);
+        $rekeningOperasiPoliKeu = DB::select("EXEC dbo.WebRekeningOperasiPoliKeuByID_SP ?", [$id]);
+        
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        // Oba Pay
+        $salesFarmasi = [];
+        $grandTotalFarmasiApi = 0;
+    
+        try {
+            $token = $this->getFarmasiToken();
+    
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->get('http://192.168.1.9:8010/api/sales', [
+                    'appointment_id' => $id
+                ]);
+    
+            if ($response->status() == 401) {
+                Cache::forget('farmasi_token');
+    
+                $token = $this->getFarmasiToken();
+    
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->get('http://192.168.1.9:8010/api/sales', [
+                        'appointment_id' => $id
+                    ]);
+            }
+    
+            if ($response->successful()) {
+                $salesFarmasi = $response->json('data.sales') ?? [];
+                $grandTotalFarmasiApi = $response->json('data.grand_total') ?? 0;
+            }
+    
+        } catch (\Exception $e) {
+            Log::error('Farmasi API Rekening Print Error : ' . $e->getMessage());
+    
+            $salesFarmasi = [];
+            $grandTotalFarmasiApi = 0;
+        }
+
+        $totalKamar = collect($kamar)->sum('TotalSewa');
+        $totalAskep = collect($kamar)->sum('TotalAskep');
+        $totalVisit = collect($rekeningVisitKeu)->sum('Biaya');
+        $totalUtilitas = collect($rekeningUtilitasKeu)->sum('Biaya');
+        $totalLab = collect($rekeningLaboratKeu)->sum('Netto');
+        $totalRadiologi = collect($rekeningRadiologiKeu)->sum('BiayaRad');
+        $totalLain = collect($lainlain)->sum('TotalLain');
+        $totalOperasi = collect($rekeningOperasiKeu)->sum('Netto');
+        $totalOperasiIgd = collect($rekeningOperasiIgdKeu)->sum('Biaya');
+        $totalOperasiPoli = collect($rekeningOperasiPoliKeu)->sum('Biaya');
+
+        $totalObat = collect($obat)->sum('HutangObat');
+
+        $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+
+        $grandTotal =
+            $karcisJasa +
+            $totalKamar +
+            $totalAskep +
+            $totalVisit +
+            $totalUtilitas +
+            $totalLab +
+            $totalRadiologi +            
+            $totalLain +
+            $totalOperasi +
+            $totalOperasiIgd +
+            $totalOperasiPoli +
+            $totalObat +
+            $grandTotalFarmasiApi;
+
+        $dijamin = $pasien->DownPay ?? 0;
+        $sisa = $grandTotal - $dijamin;
+
+        $terbilangSisa = strtoupper(
+            trim(
+                preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+            )
+        );     
+
+        $tanggalCetak = now()->format('d M Y H:i:s');
+    
+        return view('rawatjalan.rek-keu-print', compact(
+            'pasien',
+            'kamar',
+            'rekeningVisitKeu',
+            'totalVisit',
+            'rekeningUtilitasKeu',
+            'totalUtilitas',
+            'rekeningLaboratKeu',
+            'totalLab',
+            'rekeningRadiologiKeu',
+            'totalRadiologi',
+            'lainlain',
+            'rekeningOperasiKeu',
+            'rekeningOperasiIgdKeu',
+            'rekeningOperasiPoliKeu',
+            'totalOperasiIgd',
+            'totalOperasiPoli',
+            'obat',
+            'salesFarmasi',
+            'grandTotalFarmasiApi',
+            'sisa',
+            'terbilangSisa',
+            'tanggalCetak'
+        ));
+    }
+
     //Ambil Token ObaPay
     private function getFarmasiToken()
     {
