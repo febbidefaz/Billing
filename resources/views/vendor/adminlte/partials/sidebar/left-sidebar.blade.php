@@ -67,6 +67,15 @@
                     </a>
                 </li>
 
+
+                <li class="nav-item">
+                    <a href="{{ route('monitoring.ri') }}"
+                        class="nav-link {{ request()->routeIs('monitoring.ri') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>Monitoring RI</p>
+                    </a>
+                </li>
+
                 @if (auth()->user() && auth()->user()->Role == 'admin')
                     <li class="nav-item">
                         <a href="{{ route('userbilling.index') }}"

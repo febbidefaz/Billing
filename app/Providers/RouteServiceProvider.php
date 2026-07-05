@@ -38,6 +38,9 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/obapay.php'));    
+            
+            Route::middleware('web')
+                ->group(base_path('routes/monitoring.php'));    
         });
     }
 }
