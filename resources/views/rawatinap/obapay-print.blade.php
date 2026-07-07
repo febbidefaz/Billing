@@ -75,6 +75,21 @@
                 display: none !important;
             }
         }
+
+        .info-table {
+            margin-bottom: 10px;
+            font-size: 11px;
+        }
+
+        .info-table td {
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+
+        .info-label {
+            width: 120px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -84,6 +99,36 @@
     <div class="title"> RUMAH SAKIT 'AISYIYAH </div>
 
     <div class="subtitle"> JL. KH. HASYIM ASY'ARI 17 BOJONEGORO </div>
+
+    <table class="info-table">
+        <tr>
+            <td class="info-label">REGISTRASI</td>
+            <td>: {{ $pasien->ID ?? '-' }}</td>
+
+            <td class="info-label">TANGGAL LAHIR</td>
+            <td>: {{ !empty($pasien->Tanggal_Lahir) ? date('d/m/Y', strtotime($pasien->Tanggal_Lahir)) : '-' }}</td>
+        </tr>
+
+        <tr>
+            <td class="info-label">REKAM MEDIK</td>
+            <td>: {{ $pasien->Register ?? '-' }}</td>
+
+            <td class="info-label">ALAMAT</td>
+            <td>: {{ $pasien->Addr ?? '-' }}</td>
+        </tr>
+
+        <tr>
+            <td class="info-label">PASIEN</td>
+            <td>: {{ $pasien->Nama ?? '-' }}</td>
+
+            <td class="info-label">KELURAHAN</td>
+            <td>: {{ $pasien->Kelurahan ?? '-' }}
+                @if (!empty($pasien->Telepon))
+                    &nbsp;&nbsp;&nbsp; Telp {{ $pasien->Telepon }}
+                @endif
+            </td>
+        </tr>
+    </table>
 
     <table>
         <thead>

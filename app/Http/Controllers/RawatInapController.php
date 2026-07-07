@@ -797,6 +797,12 @@ class RawatInapController extends Controller
         $salesFarmasi = [];
         $grandTotalFarmasiApi = 0;
 
+         // Ambil data pasien
+        $pasien = DB::selectOne(
+            "EXEC dbo.WebPasienRawatInapDetailByID_SP ?",
+            [$id]
+        );
+
         try {
 
             $token = $this->getFarmasiToken();
@@ -820,6 +826,7 @@ class RawatInapController extends Controller
 
         return view('rawatinap.obapay-print', compact(
             'id',
+            'pasien',
             'salesFarmasi',
             'grandTotalFarmasiApi'
         ));
