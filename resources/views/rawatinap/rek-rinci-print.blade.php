@@ -6,12 +6,12 @@
 
     $totalKamar = collect($kamar)->sum('TotalSewa');
     $totalAskep = collect($kamar)->sum('TotalAskep');
-    $totalVisit = collect($rekeningVisitRinci)->sum('Netto');
-    $totalUtilitas = collect($rekeningUtilitasRinci)->sum('Netto');
+    $totalVisit = collect($rekeningVisitRinci)->sum('BiayaVisit');
+    $totalUtilitas = collect($rekeningUtilitasRinci)->sum('BiayaTindak');
     $totalLab = collect($rekeningLaboratRinci ?? [])->sum('Netto');
     $totalRadiologi = collect($rekeningRadiologiRinci ?? [])->sum('Netto');
-    $totalLain = collect($lainlain)->sum('TotalLain');
-    $totalOperasi = collect($rekeningOperasiRinci ?? [])->sum('Netto');
+    $totalLain = collect($lainlain)->sum('BiayaLain');
+    $totalOperasi = collect($rekeningOperasiRinci ?? [])->sum('Biaya');
     $totalObat = collect($obat)->sum('HutangObat');
 
     $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
@@ -29,9 +29,29 @@
         $totalObat +
         ($grandTotalFarmasiApi ?? 0);
 
+    $totalDiskonKamar = collect($kamar)->sum('TotalDisc');
+    $totalDiskonVisit = collect($rekeningVisitRinci)->sum('Discount');
+    $totalDiskonUtilitas = collect($rekeningUtilitasRinci)->sum('Discount');
+    $totalDiskonLab = collect($rekeningLaboratRinci ?? [])->sum('Discount');
+    $totalDiskonRadiologi = collect($rekeningRadiologiRinci ?? [])->sum('Discount');
+    $totalDiskonLain = collect($lainlain)->sum('TotalDisc');
+    $totalDiskonOperasi = collect($rekeningOperasiRinci ?? [])->sum('Pot');
+
+    $diskon =
+        $totalDiskonKamar +
+        $totalDiskonVisit +
+        $totalDiskonUtilitas +
+        $totalDiskonLab +
+        $totalDiskonRadiologi +
+        $totalDiskonLain +
+        $totalDiskonOperasi;
+
     $dijamin = $pasien->DownPay ?? 0;
-    $diskon = 0;
-    $sisa = $grandTotal - $dijamin;
+    $sisa = $grandTotal - $diskon - $dijamin;
+
+    //  $dijamin = $pasien->DownPay ?? 0;
+    //  $diskon = 0;
+    //  $sisa = $grandTotal - $dijamin;
 
     $logoFile = public_path('img/logo.png');
     $logoSrc = is_file($logoFile) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile)) : null;
@@ -354,6 +374,7 @@
             <tfoot>
                 <tr>
                     <td></td>
+                    <td></td>
 
                     <td class="right bold u">
                         SUB TOTAL
@@ -474,10 +495,14 @@
 
             <tfoot>
                 <tr>
-                    <td colspan="2"></td>
+                    <td colspan="1"></td>
 
                     <td class="right bold u">
                         SUB TOTAL
+                    </td>
+
+                    <td class="right bold u">
+                        {{ $R(collect($rekeningLaboratRinci ?? [])->sum('BiayaLab')) }}
                     </td>
 
                     <td class="right bold u">
@@ -557,7 +582,7 @@
                     <tr>
                         <td>{{ $l->Lain ?? '-' }}</td>
                         <td class="center">{{ $fmt($l->TGL ?? null) }}</td>
-                        <td class="right">{{ $R($l->TotalLain ?? 0) }}</td>
+                        <td class="right">{{ $R($l->BiayaLain ?? 0) }}</td>
                         <td class="right">{{ $R($l->TotalDisc ?? 0) }}</td>
                     </tr>
                 @endforeach
@@ -626,10 +651,14 @@
 
             <tfoot>
                 <tr>
-                    <td colspan="3"></td>
+                    <td colspan="2"></td>
 
                     <td class="right bold u">
                         SUB TOTAL
+                    </td>
+
+                    <td class="right bold u">
+                        {{ $R($totalOperasi) }}
                     </td>
 
                     <td class="right bold u">

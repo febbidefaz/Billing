@@ -6,12 +6,12 @@
 
     $totalKamar = collect($kamar)->sum('TotalSewa');
     $totalAskep = collect($kamar)->sum('TotalAskep');
-    $totalVisit = collect($rekeningVisit)->sum('Netto');
-    $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+    $totalVisit = collect($rekeningVisit)->sum('Biaya');
+    $totalUtilitas = collect($rekeningUtilitas)->sum('BiayaTindak');
     $totalLab = collect($rekeningLaborat ?? [])->sum('Netto');
     $totalRadiologi = collect($rekeningRadiologi ?? [])->sum('Netto');
-    $totalLain = collect($lainlain)->sum('TotalLain');
-    $totalOperasi = collect($rekeningOperasi ?? [])->sum('Netto');
+    $totalLain = collect($lainlain)->sum('BiayaLain');
+    $totalOperasi = collect($rekeningOperasi ?? [])->sum('Biaya');
     $totalObat = collect($obat)->sum('HutangObat');
 
     $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
@@ -29,9 +29,29 @@
         $totalObat +
         ($grandTotalFarmasiApi ?? 0);
 
+    $totalDiskonKamar = collect($kamar)->sum('TotalDisc');
+    $totalDiskonVisit = collect($rekeningVisit)->sum('Discount');
+    $totalDiskonUtilitas = collect($rekeningUtilitas)->sum('Discount');
+    $totalDiskonLab = collect($rekeningLaborat ?? [])->sum('Discount');
+    $totalDiskonRadiologi = collect($rekeningRadiologi ?? [])->sum('Discount');
+    $totalDiskonLain = collect($lainlain)->sum('TotalDisc');
+    $totalDiskonOperasi = collect($rekeningOperasi ?? [])->sum('Pot');
+
+    $diskon =
+        $totalDiskonKamar +
+        $totalDiskonVisit +
+        $totalDiskonUtilitas +
+        $totalDiskonLab +
+        $totalDiskonRadiologi +
+        $totalDiskonLain +
+        $totalDiskonOperasi;
+
     $dijamin = $pasien->DownPay ?? 0;
-    $diskon = 0;
-    $sisa = $grandTotal - $dijamin;
+    $sisa = $grandTotal - $diskon - $dijamin;
+
+    //$dijamin = $pasien->DownPay ?? 0;
+    // $diskon = 0;
+    //$sisa = $grandTotal - $dijamin;
 
     $logoFile = public_path('img/logo.png');
     $logoSrc = is_file($logoFile) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile)) : null;
@@ -340,8 +360,8 @@
                     <tr>
                         <td>{{ $v->Dokter ?? '-' }}</td>
                         <td class="right">{{ $R($v->NTimes ?? 0) }}</td>
-                        <td class="right">{{ $R($v->Netto ?? 0) }}</td>
-                        <td class="right">{{ $R(($v->Discount ?? 0) * ($v->Pot ?? 0)) }}</td>
+                        <td class="right">{{ $R($v->Biaya ?? 0) }}</td>
+                        <td class="right">{{ $R($v->Discount ?? 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -384,13 +404,13 @@
                         <td>{{ $u->Tindak ?? '-' }}</td>
                         <td class="right">{{ $R($u->NTimes ?? 0) }}</td>
                         <td class="right">{{ $R($u->Netto ?? 0) }}</td>
-                        <td class="right">{{ $R(($u->Discount ?? 0) * ($u->Pot ?? 0)) }}</td>
+                        <td class="right">{{ $R($u->Discount ?? 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2"></td>
+                    <td colspan="1"></td>
 
                     <td class="right bold u">
                         SUB TOTAL
@@ -398,6 +418,10 @@
 
                     <td class="right bold u">
                         {{ $R($totalUtilitas) }}
+                    </td>
+
+                    <td class="right bold u">
+                        {{ $R(collect($rekeningUtilitas)->sum('Discount')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -526,7 +550,7 @@
                     <tr>
                         <td>{{ $l->Lain ?? '-' }}</td>
                         <td class="center">{{ $fmt($l->TGL ?? null) }}</td>
-                        <td class="right">{{ $R($l->TotalLain ?? 0) }}</td>
+                        <td class="right">{{ $R($l->BiayaLain ?? 0) }}</td>
                         <td class="right">{{ $R($l->TotalDisc ?? 0) }}</td>
                     </tr>
                 @endforeach
@@ -571,7 +595,7 @@
                     <tr>
                         <td>{{ $o->Nama_jenis ?? '-' }}</td>
                         <td class="right">{{ $o->c ?? 0 }}</td>
-                        <td class="right">{{ $R($o->Netto ?? 0) }}</td>
+                        <td class="right">{{ $R($o->Biaya ?? 0) }}</td>
                         <td class="right">{{ $R($o->Pot ?? 0) }}</td>
                     </tr>
                 @endforeach

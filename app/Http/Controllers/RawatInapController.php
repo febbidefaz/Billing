@@ -112,7 +112,7 @@ class RawatInapController extends Controller
     {
         if (Auth::user()->Role == 'Kasir') {
             abort(403, 'Kasir tidak memiliki hak mengubah Koding Awal');
-        }
+         }
         try {
 
             $request->validate([
@@ -1402,7 +1402,7 @@ class RawatInapController extends Controller
 
         $totalKamar = collect($kamar)->sum('TotalSewa');
         $totalAskep = collect($kamar)->sum('TotalAskep');
-        $totalVisit = collect($rekeningVisit)->sum('Netto');
+        $totalVisit = collect($rekeningVisit)->sum('Biaya');
         $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
         $totalLain = collect($lainlain)->sum('TotalLain');
         $totalOperasi = collect($rekeningOperasi)->sum('Netto');
@@ -1628,7 +1628,7 @@ class RawatInapController extends Controller
         $totalLab = collect($rekeningLaboratKeu)->sum('Netto');
         $totalRadiologi = collect($rekeningRadiologiKeu)->sum('BiayaRad');
         $totalLain = collect($lainlain)->sum('TotalLain');
-        $totalOperasi = collect($rekeningOperasiKeu)->sum('Netto');
+        $totalOperasi = collect($rekeningOperasiKeu)->sum('Biaya');
         $totalOperasiIgd = collect($rekeningOperasiIgdKeu)->sum('Biaya');
         $totalOperasiPoli = collect($rekeningOperasiPoliKeu)->sum('Biaya');
 

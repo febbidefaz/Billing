@@ -7,10 +7,10 @@
     $totalKamar = collect($kamar)->sum('TotalSewa');
     $totalAskep = collect($kamar)->sum('TotalAskep');
     $totalVisit = collect($rekeningVisitKeu)->sum('Biaya');
-    $totalUtilitas = collect($rekeningUtilitasKeu)->sum('Netto');
+    $totalUtilitas = collect($rekeningUtilitasKeu)->sum('BiayaTindak');
     $totalLab = collect($rekeningLaboratKeu ?? [])->sum('Netto');
     $totalRadiologi = collect($rekeningRadiologiKeu ?? [])->sum('Netto');
-    $totalLain = collect($lainlain)->sum('TotalLain');
+    $totalLain = collect($lainlain)->sum('BiayaLain');
     $totalOperasi = collect($rekeningOperasiKeu ?? [])->sum('Biaya');
     $totalOperasiIgd = collect($rekeningOperasiIgdKeu)->sum('Biaya');
     $totalOperasiPoli = collect($rekeningOperasiPoliKeu)->sum('Biaya');
@@ -33,9 +33,29 @@
         $totalObat +
         ($grandTotalFarmasiApi ?? 0);
 
+    $totalDiskonKamar = collect($kamar)->sum('TotalDisc');
+    $totalDiskonVisit = collect($rekeningVisitKeu)->sum('Discount');
+    $totalDiskonUtilitas = collect($rekeningUtilitasKeu)->sum('Discount');
+    $totalDiskonLab = collect($rekeningLaboratKeu ?? [])->sum('Discount');
+    $totalDiskonRadiologi = collect($rekeningRadiologiKeu ?? [])->sum('Discount');
+    $totalDiskonLain = collect($lainlain)->sum('TotalDisc');
+    $totalDiskonOperasi = collect($rekeningOperasiKeu ?? [])->sum('Pot');
+
+    $diskon =
+        $totalDiskonKamar +
+        $totalDiskonVisit +
+        $totalDiskonUtilitas +
+        $totalDiskonLab +
+        $totalDiskonRadiologi +
+        $totalDiskonLain +
+        $totalDiskonOperasi;
+
     $dijamin = $pasien->DownPay ?? 0;
-    $diskon = 0;
-    $sisa = $grandTotal - $dijamin;
+    $sisa = $grandTotal - $diskon - $dijamin;
+
+    //  $dijamin = $pasien->DownPay ?? 0;
+    //  $diskon = 0;
+    //  $sisa = $grandTotal - $dijamin;
 
     $logoFile = public_path('img/logo.png');
     $logoSrc = is_file($logoFile) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile)) : null;
@@ -683,7 +703,7 @@
                                     <tr>
                                         <td>{{ $l->Lain ?? '-' }}</td>
                                         <td class="center">{{ $fmt($l->TGL ?? null) }}</td>
-                                        <td class="right">{{ $R($l->TotalLain ?? 0) }}</td>
+                                        <td class="right">{{ $R($l->BiayaLain ?? 0) }}</td>
                                         <td class="right">{{ $R($l->TotalDisc ?? 0) }}</td>
                                     </tr>
                                 @endforeach

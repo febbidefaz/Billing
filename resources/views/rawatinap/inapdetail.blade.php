@@ -1147,8 +1147,9 @@
                                         <th>J. Klr</th>
                                         <th>Pot Hr</th>
                                         <th>Status</th>
-                                        <th>Kamar</th>
-                                        <th>Pot(%)</th>
+                                        <th class="text-right">Kamar</th>
+                                        <th class="text-right">Disc(%)</th>
+                                        <th class="text-right">Jml Disc</th>
                                     </tr>
                                 </thead>
 
@@ -1170,10 +1171,11 @@
                                         '{{ $k->Askep }}',
                                         '{{ $k->Pot2 }}',
                                         '{{ $k->KodeBed }}',
-                                        '{{ $k->Biaya }}',
-                                        '{{ $k->kamar }}',
-                                        '{{ $k->japel }}',
-                                        '{{ $k->alat }}'
+                                     
+                                        '{{ Js::from((float) $k->Biaya) }}',
+                                        '{{ Js::from((float) $k->kamar) }}',
+                                        '{{ Js::from((float) $k->japel) }}',
+                                        '{{ Js::from((float) $k->alat) }}',                                      
                                     )">
 
                                             <td>
@@ -1188,13 +1190,21 @@
                                             <td>{{ $k->JKeluar ? date('H:i', strtotime($k->JKeluar)) : '-' }}</td>
                                             <td>{{ $k->PotDay ?? 0 }}</td>
                                             <td>{{ $k->Status }}</td>
-                                            <td>Rp {{ number_format($k->TotalSewa ?? 0, 0, ',', '.') }}</td>
-                                            <td>{{ number_format(($k->Pot ?? 0) * 100, 2) }}%</td>
+                                            <td class="text-right">
+                                                Rp {{ number_format($k->TotalSewa ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{ number_format(($k->Pot ?? 0) * 100, 2) }}%
+                                            </td>
+                                            <td class="text-right">
+                                                Rp
+                                                {{ number_format(($k->TotalSewa ?? 0) * ($k->Pot ?? 0), 0, ',', '.') }}
+                                            </td>
 
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center text-muted">
+                                            <td colspan="11" class="text-center text-muted">
                                                 Data kamar belum tersedia.
                                             </td>
                                         </tr>
@@ -1224,6 +1234,18 @@
 
                                         <td></td>
 
+                                        <td class="align-middle">
+                                            Rp
+                                            {{ number_format(
+                                                collect($kamar)->sum(function ($k) {
+                                                    return ($k->TotalSewa ?? 0) * ($k->Pot ?? 0);
+                                                }),
+                                                0,
+                                                ',',
+                                                '.',
+                                            ) }}
+                                        </td>
+
                                     </tr>
                                 </tfoot>
 
@@ -1252,7 +1274,8 @@
                                 $('#editKamarTarif').val('Rp 0');
                                 $('#editJapel').val('Rp 0');
                                 $('#editAlat').val('Rp 0');
-
+                                $('#editPot').val(0);
+                                $('#editNominalDisc').val('Rp 0');
                                 $('#modalEditPasInapLabel').html(
                                     '<i class="fas fa-plus-circle mr-2"></i> Tambah Kamar Rawat Inap'
                                 );
@@ -1291,7 +1314,7 @@
                                         JKeluar: $('#editJKeluar').val(),
                                         Status: $('#editStatus').val(),
 
-                                        Pot: $('#editPot').val() || 0,
+                                        Pot: (parseFloat($('#editPot').val() || 0) / 100),
                                         PotDay: $('#editPotDay').val() || 0,
                                         Askep: $('#editAskep').val() || 0,
                                         Pot2: $('#editPot2').val() || 0,
@@ -1331,12 +1354,13 @@
                                 biaya,
                                 kamarTarif,
                                 japel,
-                                alat
+                                alat //,
+                                // totalSewa
                             ) {
 
                                 $('#editNomer').val(nomer);
 
-                                $('#editKamar').val(kelasId + '|' + roomId).trigger('change');
+                                $('#editKamar').val(kelasId + '|' + roomId);
                                 $('#editDokterID').val(dokterId).trigger('change');
                                 $('#editStatus').val(status).trigger('change');
 
@@ -1345,8 +1369,23 @@
                                 $('#editTKeluar').val(tKeluar);
                                 $('#editJKeluar').val(jKeluar);
 
-                                $('#editPot').val(pot);
                                 $('#editPotDay').val(potDay);
+                                $('#editPot').val(
+                                    parseFloat(pot || 0) * 100
+                                );
+
+                                //    let nominalDisc =
+                                //        parseFloat(totalSewa || 0) *
+                                //        parseFloat(pot || 0);
+
+                                let nominalDisc =
+                                    parseFloat(biaya || 0) *
+                                    parseFloat(pot || 0);
+
+                                $('#editNominalDisc').val(
+                                    formatRupiah(nominalDisc)
+                                );
+
                                 $('#editAskep').val(askep);
                                 $('#editPot2').val(pot2);
                                 $('#editKodeBed').val(kodeBed);
@@ -1398,7 +1437,7 @@
                                         TKeluar: $('#editTKeluar').val(),
                                         JKeluar: $('#editJKeluar').val(),
                                         Status: $('#editStatus').val(),
-                                        Pot: $('#editPot').val(),
+                                        Pot: (parseFloat($('#editPot').val() || 0) / 100),
                                         PotDay: $('#editPotDay').val(),
                                         Askep: $('#editAskep').val(),
                                         Pot2: $('#editPot2').val(),
@@ -1421,6 +1460,21 @@
                                 return 'Rp ' + angka.toLocaleString('id-ID');
 
                             }
+
+                            $('#editPot').on('input', function() {
+                                let tarif = parseFloat(
+                                    ($('#editKamarTarif').val() || '0')
+                                    .replace(/[^\d]/g, '')
+                                );
+
+                                let pot = parseFloat($(this).val() || 0) / 100;
+
+                                let disc = tarif * pot;
+
+                                $('#editNominalDisc').val(
+                                    formatRupiah(disc)
+                                );
+                            });
                             $(function() {
 
                                 $(document).ready(function() {
@@ -1669,6 +1723,22 @@
                                                         </div>
                                                     </div>
 
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Discount (%)</label>
+                                                            <input type="number" step="0.01" id="editPot"
+                                                                class="form-control text-right" placeholder="0">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Jumlah Discount</label>
+                                                            <input type="text" id="editNominalDisc"
+                                                                class="form-control text-right" readonly>
+                                                        </div>
+                                                    </div>
+
                                                 </div>
 
                                             </div>
@@ -1721,8 +1791,9 @@
                                     <tr>
                                         <th>Dokter</th>
                                         <th>Tgl Visit</th>
-                                        <th>Tarif</th>
-                                        <th>Pot (%)</th>
+                                        <th class="text-right">Tarif</th>
+                                        <th class="text-right">Disc (%)</th>
+                                        <th class="text-right">Jml Disc</th>
                                     </tr>
                                 </thead>
 
@@ -1734,13 +1805,19 @@
                                                 '{{ $v->DokterID }}',
                                                 '{{ $v->TglVisit ? date('Y-m-d', strtotime($v->TglVisit)) : '' }}',
                                                 '{{ $v->BiayaVisit ?? 0 }}',
-                                                '{{ ($v->Pot ?? 0) * 100 }}'
+                                                '{{ ($v->Pot ?? 0) * 100 }}',
+                                                '{{ ($v->BiayaVisit ?? 0) * ($v->Pot ?? 0) }}'
                                             )">
 
                                             <td>{{ $v->NamaDokter ?? '-' }}</td>
                                             <td>{{ $v->TglVisit ? date('d/m/Y', strtotime($v->TglVisit)) : '-' }}</td>
-                                            <td>Rp {{ number_format($v->BiayaVisit ?? 0, 0, ',', '.') }}</td>
-                                            <td>{{ number_format(($v->Pot ?? 0) * 100, 2) }}%</td>
+                                            <td class="text-right">Rp
+                                                {{ number_format($v->BiayaVisit ?? 0, 0, ',', '.') }}</td>
+                                            <td class="text-right">{{ number_format(($v->Pot ?? 0) * 100, 2) }}%</td>
+                                            <td class="text-right">
+                                                Rp
+                                                {{ number_format(($v->BiayaVisit ?? 0) * ($v->Pot ?? 0), 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -1765,11 +1842,23 @@
                                             Total Visit
                                         </td>
 
-                                        <td>
-                                            Rp {{ number_format(collect($visitdokter)->sum('TotalVisit'), 0, ',', '.') }}
+                                        <td class="text-right">
+                                            Rp {{ number_format(collect($visitdokter)->sum('BiayaVisit'), 0, ',', '.') }}
                                         </td>
 
                                         <td></td>
+
+                                        <td class="text-right">
+                                            Rp
+                                            {{ number_format(
+                                                collect($visitdokter)->sum(function ($v) {
+                                                    return ($v->BiayaVisit ?? 0) * ($v->Pot ?? 0);
+                                                }),
+                                                0,
+                                                ',',
+                                                '.',
+                                            ) }}
+                                        </td>
                                     </tr>
                                 </tfoot>
 
@@ -1783,7 +1872,8 @@
                                 dokterId,
                                 tanggal,
                                 biaya,
-                                pot
+                                pot,
+                                jmlPot
                             ) {
 
                                 $('#editVisitID').val(visitId);
@@ -1799,6 +1889,10 @@
                                 );
 
                                 $('#editVisitPot').val(pot);
+
+                                $('#editVisitNominalPot').val(
+                                    formatRupiahVisit(jmlPot)
+                                );
 
                                 $('#btnHapusVisit')
                                     .show()
@@ -2027,9 +2121,17 @@
 
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="editVisitPot">Potongan (%)</label>
+                                                            <label for="editVisitPot">Diskon (%)</label>
                                                             <input type="number" step="0.01" id="editVisitPot"
                                                                 class="form-control text-right" placeholder="0">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Nominal Diskon</label>
+                                                            <input type="text" id="editVisitNominalPot"
+                                                                class="form-control text-right" readonly>
                                                         </div>
                                                     </div>
 
@@ -2085,8 +2187,9 @@
                                         <th>Tindakan</th>
                                         <th>Tanggal</th>
                                         <th>Dokter</th>
-                                        <th>Biaya</th>
-                                        <th>Pot (%)</th>
+                                        <th class="text-right">Biaya</th>
+                                        <th class="text-right">Disc (%)</th>
+                                        <th class="text-right">Jml Disc</th>
                                     </tr>
                                 </thead>
 
@@ -2100,14 +2203,23 @@
                                                 '{{ $u->Tanggal ? date('Y-m-d', strtotime($u->Tanggal)) : '' }}',
                                                 '{{ $u->Jam ? date('H:i', strtotime($u->Jam)) : '' }}',
                                                 '{{ $u->Biaya ?? 0 }}',
-                                                '{{ ($u->Pot ?? 0) * 100 }}'
+                                                '{{ ($u->Pot ?? 0) * 100 }}',
+                                                '{{ ($u->Biaya ?? 0) * ($u->Pot ?? 0) }}'
                                             )">
 
                                             <td>{{ $u->NamaTindakan ?? '-' }}</td>
                                             <td>{{ $u->Tanggal ? date('d/m/Y', strtotime($u->Tanggal)) : '-' }}</td>
                                             <td>{{ $u->NamaDokter ?? '-' }}</td>
-                                            <td>Rp {{ number_format($u->Biaya ?? 0, 0, ',', '.') }}</td>
-                                            <td>{{ number_format(($u->Pot ?? 0) * 100, 2) }}%</td>
+                                            <td class="text-right">
+                                                Rp {{ number_format($u->Biaya ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{ number_format(($u->Pot ?? 0) * 100, 2) }}%
+                                            </td>
+                                            <td class="text-right">
+                                                Rp
+                                                {{ number_format(($u->Biaya ?? 0) * ($u->Pot ?? 0), 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -2132,11 +2244,23 @@
                                             Total Utilitas
                                         </td>
 
-                                        <td>
-                                            Rp {{ number_format(collect($utilitas)->sum('TotalUtilitas'), 0, ',', '.') }}
+                                        <td class="text-right">
+                                            Rp {{ number_format(collect($utilitas)->sum('Biaya'), 0, ',', '.') }}
                                         </td>
 
                                         <td></td>
+
+                                        <td class="text-right">
+                                            Rp
+                                            {{ number_format(
+                                                collect($utilitas)->sum(function ($u) {
+                                                    return ($u->Biaya ?? 0) * ($u->Pot ?? 0);
+                                                }),
+                                                0,
+                                                ',',
+                                                '.',
+                                            ) }}
+                                        </td>
                                     </tr>
                                 </tfoot>
 
@@ -2174,7 +2298,8 @@
                                 tanggal,
                                 jam,
                                 biaya,
-                                pot
+                                pot,
+                                jmlDisc
                             ) {
                                 $('#editUtilitasActID').val(actId);
 
@@ -2189,7 +2314,12 @@
                                 $('#editUtilitasTanggal').val(tanggal);
                                 $('#editUtilitasJam').val(jam);
                                 $('#editUtilitasBiaya').val(formatRupiahUtilitas(biaya));
-                                $('#editUtilitasPot').val(pot);
+                                $('#editUtilitasPot').val(
+                                    parseFloat(pot || 0)
+                                );
+                                $('#editUtilitasNominalDisc').val(
+                                    formatRupiahUtilitas(jmlDisc)
+                                );
 
                                 $('#modalEditUtilitasLabel').html(
                                     '<i class="fas fa-stethoscope mr-2"></i> Perubahan Data Utilitas / Tindakan Dokter'
@@ -2420,9 +2550,17 @@
 
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label>Potongan (%)</label>
+                                                            <label>Discount (%)</label>
                                                             <input type="number" step="0.01" id="editUtilitasPot"
                                                                 class="form-control text-right" placeholder="0">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Jumlah Discount</label>
+                                                            <input type="text" id="editUtilitasNominalDisc"
+                                                                class="form-control text-right" readonly>
                                                         </div>
                                                     </div>
 
@@ -2963,8 +3101,9 @@
                                         <th>nama</th>
                                         <th>Tanggal</th>
                                         {{-- <th>Ruang</th> --}}
-                                        <th>Tarif</th>
-                                        <th>Pot (%)</th>
+                                        <th class="text-right">Tarif</th>
+                                        <th class="text-right">Disc (%)</th>
+                                        <th class="text-right">Jml Disc</th>
                                     </tr>
                                 </thead>
 
@@ -2978,13 +3117,24 @@
                                         '{{ addslashes($l->Lain ?? '') }}',
                                         '{{ $l->BiayaLain ?? 0 }}',
                                         '{{ ($l->Pot ?? 0) * 100 }}'
+                                        '{{ ($l->BiayaLain ?? 0) * ($l->Pot ?? 0) }}'
+                                   
                                     )">
                                             <td>{{ $l->Lain_ID ?? '-' }}</td>
                                             <td>{{ $l->Lain ?? '-' }}</td>
                                             <td>{{ $l->TGL ? date('d/m/Y', strtotime($l->TGL)) : '-' }}</td>
                                             {{--   <td>{{ $l->NamaKamar ?? '-' }}</td> --}}
-                                            <td>Rp {{ number_format($l->BiayaLain ?? 0, 0, ',', '.') }}</td>
-                                            <td>{{ number_format(($l->Pot ?? 0) * 100, 2) }}%</td>
+                                            <td class="text-right">
+                                                Rp {{ number_format($l->BiayaLain ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{ number_format(($l->Pot ?? 0) * 100, 2) }}%
+                                            </td>
+
+                                            <td class="text-right">
+                                                Rp
+                                                {{ number_format(($l->BiayaLain ?? 0) * ($l->Pot ?? 0), 0, ',', '.') }}
+                                            </td>
 
                                         </tr>
 
@@ -3014,11 +3164,23 @@
                                             Total Lain-lain
                                         </td>
 
-                                        <td>
-                                            Rp {{ number_format(collect($lainlain)->sum('TotalLain'), 0, ',', '.') }}
+                                        <td class="text-right">
+                                            Rp {{ number_format(collect($lainlain)->sum('BiayaLain'), 0, ',', '.') }}
                                         </td>
 
                                         <td></td>
+
+                                        <td class="text-right">
+                                            Rp
+                                            {{ number_format(
+                                                collect($lainlain)->sum(function ($l) {
+                                                    return ($l->BiayaLain ?? 0) * ($l->Pot ?? 0);
+                                                }),
+                                                0,
+                                                ',',
+                                                '.',
+                                            ) }}
+                                        </td>
 
                                     </tr>
                                 </tfoot>
@@ -3220,8 +3382,10 @@
                                         <th>Operasi/ Tindakan</th>
                                         <th>Tanggal</th>
                                         <th>Operator</th>
-                                        <th>Jml Netto</th>
-                                        <th>Di OK</th>
+                                        <th class="text-right">Jml Brutto</th>
+                                        <th class="text-right">Disc</th>
+                                        <th class="text-right">Jml Netto</th>
+                                        <th class="text-center">OK</th>
                                     </tr>
                                 </thead>
 
@@ -3274,7 +3438,17 @@
                                             <td>{{ $o->JenisOperasi ?? '-' }}</td>
                                             <td>{{ $o->TgOp ? date('d/m/Y', strtotime($o->TgOp)) : '-' }}</td>
                                             <td>{{ $o->Op ?? '-' }}</td>
-                                            <td>Rp {{ number_format($o->Netto ?? 0, 0, ',', '.') }}</td>
+                                            <td class="text-right">
+                                                Rp {{ number_format($o->Brutto ?? 0, 0, ',', '.') }}
+                                            </td>
+
+                                            <td class="text-right">
+                                                Rp {{ number_format($o->Discount ?? 0, 0, ',', '.') }}
+                                            </td>
+
+                                            <td class="text-right">
+                                                Rp {{ number_format($o->Netto ?? 0, 0, ',', '.') }}
+                                            </td>
                                             <td>
                                                 @if ($o->AtOk == 1)
                                                     <i class="fas fa-check text-success"></i>
@@ -3302,11 +3476,19 @@
                                             </button>
                                         </td>
 
-                                        <td colspan="2" class="text-right">
+                                        <td colspan="2" class="text-right align-middle">
                                             Total Operasi
                                         </td>
 
-                                        <td>
+                                        <td class="text-right align-middle">
+                                            Rp {{ number_format(collect($operasi)->sum('Brutto'), 0, ',', '.') }}
+                                        </td>
+
+                                        <td class="text-right align-middle">
+                                            Rp {{ number_format(collect($operasi)->sum('Discount'), 0, ',', '.') }}
+                                        </td>
+
+                                        <td class="text-right align-middle">
                                             Rp {{ number_format(collect($operasi)->sum('Netto'), 0, ',', '.') }}
                                         </td>
 
@@ -3441,9 +3623,11 @@
                                                         <div class="form-group">
                                                             <label>Anestesi</label>
 
-                                                            <select id="operasiAnes" class="form-control select2-dokter">
+                                                            <select id="operasiAnes"
+                                                                class="form-control select2-dokter">
 
-                                                                <option value="">-- Pilih Dokter Anestesi --</option>
+                                                                <option value="">-- Pilih Dokter Anestesi --
+                                                                </option>
 
                                                                 @foreach ($dokterList as $d)
                                                                     <option value="{{ $d->DokterAlias }}">
@@ -3556,67 +3740,107 @@
                                                     <div class="card-body p-2">
 
                                                         <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Op</label>
-                                                            <div class="col-5">
+                                                            <label class="col-4 col-form-label-sm">Op</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01" id="prosenOp"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotOp"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
+                                                            </div>
                                                         </div>
 
                                                         <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Ass</label>
-                                                            <div class="col-5">
+                                                            <label class="col-4 col-form-label-sm">Ass</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01" id="prosenAss"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
-                                                        </div>
-
-                                                        <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Anes</label>
-                                                            <div class="col-5">
-                                                                <input type="number" step="0.01" id="prosenAnes"
-                                                                    class="form-control form-control-sm text-right">
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotAss"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
                                                             </div>
                                                         </div>
 
                                                         <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Ass Anes</label>
-                                                            <div class="col-5">
+                                                            <label class="col-4 col-form-label-sm">Anes</label>
+                                                            <div class="col-4">
+                                                                <input type="number" step="0.01" id="prosenAnes"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotAnes"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-4 col-form-label-sm">Ass Anes</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01"
                                                                     id="prosenAssAnes"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotAssAnes"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
+                                                            </div>
                                                         </div>
 
                                                         <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Alat</label>
-                                                            <div class="col-5">
+                                                            <label class="col-4 col-form-label-sm">Alat</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01" id="prosenAlat"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotAlat"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
+                                                            </div>
                                                         </div>
 
                                                         <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">Bahan</label>
-                                                            <div class="col-5">
+                                                            <label class="col-4 col-form-label-sm">Bahan</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01" id="prosenBahan"
                                                                     class="form-control form-control-sm text-right">
                                                             </div>
-                                                        </div>
-
-                                                        <div class="form-group row mb-1">
-                                                            <label class="col-7 col-form-label-sm">OK</label>
-                                                            <div class="col-5">
-                                                                <input type="number" step="0.01" id="prosenOk"
-                                                                    class="form-control form-control-sm text-right">
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotBahan"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
                                                             </div>
                                                         </div>
 
-                                                        <div class="form-group row mb-0">
-                                                            <label class="col-7 col-form-label-sm">Jasa</label>
-                                                            <div class="col-5">
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-4 col-form-label-sm">OK</label>
+                                                            <div class="col-4">
+                                                                <input type="number" step="0.01" id="prosenOk"
+                                                                    class="form-control form-control-sm text-right">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotOk"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row mb-1">
+                                                            <label class="col-4 col-form-label-sm">Jasa</label>
+                                                            <div class="col-4">
                                                                 <input type="number" step="0.01" id="prosenJasa"
                                                                     class="form-control form-control-sm text-right">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <input type="text" id="PotJasa"
+                                                                    class="form-control form-control-sm text-right"
+                                                                    readonly>
                                                             </div>
                                                         </div>
 
@@ -3624,6 +3848,8 @@
 
                                                 </div>
                                             </div>
+
+
                                         </div>
 
                                         {{-- Total --}}
@@ -3798,6 +4024,15 @@
                                 $('#prosenOk').val(prosenOk);
                                 $('#prosenJasa').val(prosenJasa);
 
+                                $('#PotOp').val(formatRupiahOperasi(potOp));
+                                $('#PotAss').val(formatRupiahOperasi(potAss));
+                                $('#PotAnes').val(formatRupiahOperasi(potAnes));
+                                $('#PotAssAnes').val(formatRupiahOperasi(potAssAnes));
+                                $('#PotAlat').val(formatRupiahOperasi(potAlat));
+                                $('#PotBahan').val(formatRupiahOperasi(potBahan));
+                                $('#PotOk').val(formatRupiahOperasi(potOk));
+                                $('#PotJasa').val(formatRupiahOperasi(potJasa));
+
                                 $('#totalBrutto').html(formatRupiahOperasi(brutto));
                                 $('#totalDiscount').html(formatRupiahOperasi(discount));
                                 $('#totalNetto').html(formatRupiahOperasi(netto));
@@ -3925,6 +4160,15 @@
                                 $('#prosenBahan').val(0);
                                 $('#prosenOk').val(0);
                                 $('#prosenJasa').val(0);
+
+                                $('#PotOp').val('Rp 0');
+                                $('#PotAss').val('Rp 0');
+                                $('#PotAnes').val('Rp 0');
+                                $('#PotAssAnes').val('Rp 0');
+                                $('#PotAlat').val('Rp 0');
+                                $('#PotBahan').val('Rp 0');
+                                $('#PotOk').val('Rp 0');
+                                $('#PotJasa').val('Rp 0');
                             }
 
                             function resetOperasiTotal() {
@@ -4823,20 +5067,26 @@
                 ($pasien->JasaPrk ?? 0) +
                 collect($kamar)->sum('TotalSewa') +
                 collect($kamar)->sum('TotalAskep') +
-                collect($visitdokter)->sum('TotalVisit') +
-                collect($utilitas)->sum('TotalUtilitas') +
+                collect($visitdokter)->sum('BiayaVisit') +
+                collect($utilitas)->sum('Biaya') +
                 collect($radiologiDetailFlat ?? [])->sum('Biaya') +
                 collect($labDetailFlat ?? [])->sum('Biaya') +
-                collect($lainlain)->sum('TotalLain') +
-                collect($operasi)->sum('Netto') +
+                collect($lainlain)->sum('BiayaLain') +
+                collect($operasi)->sum('Brutto') +
                 collect($obat)->sum('HutangObat') +
                 ($grandTotalFarmasiApi ?? 0);
 
             $hutangObat = collect($obat)->sum('HutangObat') + ($grandTotalFarmasiApi ?? 0);
             $dijamin = $pasien->DownPay ?? 0;
             $plafon = $pasien->Phk3 ?? 0;
-            $totalDiscount = 0;
-            $netto = $grandTotal - $dijamin;
+            $totalDiscount =
+                collect($kamar)->sum('TotalDisc') +
+                collect($visitdokter)->sum('Discount') +
+                collect($utilitas)->sum('Discount') +
+                collect($operasi)->sum('Discount') +
+                collect($lainlain)->sum('TotalDisc');
+
+            $netto = $grandTotal - $dijamin - $totalDiscount;
         @endphp
 
         <div class="card border-0 shadow-sm billing-total-card">
