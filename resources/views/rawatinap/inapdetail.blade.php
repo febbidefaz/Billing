@@ -1204,7 +1204,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="11" class="text-center text-muted">
+                                            <td colspan="12" class="text-center text-muted">
                                                 Data kamar belum tersedia.
                                             </td>
                                         </tr>
@@ -1821,7 +1821,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">
+                                            <td colspan="5" class="text-center text-muted">
                                                 Data visit dokter belum tersedia.
                                             </td>
                                         </tr>
@@ -2223,7 +2223,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted">
+                                            <td colspan="6" class="text-center text-muted">
                                                 Data utilitas / tindakan dokter belum tersedia.
                                             </td>
                                         </tr>
@@ -3141,7 +3141,7 @@
                                     @empty
 
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted">
+                                            <td colspan="6" class="text-center text-muted">
                                                 Data biaya lain-lain belum tersedia.
                                             </td>
                                         </tr>
@@ -3459,7 +3459,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted">
+                                            <td colspan="7" class="text-center text-muted">
                                                 Data operasi belum tersedia.
                                             </td>
                                         </tr>
