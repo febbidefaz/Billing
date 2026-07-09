@@ -212,6 +212,7 @@
                     <th class="col-uraian">URAIAN</th>
                     <th class="col-biaya">BIAYA</th>
                     <th class="col-potongan">POTONGAN</th>
+                    <th class="col-potongan">NETTO</th>
                 </tr>
             </thead>
 
@@ -220,54 +221,64 @@
                     <td>Operator : {{ $operasi->Op ?? '-' }}</td>
                     <td class="nominal">{{ $R($operasi->BiayaOp ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotOp ?? 0) }}</td>
+                    <td class="nominal">
+                        {{ $R(($operasi->BiayaOp ?? 0) - ($operasi->PotOp ?? 0)) }}
+                    </td>
                 </tr>
-
                 <tr>
                     <td>Asisten : {{ $operasi->Ass ?? '-' }}</td>
                     <td class="nominal">{{ $R($operasi->BiayaAss ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotAss ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->BiayaAss ?? 0) - ($operasi->PotAss ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Anestesi : {{ $operasi->Anes ?? '-' }}</td>
                     <td class="nominal">{{ $R($operasi->BiayaAnes ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotAnes ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->BiayaAnes ?? 0) - ($operasi->PotAnes ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Ass. Anestesi : {{ $operasi->AssAnes ?? '-' }}</td>
                     <td class="nominal">{{ $R($operasi->BiayaAssAnes ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotAssAnes ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->BiayaAssAnes ?? 0) - ($operasi->PotAssAnes ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Sewa Alat</td>
                     <td class="nominal">{{ $R($operasi->SewaAlat ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotAlat ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->SewaAlat ?? 0) - ($operasi->PotAlat ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Bahan</td>
                     <td class="nominal">{{ $R($operasi->Bahan ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotBahan ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->Bahan ?? 0) - ($operasi->PotBahan ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Sewa Kamar Operasi</td>
                     <td class="nominal">{{ $R($operasi->SewaOK ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotOk ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->SewaOK ?? 0) - ($operasi->PotOk ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>Jasa Rumah Sakit</td>
                     <td class="nominal">{{ $R($operasi->Jasa ?? 0) }}</td>
                     <td class="nominal">{{ $R($operasi->PotJasa ?? 0) }}</td>
+                    <td class="nominal">{{ $R(($operasi->Jasa ?? 0) - ($operasi->PotJasa ?? 0)) }}</td>
                 </tr>
 
                 <tr>
                     <td>CSSD</td>
                     <td class="nominal">{{ $R($operasi->Cssd ?? 0) }}</td>
                     <td class="nominal">0</td>
+                    <td class="nominal">{{ $R($operasi->Cssd ?? 0) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -275,12 +286,13 @@
         <div class="summary">
             <table>
                 <tr>
-                    <td width="58%" class="bold">TOTAL BIAYA</td>
-                    <td width="21%" class="nominal">{{ $R($operasi->Netto ?? 0) }}</td>
-                    <td width="21%" class="nominal">{{ $R($totalPotongan) }}</td>
+                    <td width="38%" class="bold">TOTAL BIAYA</td>
+                    <td width="14%" class="nominal">{{ $R($operasi->Brutto ?? 0) }}</td>
+                    <td width="14%" class="nominal">{{ $R($totalPotongan) }}</td>
+                    <td width="14%" class="nominal">{{ $R($operasi->Netto ?? 0) }}</td>
                 </tr>
                 <tr>
-                    <td colspan="3">
+                    <td colspan="4">
                         <span class="bold">TERBILANG</span>
                         <span style="margin-left:10px;">:</span>
                         <span class="terbilang">
