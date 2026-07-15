@@ -65,6 +65,7 @@
                             <th>T. Masuk</th>
                             <th>T. Keluar</th>
                             <th>Status</th>
+                            <th>No SEP</th>
                             <th>Alamat</th>
                         </tr>
                     </thead>
@@ -214,6 +215,9 @@
                     },
                     {
                         data: 'Status'
+                    },
+                    {
+                        data: 'NoSEP'
                     },
                     {
                         data: 'Addr'
