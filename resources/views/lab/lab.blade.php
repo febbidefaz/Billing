@@ -12,6 +12,35 @@
         }
     };
 
+    $fmtDateIndo = function ($value) {
+        if (!$value) {
+            return '-';
+        }
+
+        try {
+            $date = Carbon::parse($value);
+
+            $bulan = [
+                1 => 'Januari',
+                2 => 'Februari',
+                3 => 'Maret',
+                4 => 'April',
+                5 => 'Mei',
+                6 => 'Juni',
+                7 => 'Juli',
+                8 => 'Agustus',
+                9 => 'September',
+                10 => 'Oktober',
+                11 => 'November',
+                12 => 'Desember',
+            ];
+
+            return $date->format('d') . ' ' . $bulan[(int) $date->format('n')] . ' ' . $date->format('Y');
+        } catch (\Throwable $e) {
+            return (string) $value;
+        }
+    };
+
     $printedAt = $printedAt ?? now('Asia/Jakarta');
     $hospital = $hospital ?? [];
     $patient = $patient ?? [];
@@ -431,8 +460,8 @@
                     <td class="colon">:</td>
                     <td class="value">
                         {{ $patient['gender'] ?? '-' }}
-                        &nbsp;&nbsp;&nbsp;
-                        {{ $patient['dob'] ? $fmtDate($patient['dob'], 'l, d F Y') : '-' }}
+                        &nbsp;&nbsp;/&nbsp;
+                        {{ $patient['dob'] ? $fmtDateIndo($patient['dob']) : '-' }}
                     </td>
 
                     <td></td>
