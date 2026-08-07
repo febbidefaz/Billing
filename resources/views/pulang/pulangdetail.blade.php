@@ -2649,6 +2649,63 @@
                                                         </tfoot>
                                                     </table>
                                                 </div>
+
+                                                <div class="modal-footer bg-white">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-dismiss="modal">
+                                                        <i class="fas fa-times mr-1"></i>
+                                                        Tutup
+                                                    </button>
+
+                                                    <button type="button" class="btn btn-info"
+                                                        onclick="openRadiologiPrint(
+                                                            '{{ route('rad.print', ['idRad' => $r->IDRad]) }}'
+                                                        )">
+                                                        <i class="fas fa-print mr-1"></i>
+                                                        Print Radiologi
+                                                    </button>
+                                                </div>
+
+                                                <script>
+                                                    function openRadiologiPrint(url) {
+                                                        const width = 1000;
+                                                        const height = 750;
+
+                                                        const left = Math.max(
+                                                            0,
+                                                            Math.round((window.screen.width - width) / 2)
+                                                        );
+
+                                                        const top = Math.max(
+                                                            0,
+                                                            Math.round((window.screen.height - height) / 2)
+                                                        );
+
+                                                        const popup = window.open(
+                                                            url,
+                                                            'radiologiPrintPopup',
+                                                            [
+                                                                `width=${width}`,
+                                                                `height=${height}`,
+                                                                `left=${left}`,
+                                                                `top=${top}`,
+                                                                'resizable=yes',
+                                                                'scrollbars=yes',
+                                                                'toolbar=no',
+                                                                'menubar=no',
+                                                                'location=no',
+                                                                'status=no'
+                                                            ].join(',')
+                                                        );
+
+                                                        if (!popup) {
+                                                            alert('Popup diblokir browser. Izinkan popup untuk aplikasi ini.');
+                                                            return;
+                                                        }
+
+                                                        popup.focus();
+                                                    }
+                                                </script>
                                             </div>
 
                                         </div>
@@ -2950,6 +3007,65 @@
                                                 </div>
 
                                             </div>
+
+                                            <div class="modal-footer bg-white">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    <i class="fas fa-times mr-1"></i>
+                                                    Tutup
+                                                </button>
+
+                                                <button type="button" class="btn btn-info"
+                                                    onclick="openLabPrint(
+                                                        '{{ route('lab.print', ['idLab' => $l->IDLab]) }}'
+                                                    )">
+                                                    <i class="fas fa-print mr-1"></i>
+                                                    Print Lab
+                                                </button>
+                                            </div>
+
+                                            <script>
+                                                function openLabPrint(url) {
+                                                    const width = 1000;
+                                                    const height = 750;
+
+                                                    const left = Math.max(
+                                                        0,
+                                                        Math.round((window.screen.width - width) / 2)
+                                                    );
+
+                                                    const top = Math.max(
+                                                        0,
+                                                        Math.round((window.screen.height - height) / 2)
+                                                    );
+
+                                                    const popup = window.open(
+                                                        url,
+                                                        'labPrintPopup',
+                                                        [
+                                                            `width=${width}`,
+                                                            `height=${height}`,
+                                                            `left=${left}`,
+                                                            `top=${top}`,
+                                                            'resizable=yes',
+                                                            'scrollbars=yes',
+                                                            'toolbar=no',
+                                                            'menubar=no',
+                                                            'location=no',
+                                                            'status=no'
+                                                        ].join(',')
+                                                    );
+
+                                                    if (!popup) {
+                                                        alert(
+                                                            'Popup diblokir browser. Silakan izinkan popup untuk aplikasi ini.'
+                                                        );
+                                                        return;
+                                                    }
+
+                                                    popup.focus();
+                                                }
+                                            </script>
+
 
                                         </div>
 

@@ -2838,7 +2838,7 @@
                                                     
                                                         popup.focus();
                                                     }
-                                                    </script>
+                                                </script>
 
                                             </div>
 
@@ -3140,6 +3140,21 @@
 
                                                 </div>
 
+                                            </div>                                         
+
+                                            <div class="modal-footer bg-white">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    <i class="fas fa-times mr-1"></i>
+                                                    Tutup
+                                                </button>
+
+                                                <button type="button" class="btn btn-info"
+                                                    onclick="openLabPrint(
+                                                        '{{ route('lab.print', ['idLab' => $l->IDLab]) }}'
+                                                    )">
+                                                    <i class="fas fa-print mr-1"></i>
+                                                    Print Lab
+                                                </button>
                                             </div>
 
                                             <script>
@@ -3184,21 +3199,6 @@
                                                     popup.focus();
                                                 }
                                             </script>
-
-                                            <div class="modal-footer bg-white">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                    <i class="fas fa-times mr-1"></i>
-                                                    Tutup
-                                                </button>
-
-                                                <button type="button" class="btn btn-info"
-                                                    onclick="openLabPrint(
-                                                        '{{ route('lab.print', ['idLab' => $l->IDLab]) }}'
-                                                    )">
-                                                    <i class="fas fa-print mr-1"></i>
-                                                    Print Lab
-                                                </button>
-                                            </div>
 
                                         </div>
 
