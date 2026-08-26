@@ -170,91 +170,91 @@ class RadController extends Controller
     }
 
     private function formatSignatureImage(mixed $ttd): ?string
-{
-    if (empty($ttd)) {
-        return null;
-    }
+    {
+        if (empty($ttd)) {
+            return null;
+        }
 
-    /*
-     * Jika sudah berupa data URI.
-     */
-    if (
-        is_string($ttd) &&
-        str_starts_with($ttd, 'data:image/')
-    ) {
-        return $ttd;
-    }
+        /*
+        * Jika sudah berupa data URI.
+        */
+        if (
+            is_string($ttd) &&
+            str_starts_with($ttd, 'data:image/')
+        ) {
+            return $ttd;
+        }
 
-    /*
-     * Jika isi database berupa path file.
-     */
-    if (is_string($ttd) && is_file($ttd)) {
-        $mime = mime_content_type($ttd) ?: 'image/png';
-
-        return 'data:' . $mime . ';base64,' .
-            base64_encode(file_get_contents($ttd));
-    }
-
-    /*
-     * Jika isi database berupa path relatif di public.
-     */
-    if (is_string($ttd)) {
-        $publicFile = public_path(
-            ltrim(str_replace('\\', '/', $ttd), '/')
-        );
-
-        if (is_file($publicFile)) {
-            $mime = mime_content_type($publicFile)
-                ?: 'image/png';
+        /*
+        * Jika isi database berupa path file.
+        */
+        if (is_string($ttd) && is_file($ttd)) {
+            $mime = mime_content_type($ttd) ?: 'image/png';
 
             return 'data:' . $mime . ';base64,' .
-                base64_encode(
-                    file_get_contents($publicFile)
-                );
+                base64_encode(file_get_contents($ttd));
         }
-    }
 
-    /*
-     * Jika isi database sudah berupa base64 tanpa prefix.
-     */
-    if (is_string($ttd)) {
-        $clean = preg_replace(
-            '/\s+/',
-            '',
-            $ttd
-        );
+        /*
+        * Jika isi database berupa path relatif di public.
+        */
+        if (is_string($ttd)) {
+            $publicFile = public_path(
+                ltrim(str_replace('\\', '/', $ttd), '/')
+            );
 
-        $decoded = base64_decode(
-            $clean,
-            true
-        );
+            if (is_file($publicFile)) {
+                $mime = mime_content_type($publicFile)
+                    ?: 'image/png';
 
-        if ($decoded !== false) {
-            $mime = $this->detectImageMime($decoded);
+                return 'data:' . $mime . ';base64,' .
+                    base64_encode(
+                        file_get_contents($publicFile)
+                    );
+            }
+        }
+
+        /*
+        * Jika isi database sudah berupa base64 tanpa prefix.
+        */
+        if (is_string($ttd)) {
+            $clean = preg_replace(
+                '/\s+/',
+                '',
+                $ttd
+            );
+
+            $decoded = base64_decode(
+                $clean,
+                true
+            );
+
+            if ($decoded !== false) {
+                $mime = $this->detectImageMime($decoded);
+
+                if ($mime !== null) {
+                    return 'data:' . $mime . ';base64,' .
+                        base64_encode($decoded);
+                }
+            }
+        }
+
+        /*
+        * Jika isi SQL Server berupa VARBINARY / IMAGE.
+        */
+        if (is_string($ttd)) {
+            $mime = $this->detectImageMime($ttd);
 
             if ($mime !== null) {
                 return 'data:' . $mime . ';base64,' .
-                    base64_encode($decoded);
+                    base64_encode($ttd);
             }
         }
+
+        Log::warning('Format tanda tangan radiologi tidak dikenali');
+
+        return null;
     }
-
-    /*
-     * Jika isi SQL Server berupa VARBINARY / IMAGE.
-     */
-    if (is_string($ttd)) {
-        $mime = $this->detectImageMime($ttd);
-
-        if ($mime !== null) {
-            return 'data:' . $mime . ';base64,' .
-                base64_encode($ttd);
-        }
-    }
-
-    Log::warning('Format tanda tangan radiologi tidak dikenali');
-
-    return null;
-}
 
     private function detectImageMime(string $binary): ?string
     {
@@ -283,4 +283,254 @@ class RadController extends Controller
 
         return null;
     }
+
+    public function printEditRadiologi($id)
+    {
+        try {
+
+            // =====================================================
+            // AMBIL DATA RADIOLOGI EDIT
+            // BERDASARKAN ID REGISTRASI
+            // =====================================================
+
+            $rows = DB::select(
+                "EXEC dbo.WebRadiologiResultKwitEditIDReg_SP ?",
+                [$id]
+            );
+
+
+            if (empty($rows)) {
+
+                return response(
+                    '<h3 style="
+                        font-family:Arial;
+                        text-align:center;
+                        margin-top:50px;
+                    ">
+                        Data Edit Radiologi belum tersedia.
+                    </h3>',
+                    404
+                );
+            }
+
+
+            // =====================================================
+            // DATA PASIEN
+            // =====================================================
+
+            $first = $rows[0];
+
+
+            $patientR = [
+
+                'nama' =>
+                    $first->Nama ?? '-',
+
+                'regNum' =>
+                    $first->RegNum ?? '-',
+
+                'idReg' =>
+                    $first->IDReg ?? $id,
+
+                'addr' =>
+                    trim(
+                        ($first->Addr ?? '')
+                        . ' '
+                        . ($first->Kelurahan ?? '')
+                    ) ?: '-',
+
+                'gender' =>
+                    $first->Jenis_Kelamin ?? '-',
+
+                'dob' =>
+                    $first->Tanggal_Lahir ?? null,
+
+            ];
+
+
+            // =====================================================
+            // GROUP PER ID RAD
+            // =====================================================
+
+            $groupRad = collect($rows)
+                ->groupBy('IDRad');
+
+
+            $rads = [];
+
+
+            foreach ($groupRad as $idRad => $items) {
+
+                $firstRad =
+                    $items->first();
+
+
+                // ================================================
+                // ITEM PEMERIKSAAN
+                // ================================================
+
+                $periks =
+                    $items
+                        ->map(function ($row) {
+
+                            return [
+
+                                'radio_id' =>
+                                    $row->Radio_ID ?? null,
+
+                                'periksa_id' =>
+                                    $row->PeriksaID ?? null,
+
+                                'periksa' =>
+                                    $row->Periksa ?? '-',
+
+                                'result' =>
+                                    $row->Result ?? '',
+
+                                'biaya' =>
+                                    $row->Biaya ?? 0,
+
+                            ];
+
+                        })
+                        ->values()
+                        ->toArray();
+
+
+                // ================================================
+                // DATA PER ID RAD
+                // ================================================
+
+                $rads[] = [
+
+                    'idrad' =>
+                        $idRad,
+
+                    'trad' =>
+                        $firstRad->TRad ?? null,
+
+                    'dokter' =>
+                        $firstRad->Dokter ?? '-',
+
+                    'alatname' =>
+                        $firstRad->AlatName ?? '-',
+
+                    'klas' =>
+                        $firstRad->Klas ?? '-',
+
+                    'usr' =>
+                        $firstRad->Usr ?? '-',
+
+                    'shift' =>
+                        $firstRad->Shift ?? '-',
+
+                    'dr' =>
+                        $firstRad->dr ?? '-',
+
+                    'ttd' =>
+                        $this->formatSignatureImage(
+                            $firstRad->Ttd ?? null
+                        ),
+
+                    'th' =>
+                        $firstRad->TH ?? 0,
+
+                    'bln' =>
+                        $firstRad->Bln ?? 0,
+
+                    'hr' =>
+                        $firstRad->Hr ?? 0,
+
+                    'periks' =>
+                        $periks,
+
+                ];
+            }
+
+
+            // =====================================================
+            // DATA RS
+            // =====================================================
+
+            $hospitalR = [
+
+                'name' =>
+                    "INSTALASI RADIOLOGI RUMAH SAKIT 'AISYIYAH BOJONEGORO",
+
+                'address' =>
+                    'JL. PANGLIMA SUDIRMAN 48 BOJONEGORO TELP. 0353-881748 FAX 0353-88597'
+
+            ];
+
+
+            $printedAt =
+                now('Asia/Jakarta');
+
+
+            // =====================================================
+            // GENERATE PDF
+            // =====================================================
+
+            $pdf = Pdf::loadView(
+                'rad.print-edit-rad',
+                compact(
+                    'patientR',
+                    'rads',
+                    'hospitalR',
+                    'printedAt'
+                )
+            );
+
+
+            $pdf->setPaper(
+                'A4',
+                'portrait'
+            );
+
+
+            $pdf->setOption(
+                'isRemoteEnabled',
+                true
+            );
+
+
+            $pdf->setOption(
+                'isHtml5ParserEnabled',
+                true
+            );
+
+
+            $pdf->setOption(
+                'chroot',
+                base_path()
+            );
+
+
+            return $pdf->stream(
+                'Edit-Radiologi-'
+                . ($patientR['regNum'] ?? $id)
+                . '.pdf'
+            );
+
+
+        } catch (\Throwable $e) {
+
+            dd([
+
+                'id' =>
+                    $id,
+
+                'message' =>
+                    $e->getMessage(),
+
+                'file' =>
+                    $e->getFile(),
+
+                'line' =>
+                    $e->getLine()
+
+            ]);
+        }
+    }
+
 }

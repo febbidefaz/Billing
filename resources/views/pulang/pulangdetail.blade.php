@@ -1056,6 +1056,51 @@
                             }
                         </script>
                     @endif
+
+                    {{-- Print Edit rad --}}
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <button type="button" class="btn btn-success btn-sm" onclick="printEditRadiologi()">
+
+                            <i class="fas fa-print"></i>
+                            E. Rad
+
+                        </button>
+
+
+                        <script>
+                            function printEditRadiologi() {
+
+                                window.open(
+                                    "{{ route('radiologi.edit.print', $pasien->ID) }}",
+                                    "PreviewEditRadiologi",
+                                    "width=1200,height=900,resizable=yes,scrollbars=yes"
+                                );
+
+                            }
+                        </script>
+                    @endif
+
+                    {{-- Print Edit Lab --}}
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <button type="button" class="btn btn-success btn-sm" onclick="printEditLab()">
+
+                            <i class="fas fa-print"></i> E. Lab
+
+                        </button>
+
+                        <script>
+                            function printEditLab() {
+
+                                window.open(
+                                    "{{ route('lab.edit.print', $pasien->ID) }}",
+                                    "PreviewEditLab",
+                                    "width=1200,height=900,resizable=yes,scrollbars=yes"
+                                );
+
+                            }
+                        </script>
+                    @endif
+
                 </div>
 
             </div>
@@ -1125,10 +1170,27 @@
 
                     @if (strtolower(Auth::user()->Role) == 'casemix')
                         <li class="nav-item">
-                            <a class="nav-link font-weight-bold" style="color:#2E8B57 !important;" data-toggle="pill"
-                                href="#tab-editfarmasi">
+                            <a class="nav-link font-weight nav-casemix" data-toggle="pill" href="#tab-editfarmasi">
 
                                 <i class="fas fa-pills"></i> Edit Far
+                            </a>
+                        </li>
+                    @endif
+
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <li class="nav-item">
+                            <a class="nav-link font-weight nav-casemix" data-toggle="pill" href="#tab-editradiologi">
+
+                                <i class="fas fa-x-ray"></i> Edit Rad
+                            </a>
+                        </li>
+                    @endif
+
+                    @if (strtolower(Auth::user()->Role) == 'casemix')
+                        <li class="nav-item">
+                            <a class="nav-link font-weight nav-casemix" data-toggle="pill" href="#tab-editlab">
+
+                                <i class="fas fa-vials"></i> Edit Lab
                             </a>
                         </li>
                     @endif
@@ -4938,6 +5000,1392 @@
                         }
                     </script>
 
+                    {{-- Tab Edit Rad --}}
+                    <div class="tab-pane fade" id="tab-editradiologi">
+
+                        <div class="p-3">
+
+                            {{-- ================================================= --}}
+                            {{-- TOMBOL SYNC --}}
+                            {{-- ================================================= --}}
+
+                            <div class="mb-3">
+
+                                <button type="button" class="btn btn-success btn-sm" onclick="confirmSyncRadEdit()">
+
+                                    <i class="fas fa-sync mr-1"></i>
+                                    Sync Radiologi
+
+                                </button>
+
+                                <small class="text-muted ml-2">
+                                    Data edit terpisah dari data radiologi asli.
+                                </small>
+
+                            </div>
+
+
+                            {{-- ================================================= --}}
+                            {{-- DAFTAR RADIOLOGI --}}
+                            {{-- ================================================= --}}
+
+                            @forelse($radiologi as $r)
+                                @php
+
+                                    $idRad = $r->IDRad;
+
+                                    $itemsRadEdit = collect($radEdit[$idRad] ?? []);
+
+                                    $collapseId = 'editRadDetail_' . $idRad;
+
+                                @endphp
+
+
+                                <div class="card mb-3 shadow-sm">
+
+                                    {{-- ================================================= --}}
+                                    {{-- HEADER --}}
+                                    {{-- ================================================= --}}
+
+                                    <div class="card-header bg-info text-white" style="cursor:pointer;"
+                                        data-toggle="collapse" data-target="#{{ $collapseId }}">
+
+                                        <div class="row align-items-center">
+
+                                            {{-- ID RAD --}}
+                                            <div class="col-md-2">
+
+                                                <small>
+                                                    ID RAD
+                                                </small>
+
+                                                <div class="font-weight-bold">
+
+                                                    {{ $idRad }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {{-- TANGGAL --}}
+                                            <div class="col-md-3">
+
+                                                <small>
+                                                    TANGGAL
+                                                </small>
+
+                                                <div class="font-weight-bold">
+
+                                                    {{ !empty($r->TGL) ? date('d/m/Y', strtotime($r->TGL)) : '-' }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {{-- DOKTER --}}
+                                            <div class="col-md-4">
+
+                                                <small>
+                                                    DOKTER
+                                                </small>
+
+                                                <div class="font-weight-bold">
+
+                                                    {{ $r->Dokter ?? '-' }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {{-- TOTAL --}}
+                                            <div class="col-md-3 text-right">
+
+                                                <small>
+                                                    TOTAL
+                                                </small>
+
+                                                <div class="font-weight-bold">
+
+                                                    Rp
+                                                    {{ number_format($itemsRadEdit->sum('Biaya'), 0, ',', '.') }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {{-- ================================================= --}}
+                                    {{-- DETAIL --}}
+                                    {{-- ================================================= --}}
+
+                                    <div id="{{ $collapseId }}" class="collapse">
+
+                                        <div class="card-body p-0">
+
+                                            <div class="table-responsive">
+
+                                                <table
+                                                    class="
+                                                        table
+                                                        table-bordered
+                                                        table-sm
+                                                        mb-0
+                                                    ">
+
+
+                                                    {{-- ============================= --}}
+                                                    {{-- HEADER TABLE --}}
+                                                    {{-- ============================= --}}
+
+                                                    <thead class="bg-light">
+
+                                                        <tr>
+
+                                                            <th width="60" class="text-center">
+
+                                                                NO
+
+                                                            </th>
+
+
+                                                            <th>
+
+                                                                PEMERIKSAAN
+
+                                                            </th>
+
+
+                                                            <th width="50%">
+
+                                                                HASIL PEMERIKSAAN
+
+                                                            </th>
+
+
+                                                            <th width="160" class="text-right">
+
+                                                                BIAYA
+
+                                                            </th>
+
+
+                                                            <th width="100" class="text-center">
+
+                                                                AKSI
+
+                                                            </th>
+
+                                                        </tr>
+
+                                                    </thead>
+
+
+                                                    {{-- ============================= --}}
+                                                    {{-- BODY --}}
+                                                    {{-- ============================= --}}
+
+                                                    <tbody>
+
+                                                        @php
+
+                                                            $noEditRad = 1;
+
+                                                        @endphp
+
+
+                                                        @forelse($itemsRadEdit as $item)
+                                                            <tr
+                                                                id="
+                                                                    rowRadEdit_{{ $item->IDRad }}_{{ $item->Radio_ID }}
+                                                                ">
+
+
+                                                                {{-- NOMOR --}}
+                                                                <td class="text-center" style="vertical-align:middle;">
+
+                                                                    {{ $noEditRad++ }}
+
+                                                                </td>
+
+
+                                                                {{-- PEMERIKSAAN --}}
+                                                                <td style="vertical-align:middle;">
+
+                                                                    <span
+                                                                        style="
+                                                                            font-style:italic;
+                                                                            font-weight:500;
+                                                                        ">
+
+                                                                        {{ $item->Periksa ?? '-' }}
+
+                                                                    </span>
+                                                            
+                                                                </td>
+
+
+                                                                {{-- HASIL --}}
+                                                                <td>
+
+                                                                    <textarea
+                                                                        class="
+                                                                            form-control
+                                                                            form-control-sm
+                                                                        "
+                                                                        rows="5" id="rad_result_{{ $item->IDRad }}_{{ $item->Radio_ID }}">{{ $item->Result ?? '' }}</textarea>
+
+                                                                </td>
+
+
+                                                                {{-- BIAYA --}}
+                                                                <td>
+
+                                                                    <input type="number"
+                                                                        class="
+                                                                            form-control
+                                                                            form-control-sm
+                                                                            text-right
+                                                                            font-weight-bold
+                                                                        "
+                                                                        id="rad_biaya_{{ $item->IDRad }}_{{ $item->Radio_ID }}"
+                                                                        value="{{ $item->Biaya ?? 0 }}" readonly>
+
+                                                                </td>
+
+
+                                                                {{-- AKSI --}}
+                                                                <td class="text-center" style="vertical-align:middle;">
+
+
+                                                                    {{-- SIMPAN --}}
+                                                                    <button type="button"
+                                                                        class="
+                                                                            btn
+                                                                            btn-success
+                                                                            btn-sm
+                                                                        "
+                                                                        title="Simpan"
+                                                                        onclick="
+                                                                            updateRadEdit(
+                                                                                '{{ $item->IDRad }}',
+                                                                                '{{ $item->Radio_ID }}'
+                                                                            )
+                                                                        ">
+
+                                                                        <i class="fas fa-save"></i>
+
+                                                                    </button>
+
+
+                                                                    {{-- HAPUS --}}
+                                                                    <button type="button"
+                                                                        class="
+                                                                            btn
+                                                                            btn-danger
+                                                                            btn-sm
+                                                                        "
+                                                                        title="Hapus"
+                                                                        onclick="
+                                                                            hapusRadEdit(
+                                                                                '{{ $item->IDRad }}',
+                                                                                '{{ $item->Radio_ID }}'
+                                                                            )
+                                                                        ">
+
+                                                                        <i class="fas fa-trash"></i>
+
+                                                                    </button>
+
+                                                                </td>
+
+                                                            </tr>
+
+
+                                                        @empty
+
+
+                                                            <tr>
+
+                                                                <td colspan="5" class="text-center py-5">
+
+                                                                    <div class="text-muted">
+
+                                                                        <i
+                                                                            class="
+                                                                                fas
+                                                                                fa-x-ray
+                                                                                fa-2x
+                                                                                mb-2
+                                                                            ">
+                                                                        </i>
+
+
+                                                                        <div class="font-weight-bold">
+
+                                                                            Data Edit Radiologi masih kosong
+
+                                                                        </div>
+
+
+                                                                        <small>
+
+                                                                            Klik
+                                                                            <b>Sync Radiologi</b>
+                                                                            untuk mengambil data radiologi.
+
+                                                                        </small>
+
+                                                                    </div>
+
+                                                                </td>
+
+                                                            </tr>
+                                                        @endforelse
+
+                                                    </tbody>
+
+
+                                                    {{-- ============================= --}}
+                                                    {{-- TOTAL --}}
+                                                    {{-- ============================= --}}
+
+                                                    @if ($itemsRadEdit->count() > 0)
+                                                        <tfoot>
+
+                                                            <tr class="font-weight-bold"
+                                                                style="
+                                                                    border-top:2px solid #333;
+                                                                    background:#f8f9fa;
+                                                                ">
+
+                                                                <td colspan="3" class="text-right"
+                                                                    style="
+                                                                        font-size:16px;
+                                                                        padding:14px;
+                                                                    ">
+
+                                                                    <i
+                                                                        class="
+                                                                            fas
+                                                                            fa-calculator
+                                                                            text-info
+                                                                            mr-1
+                                                                        ">
+                                                                    </i>
+
+                                                                    Total Radiologi
+
+                                                                </td>
+
+
+                                                                <td class="
+                                                                        text-right
+                                                                        text-info
+                                                                    "
+                                                                    style="
+                                                                        font-size:18px;
+                                                                        font-weight:700;
+                                                                        padding:14px;
+                                                                    ">
+
+                                                                    Rp
+                                                                    {{ number_format($itemsRadEdit->sum('Biaya'), 0, ',', '.') }}
+
+                                                                </td>
+
+
+                                                                <td></td>
+
+                                                            </tr>
+
+                                                        </tfoot>
+                                                    @endif
+
+
+                                                </table>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                            @empty
+
+                                <div class="alert alert-light text-center">
+
+                                    Data radiologi belum tersedia.
+
+                                </div>
+                            @endforelse
+
+                        </div>
+
+                    </div>
+
+                    <script>
+                        // ======================================================
+                        // KONFIRMASI SYNC RADIOLOGI
+                        // ======================================================
+
+                        function confirmSyncRadEdit() {
+
+                            Swal.fire({
+
+                                icon: 'warning',
+
+                                title: 'Sinkronisasi Radiologi',
+
+                                html: `
+                                    Data Edit Radiologi akan disinkronkan ulang
+                                    dari data Radiologi asli.
+                                    <br><br>
+                    
+                                    <b class="text-danger">
+                                        Perubahan yang sudah dilakukan pada Edit Radiologi
+                                        akan dikembalikan ke data awal.
+                                    </b>
+                                `,
+
+                                showCancelButton: true,
+
+                                confirmButtonText: 'Ya, Sinkronkan',
+
+                                cancelButtonText: 'Batal',
+
+                                confirmButtonColor: '#17a2b8'
+
+                            }).then((result) => {
+
+                                if (result.isConfirmed) {
+
+                                    syncRadEdit();
+
+                                }
+
+                            });
+
+                        }
+
+
+                        // ======================================================
+                        // SYNC RADIOLOGI
+                        // ======================================================
+
+                        function syncRadEdit() {
+
+                            $.ajax({
+
+                                url: "{{ route('radiologi.edit.sync', $pasien->ID) }}",
+
+                                type: "POST",
+
+                                data: {
+
+                                    _token: "{{ csrf_token() }}"
+
+                                },
+
+                                beforeSend: function() {
+
+                                    toastr.info(
+                                        'Sedang sinkron data Radiologi...'
+                                    );
+
+                                },
+
+                                success: function(res) {
+
+                                    toastr.success(
+                                        res.message ??
+                                        'Sinkronisasi Radiologi berhasil'
+                                    );
+
+                                    setTimeout(function() {
+
+                                        location.reload();
+
+                                    }, 500);
+
+                                },
+
+                                error: function(xhr) {
+
+                                    console.log(
+                                        xhr.responseText
+                                    );
+
+                                    toastr.error(
+                                        xhr.responseJSON?.message ??
+                                        'Gagal sinkron Radiologi'
+                                    );
+
+                                }
+
+                            });
+
+                        }
+
+
+                        // ======================================================
+                        // UPDATE RADIOLOGI
+                        // ======================================================
+
+                        function updateRadEdit(
+                            id,
+                            radioId
+                        ) {
+
+                            const key =
+                                id + '_' + radioId;
+
+
+                            const resultInput =
+                                document.getElementById(
+                                    'rad_result_' + key
+                                );
+
+
+                            if (!resultInput) {
+
+                                toastr.error(
+                                    'Field hasil Radiologi tidak ditemukan.'
+                                );
+
+                                return;
+
+                            }
+
+
+                            $.ajax({
+
+                                url: "{{ route('radiologi.edit.update') }}",
+
+                                type: "POST",
+
+                                data: {
+
+                                    _token: "{{ csrf_token() }}",
+
+                                    ID: id,
+
+                                    Radio_ID: radioId,
+
+                                    Result: resultInput.value
+
+                                },
+
+                                beforeSend: function() {
+
+                                    toastr.info(
+                                        'Menyimpan hasil Radiologi...'
+                                    );
+
+                                },
+
+                                success: function(res) {
+
+                                    toastr.success(
+                                        res.message ??
+                                        'Hasil Radiologi berhasil diperbarui'
+                                    );
+
+                                },
+
+                                error: function(xhr) {
+
+                                    console.log(
+                                        xhr.responseText
+                                    );
+
+                                    toastr.error(
+                                        xhr.responseJSON?.message ??
+                                        'Gagal update Radiologi'
+                                    );
+
+                                }
+
+                            });
+
+                        }
+
+
+                        // ======================================================
+                        // HAPUS RADIOLOGI
+                        // ======================================================
+
+                        function hapusRadEdit(
+                            id,
+                            radioId
+                        ) {
+
+                            Swal.fire({
+
+                                icon: 'warning',
+
+                                title: 'Hapus Pemeriksaan?',
+
+                                text: 'Pemeriksaan akan dihapus dari data Edit Radiologi.',
+
+                                showCancelButton: true,
+
+                                confirmButtonText: 'Ya, Hapus',
+
+                                cancelButtonText: 'Batal',
+
+                                confirmButtonColor: '#dc3545'
+
+                            }).then((result) => {
+
+                                if (!result.isConfirmed) {
+
+                                    return;
+
+                                }
+
+
+                                $.ajax({
+
+                                    url: "{{ route('radiologi.edit.delete') }}",
+
+                                    type: "POST",
+
+                                    data: {
+
+                                        _token: "{{ csrf_token() }}",
+
+                                        ID: id,
+
+                                        Radio_ID: radioId
+
+                                    },
+
+                                    success: function(res) {
+
+                                        toastr.success(
+                                            res.message ??
+                                            'Pemeriksaan berhasil dihapus'
+                                        );
+
+
+                                        const key =
+                                            id + '_' + radioId;
+
+
+                                        $('#rowRadEdit_' + key)
+                                            .fadeOut(
+                                                300,
+                                                function() {
+
+                                                    $(this).remove();
+
+                                                }
+                                            );
+
+                                    },
+
+                                    error: function(xhr) {
+
+                                        console.log(
+                                            xhr.responseText
+                                        );
+
+                                        toastr.error(
+                                            xhr.responseJSON?.message ??
+                                            'Gagal menghapus pemeriksaan'
+                                        );
+
+                                    }
+
+                                });
+
+                            });
+
+                        }
+                    </script>
+
+                    {{-- Tab Edit Lab --}}
+                    <div class="tab-pane fade" id="tab-editlab">
+
+                        <div class="p-3">
+
+                            {{-- TOMBOL SYNC --}}
+                            <div class="mb-3">
+
+                                <button type="button" class="btn btn-success btn-sm" onclick="confirmSyncLabEdit()">
+
+                                    <i class="fas fa-sync mr-1"></i>
+                                    Sync Lab
+
+                                </button>
+
+                                <small class="text-muted ml-2">
+                                    Data edit terpisah dari data laboratorium asli.
+                                </small>
+
+                            </div>
+
+
+                            {{-- ================================================= --}}
+                            {{-- DAFTAR LAB --}}
+                            {{-- ================================================= --}}
+
+                            @forelse($lab as $l)
+                                @php
+
+                                    $itemsLabEdit = collect($labEdit[$l->IDLab] ?? []);
+
+                                    $collapseId = 'editLabDetail_' . $l->IDLab;
+
+                                @endphp
+
+
+                                <div class="card mb-3 shadow-sm">
+
+                                    {{-- HEADER --}}
+                                    <div class="card-header bg-info text-white" style="cursor:pointer"
+                                        data-toggle="collapse" data-target="#{{ $collapseId }}">
+
+                                        <div class="row align-items-center">
+
+                                            <div class="col-md-2">
+
+                                                <small>ID LAB</small>
+
+                                                <div class="font-weight-bold">
+                                                    {{ $l->IDLab }}
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="col-md-3">
+
+                                                <small>TANGGAL</small>
+
+                                                <div class="font-weight-bold">
+
+                                                    {{ $l->TLab ? date('d/m/Y', strtotime($l->TLab)) : '-' }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="col-md-4">
+
+                                                <small>DOKTER</small>
+
+                                                <div class="font-weight-bold">
+
+                                                    {{ $l->Dokter ?? '-' }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="col-md-3 text-right">
+
+                                                <small>TOTAL</small>
+
+                                                <div class="font-weight-bold">
+
+                                                    Rp
+                                                    {{ number_format($itemsLabEdit->sum('Biaya'), 0, ',', '.') }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {{-- DETAIL --}}
+                                    <div id="{{ $collapseId }}" class="collapse">
+
+                                        <div class="card-body p-0">
+
+                                            <div class="table-responsive">
+
+                                                <table class="table table-bordered table-sm mb-0">
+
+                                                    <thead class="bg-light">
+
+                                                        <tr>
+
+                                                            <th width="60" class="text-center">
+                                                                NO
+                                                            </th>
+
+                                                            <th>
+                                                                PEMERIKSAAN
+                                                            </th>
+
+                                                            <th width="180" class="text-center">
+                                                                HASIL
+                                                            </th>
+
+                                                            <th>
+                                                                NILAI NORMAL
+                                                            </th>
+
+                                                            <th width="180" class="text-right">
+                                                                BIAYA
+                                                            </th>
+
+                                                            <th width="100" class="text-center">
+                                                                AKSI
+                                                            </th>
+
+                                                        </tr>
+
+                                                    </thead>
+
+
+                                                    <tbody>
+
+                                                        @php
+                                                            $noEditLab = 1;
+                                                            $lastKategoriEdit = null;
+                                                        @endphp
+
+
+                                                        @forelse($itemsLabEdit as $item)
+                                                            {{-- ============================================ --}}
+                                                            {{-- KATEGORI --}}
+                                                            {{-- ============================================ --}}
+
+                                                            @if ($lastKategoriEdit !== ($item->Kategori ?? ''))
+                                                                <tr>
+
+                                                                    <td colspan="6" class="font-weight-bold"
+                                                                        style="
+                                                                    padding:14px 14px;
+                                                                    background:#ffffff;
+                                                                    font-size:14px;
+                                                                ">
+
+                                                                        {{ strtoupper($item->Kategori ?? 'LABORATORIUM') }}
+
+                                                                    </td>
+
+                                                                </tr>
+
+                                                                @php
+                                                                    $lastKategoriEdit = $item->Kategori ?? '';
+                                                                @endphp
+                                                            @endif
+
+
+
+                                                            {{-- ============================================ --}}
+                                                            {{-- ITEM LAB --}}
+                                                            {{-- ============================================ --}}
+
+                                                            <tr
+                                                                id="rowLabEdit_{{ $item->ID }}_{{ $item->LabID }}_{{ $item->Prep_ID }}">
+
+
+                                                                {{-- NOMOR --}}
+                                                                <td class="text-center" style="vertical-align:middle;">
+
+                                                                    {{ $noEditLab++ }}
+
+                                                                </td>
+
+
+
+                                                                {{-- PEMERIKSAAN --}}
+                                                                <td style="vertical-align:middle;">
+
+                                                                    <span
+                                                                        style="
+                                                                    font-style:italic;
+                                                                    font-weight:500;
+                                                                ">
+
+                                                                        {{ $item->Perik ?? '-' }}
+
+                                                                    </span>
+
+                                                                </td>
+
+                                                                {{-- HASIL --}}
+                                                                <td>
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm text-center font-weight-bold"
+                                                                        id="lab_levels_{{ $item->ID }}_{{ $item->LabID }}_{{ $item->Prep_ID }}"
+                                                                        value="{{ $item->Levels ?? '' }}">
+                                                                </td>
+
+                                                                {{-- NILAI NORMAL --}}
+                                                                <td>
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm"
+                                                                        id="lab_normal_{{ $item->ID }}_{{ $item->LabID }}_{{ $item->Prep_ID }}"
+                                                                        value="{{ $item->NorL ?? '' }}" readonly>
+                                                                </td>
+
+                                                                {{-- BIAYA --}}
+                                                                <td>
+                                                                    <input type="number"
+                                                                        class="form-control form-control-sm text-right font-weight-bold"
+                                                                        id="lab_biaya_{{ $item->ID }}_{{ $item->LabID }}_{{ $item->Prep_ID }}"
+                                                                        value="{{ $item->Biaya ?? 0 }}" readonly>
+                                                                </td>
+
+
+
+                                                                {{-- AKSI --}}
+                                                                <td class="text-center" style="vertical-align:middle;">
+
+
+                                                                    {{-- SAVE --}}
+
+                                                                    <button type="button"
+                                                                        class="
+                                                                            btn
+                                                                            btn-success
+                                                                            btn-sm
+                                                                        "
+                                                                        title="Simpan"
+                                                                        onclick="
+                                                                            updateLabEdit(
+                                                                                '{{ $item->ID }}',
+                                                                                '{{ $item->LabID }}',
+                                                                                '{{ $item->Prep_ID }}'
+                                                                            )
+                                                                        ">
+
+                                                                        <i class="fas fa-save"></i>
+
+                                                                    </button>
+
+
+
+                                                                    {{-- DELETE --}}
+
+                                                                    <button type="button"
+                                                                        class="
+                                                                                btn
+                                                                                btn-danger
+                                                                                btn-sm
+                                                                            "
+                                                                        title="Hapus"
+                                                                        onclick="
+                                                                            hapusLabEdit(
+                                                                                '{{ $item->ID }}',
+                                                                                '{{ $item->LabID }}',
+                                                                                '{{ $item->Prep_ID }}'
+                                                                            )
+                                                                        ">
+
+                                                                        <i class="fas fa-trash"></i>
+
+                                                                    </button>
+
+                                                                </td>
+
+
+                                                            </tr>
+
+
+                                                        @empty
+
+
+                                                            <tr>
+
+                                                                <td colspan="6" class="text-center py-5">
+
+                                                                    <div class="text-muted">
+
+                                                                        <i
+                                                                            class="
+                                                                                fas
+                                                                                fa-vials
+                                                                                fa-2x
+                                                                                mb-2
+                                                                            "></i>
+
+                                                                        <div class="font-weight-bold">
+
+                                                                            Data Edit Laboratorium masih kosong
+
+                                                                        </div>
+
+                                                                        <small>
+
+                                                                            Klik
+                                                                            <b>Sync Lab</b>
+                                                                            untuk mengambil data laboratorium.
+
+                                                                        </small>
+
+                                                                    </div>
+
+                                                                </td>
+
+                                                            </tr>
+                                                        @endforelse
+
+                                                    </tbody>
+
+
+
+                                                    {{-- =============================================== --}}
+                                                    {{-- TOTAL --}}
+                                                    {{-- =============================================== --}}
+
+                                                    @if ($itemsLabEdit->count() > 0)
+                                                        <tfoot>
+
+                                                            <tr class="font-weight-bold"
+                                                                style="
+                                                                        border-top:2px solid #333;
+                                                                        background:#f8f9fa;
+                                                                    ">
+
+                                                                <td colspan="4" class="text-right"
+                                                                    style="
+                                                                            font-size:16px;
+                                                                            padding:14px;
+                                                                        ">
+
+                                                                    <i
+                                                                        class="
+                                                                            fas
+                                                                            fa-calculator
+                                                                            text-info
+                                                                            mr-1
+                                                                        ">
+                                                                    </i>
+
+                                                                    Total Laboratorium
+
+                                                                </td>
+
+
+                                                                <td class="
+                                                                        text-right
+                                                                        text-info
+                                                                    "
+                                                                    style="
+                                                                        font-size:18px;
+                                                                        font-weight:700;
+                                                                        padding:14px;
+                                                                    ">
+
+                                                                    Rp
+                                                                    {{ number_format($itemsLabEdit->sum('Biaya'), 0, ',', '.') }}
+
+                                                                </td>
+
+
+                                                                <td></td>
+
+                                                            </tr>
+
+                                                        </tfoot>
+                                                    @endif
+
+
+                                                </table>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                            @empty
+
+                                <div class="alert alert-light text-center">
+
+                                    Data laboratorium belum tersedia.
+
+                                </div>
+                            @endforelse
+
+                        </div>
+
+                    </div>
+
+                    <script>
+                        // ======================================================
+                        // SYNC LAB
+                        // ======================================================
+                        function confirmSyncLabEdit() {
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Sinkronisasi Laboratorium',
+
+                                html: `
+                                    Data Edit Laboratorium akan disinkronkan ulang
+                                    dari data Laboratorium asli.<br><br>
+
+                                    <b class="text-danger">
+                                        Perubahan yang sudah dilakukan pada Edit Lab
+                                        akan dikembalikan ke data awal.
+                                    </b>
+                                `,
+
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Sinkronkan',
+                                cancelButtonText: 'Batal',
+                                confirmButtonColor: '#17a2b8'
+
+                            }).then((result) => {
+
+                                if (result.isConfirmed) {
+                                    syncLabEdit();
+                                }
+
+                            });
+                        }
+
+
+                        function syncLabEdit() {
+
+                            $.ajax({
+
+                                url: "{{ route('lab.edit.sync', $pasien->ID) }}",
+
+                                type: "POST",
+
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+
+                                beforeSend: function() {
+                                    toastr.info('Sedang sinkron data laboratorium...');
+                                },
+
+                                success: function(res) {
+
+                                    toastr.success(
+                                        res.message ?? 'Sinkronisasi berhasil'
+                                    );
+
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 500);
+                                },
+
+                                error: function(xhr) {
+
+                                    console.log(xhr.responseText);
+
+                                    toastr.error(
+                                        xhr.responseJSON?.message ??
+                                        'Gagal sinkron laboratorium'
+                                    );
+                                }
+                            });
+                        }
+
+                        // ======================================================
+                        // UPDATE LAB
+                        // ======================================================
+
+                        function updateLabEdit(id, labId, prepId) {
+
+                            const key = id + '_' + labId + '_' + prepId;
+
+                            const levelsInput = document.getElementById('lab_levels_' + key);
+                            const normalInput = document.getElementById('lab_normal_' + key);
+                            const biayaInput = document.getElementById('lab_biaya_' + key);
+
+                            console.log('KEY:', key);
+                            console.log('LEVELS:', levelsInput);
+                            console.log('NORMAL:', normalInput);
+                            console.log('BIAYA:', biayaInput);
+
+                            if (!levelsInput) {
+                                toastr.error(
+                                    'Field hasil laboratorium tidak ditemukan. Key: ' + key
+                                );
+                                return;
+                            }
+
+                            if (!normalInput) {
+                                toastr.error(
+                                    'Field nilai normal tidak ditemukan.'
+                                );
+                                return;
+                            }
+
+                            if (!biayaInput) {
+                                toastr.error(
+                                    'Field biaya laboratorium tidak ditemukan.'
+                                );
+                                return;
+                            }
+
+                            const levels = levelsInput.value;
+                            const normal = normalInput.value;
+                            const biaya = biayaInput.value;
+
+                            $.ajax({
+
+                                url: "{{ route('lab.edit.update') }}",
+
+                                type: "POST",
+
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+
+                                    ID: id,
+                                    LabID: labId,
+                                    Prep_ID: prepId,
+
+                                    Levels: levels,
+                                    NorL: normal,
+                                    Biaya: biaya
+                                },
+
+                                beforeSend: function() {
+                                    toastr.info('Menyimpan perubahan...');
+                                },
+
+                                success: function(res) {
+
+                                    toastr.success(
+                                        res.message ??
+                                        'Laboratorium berhasil diperbarui'
+                                    );
+
+                                },
+
+                                error: function(xhr) {
+
+                                    console.log(xhr.responseText);
+
+                                    toastr.error(
+                                        xhr.responseJSON?.message ??
+                                        'Gagal update laboratorium'
+                                    );
+
+                                }
+
+                            });
+                        }
+
+                        // ======================================================
+                        // HAPUS LAB
+                        // ======================================================
+
+                        function hapusLabEdit(
+                            id,
+                            labId,
+                            prepId
+                        ) {
+
+                            Swal.fire({
+
+                                icon: 'warning',
+
+                                title: 'Hapus Pemeriksaan?',
+
+                                text: 'Pemeriksaan akan dihapus dari data Edit Laboratorium.',
+
+                                showCancelButton: true,
+
+                                confirmButtonText: 'Ya, Hapus',
+
+                                cancelButtonText: 'Batal',
+
+                                confirmButtonColor: '#dc3545'
+
+                            }).then((result) => {
+
+                                if (!result.isConfirmed) {
+
+                                    return;
+
+                                }
+
+
+                                $.ajax({
+
+                                    url: "{{ route('lab.edit.delete') }}",
+
+                                    type: "POST",
+
+                                    data: {
+
+                                        _token: "{{ csrf_token() }}",
+
+                                        ID: id,
+
+                                        LabID: labId,
+
+                                        Prep_ID: prepId
+
+                                    },
+
+                                    success: function(res) {
+
+                                        toastr.success(
+                                            res.message ??
+                                            'Pemeriksaan berhasil dihapus'
+                                        );
+
+
+                                        let key =
+                                            id + '_' +
+                                            labId + '_' +
+                                            prepId;
+
+
+                                        $('#rowLabEdit_' + key)
+                                            .fadeOut(
+                                                300,
+                                                function() {
+
+                                                    $(this).remove();
+
+                                                }
+                                            );
+
+                                    },
+
+                                    error: function(xhr) {
+
+                                        console.log(
+                                            xhr.responseText
+                                        );
+
+                                        toastr.error(
+                                            xhr.responseJSON?.message ??
+                                            'Gagal menghapus pemeriksaan'
+                                        );
+
+                                    }
+
+                                });
+
+                            });
+
+                        }
+                    </script>
+
                 </div>
 
             </div>
@@ -5779,6 +7227,14 @@
     .list-group-item {
         font-size: 13px;
         text-align: left;
+    }
+
+    .nav-casemix {
+        color: #2E8B57 !important;
+    }
+
+    .nav-casemix.active {
+        color: #000 !important;
     }
 </style>
 

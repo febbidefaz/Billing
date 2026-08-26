@@ -274,7 +274,7 @@ class LabController extends Controller
         mixed $level,
         mixed $batasBawah,
         mixed $batasAtas
-    ): string {
+        ): string {
         if (!is_numeric($level)) {
             return '';
         }
@@ -306,7 +306,7 @@ class LabController extends Controller
     private function formatAlamat(
         mixed $alamat,
         mixed $kelurahan
-    ): string {
+        ): string {
         return collect([
             trim((string) $alamat),
             trim((string) $kelurahan),
@@ -371,6 +371,229 @@ class LabController extends Controller
             ]);
     
             return null;
+        }
+    }
+    
+    public function printEditLab($id)
+    {
+        try {
+
+            // =====================================================
+            // AMBIL HASIL LAB EDIT
+            // =====================================================
+
+            $rows = DB::select(
+                "EXEC dbo.LaboratResultKwitEditIDReg_SP ?",
+                [$id]
+            );
+
+            if (empty($rows)) {
+
+                return response(
+                    '<h3 style="font-family:Arial;text-align:center;margin-top:50px;">
+                        Data Edit Laboratorium belum tersedia.
+                    </h3>',
+                    404
+                );
+            }
+
+
+            // =====================================================
+            // DATA PASIEN
+            // =====================================================
+
+            $first = $rows[0];
+
+            $patient = [
+                'nama'   => $first->Nama ?? '-',
+                'regNum' => $first->RegNum ?? '-',
+                'idReg'  => $first->IDReg ?? $id,
+                'addr'   => $first->Addr ?? '-',
+
+                'gender' => $first->Jenis_Kelamin ?? '-',
+
+                'dob'    => $first->Tanggal_Lahir ?? null,
+            ];
+
+
+            // =====================================================
+            // GROUP PER ID LAB
+            // =====================================================
+
+            $groupLab = collect($rows)
+                ->groupBy('IDLab');
+
+
+            $labs = [];
+
+
+            foreach ($groupLab as $idLab => $items) {
+
+                $firstLab = $items->first();
+
+
+                // =================================================
+                // GROUP KATEGORI
+                // =================================================
+
+                $kategori = $items
+                    ->groupBy('Kategori')
+                    ->map(function ($rowsKategori, $namaKategori) {
+
+                        return [
+
+                            'kategori' => $namaKategori,
+
+                            'items' => $rowsKategori
+                                ->map(function ($row) {
+
+                                    return [
+
+                                        'nama' =>
+                                            $row->Perik ?? '-',
+
+                                        'hasil' =>
+                                            $row->Levels ?? '',
+
+                                        'normal' =>
+                                            $row->NorL ?? '',
+
+                                        'biaya' =>
+                                            $row->Biaya ?? 0,
+
+                                    ];
+
+                                })
+                                ->values()
+                                ->toArray()
+                        ];
+
+                    })
+                    ->values()
+                    ->toArray();
+
+
+                // =================================================
+                // DATA PER LEMBAR LAB
+                // =================================================
+
+                $labs[] = [
+
+                    'idlab' =>
+                        $idLab,
+
+                    'tanggal' =>
+                        $firstLab->TLab ?? null,
+
+                    'dokter' =>
+                        $firstLab->Dokter ?? '-',
+
+                    'rujukan' =>
+                        $firstLab->Rujukan ?? '-',
+
+                    'kelas' =>
+                        $firstLab->Kelas ?? '-',
+
+                    'ruangan' =>
+                        $firstLab->RoomName ?? '-',
+
+                    'jamAmbil' =>
+                        $firstLab->Jam_ambil ?? '-',
+
+                    'jamcheck' =>
+                        $firstLab->Jam_check ?? '-',
+
+                    'usr' =>
+                        $firstLab->Usr ?? '-',
+
+                    'th' =>
+                        $firstLab->Th ?? 0,
+
+                    'bln' =>
+                        $firstLab->Bln ?? 0,
+
+                    'hr' =>
+                        $firstLab->Hr ?? 0,
+
+                    'kats' =>
+                        $kategori,
+                ];
+            }
+
+
+            // =====================================================
+            // DATA RS
+            // =====================================================
+
+            $hospital = [
+
+                'name' =>
+                    "INSTALASI LABORATORIUM RUMAH SAKIT 'AISYIYAH BOJONEGORO",
+
+                'address' =>
+                    'JL. PANGLIMA SUDIRMAN 48 BOJONEGORO TELP. 0353-881748 FAX 0353-88597'
+            ];
+
+
+            // =====================================================
+            // QR
+            // sementara kosong dulu
+            // =====================================================
+
+            $pj = 'dr. Istiqomah, M.Sc., Sp.PK';
+
+            $qrList = [];
+            
+            foreach ($labs as $lab) {
+            
+                $qrList[] = [
+                    'pj'  => $this->generateQrSvg($pj),
+                    'usr' => $this->generateQrSvg($lab['usr'] ?? '-'),
+                ];
+            }
+
+            $printedAt =
+                now('Asia/Jakarta');
+
+
+            // =====================================================
+            // GENERATE PDF
+            // =====================================================
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'lab.print-edit-lab',
+                compact(
+                    'patient',
+                    'labs',
+                    'hospital',
+                    'qrList',
+                    'pj',
+                    'printedAt'
+                )
+            );
+
+
+            $pdf->setPaper(
+                'A4',
+                'portrait'
+            );
+
+
+            return $pdf->stream(
+                'Edit-Laboratorium-' .
+                ($patient['regNum'] ?? $id) .
+                '.pdf'
+            );
+
+
+        } catch (\Throwable $e) {
+
+            dd([
+                'id'      => $id,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine()
+            ]);
         }
     }
 }

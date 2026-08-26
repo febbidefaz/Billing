@@ -1300,6 +1300,393 @@ class PulangController extends Controller
         });
     }
 
+    // Ambil data Rad Edit
+    public function syncRadiologiEdit($id)
+    {
+        try {
+    
+            DB::beginTransaction();
+    
+    
+            // =================================================
+            // AMBIL SEMUA ID RAD BERDASARKAN ID REGISTRASI
+            // =================================================
+    
+            $radIds = DB::table('TRadMedik')
+                ->where('IDReg', $id)
+                ->pluck('IDRad')
+                ->toArray();
+    
+    
+            // =================================================
+            // RESET DATA EDIT
+            // =================================================
+    
+            if (!empty($radIds)) {
+    
+    
+                // Hapus hasil baca klaim
+                DB::table('NonUSGXRayCTKlaim')
+                    ->whereIn(
+                        'IDRad',
+                        $radIds
+                    )
+                    ->delete();
+    
+    
+                // Hapus radiologi klaim
+                DB::table('TRadiologiKlaim')
+                    ->whereIn(
+                        'ID',
+                        $radIds
+                    )
+                    ->delete();
+    
+            }
+    
+    
+            // =================================================
+            // COPY ULANG SEMUA RADIOLOGI ASLI
+            // =================================================
+    
+            foreach ($radIds as $idRad) {
+    
+                DB::statement(
+                    "EXEC dbo.WebInsertTRadiologiK_SP ?",
+                    [
+                        $idRad
+                    ]
+                );
+    
+            }
+    
+    
+            DB::commit();
+    
+    
+            return response()->json([
+    
+                'success' =>
+                    true,
+    
+                'message' =>
+                    'Data Radiologi berhasil dikembalikan ke data awal.'
+    
+            ]);
+    
+    
+        } catch (\Throwable $e) {
+    
+    
+            DB::rollBack();
+    
+    
+            return response()->json([
+    
+                'success' =>
+                    false,
+    
+                'message' =>
+                    $e->getMessage()
+    
+            ], 500);
+    
+        }
+    }
+
+    // Del data rad Edit
+    public function deleteRadiologiEdit(Request $request)
+    {
+        try {
+
+            $request->validate([
+
+                'ID' =>
+                    'required|integer',
+
+                'Radio_ID' =>
+                    'required|integer'
+
+            ]);
+
+
+            DB::beginTransaction();
+
+
+            DB::table('NonUSGXRayCTKlaim')
+
+                ->where(
+                    'IDRad',
+                    $request->ID
+                )
+
+                ->where(
+                    'JenisID',
+                    $request->Radio_ID
+                )
+
+                ->delete();
+
+
+            DB::table('TRadiologiKlaim')
+
+                ->where(
+                    'ID',
+                    $request->ID
+                )
+
+                ->where(
+                    'Radio_ID',
+                    $request->Radio_ID
+                )
+
+                ->delete();
+
+
+            DB::commit();
+
+
+            return response()->json([
+
+                'success' =>
+                    true,
+
+                'message' =>
+                    'Pemeriksaan Radiologi berhasil dihapus.'
+
+            ]);
+
+
+        } catch (\Throwable $e) {
+
+
+            DB::rollBack();
+
+
+            return response()->json([
+
+                'success' =>
+                    false,
+
+                'message' =>
+                    $e->getMessage()
+
+            ], 500);
+
+        }
+    }
+
+    // Update Rad Edit
+    public function updateRadiologiEdit(Request $request)
+    {
+        try {
+    
+            $request->validate([
+    
+                'ID' =>
+                    'required|integer',
+    
+                'Radio_ID' =>
+                    'required|integer',
+    
+                'Result' =>
+                    'nullable'
+    
+            ]);
+    
+    
+            $updated =
+                DB::table('TRadiologiKlaim')
+    
+                    ->where(
+                        'ID',
+                        $request->ID
+                    )
+    
+                    ->where(
+                        'Radio_ID',
+                        $request->Radio_ID
+                    )
+    
+                    ->update([
+    
+                        'Result' =>
+                            $request->Result ?? ''
+    
+                    ]);
+    
+    
+            return response()->json([
+    
+                'success' =>
+                    true,
+    
+                'message' =>
+                    'Hasil Radiologi berhasil diperbarui.',
+    
+                'updated' =>
+                    $updated
+    
+            ]);
+    
+    
+        } catch (\Throwable $e) {
+    
+    
+            return response()->json([
+    
+                'success' =>
+                    false,
+    
+                'message' =>
+                    $e->getMessage()
+    
+            ], 500);
+    
+        }
+    }
+
+    // Ambil data Lab Edit
+    public function syncLabEdit($id)
+    {
+        try {
+
+            DB::beginTransaction();
+
+            // Ambil semua IDLab pasien/register ini
+            $labIds = DB::table('Laborat')
+                ->where('IDReg', $id)
+                ->pluck('IDLab')
+                ->toArray();
+
+            // Hapus data edit lama
+            if (!empty($labIds)) {
+
+                DB::table('LaboratPasEdit')
+                    ->whereIn('ID', $labIds)
+                    ->delete();
+            }
+
+            // Copy ulang dari LaboratPas
+            DB::statement(
+                "EXEC dbo.InsertLaboratPasEdit_SP ?",
+                [$id]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data laboratorium berhasil dikembalikan ke data awal.'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Del data Lab Edit
+    public function deleteLabEdit(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'      => 'required',
+                'LabID'   => 'required',
+                'Prep_ID' => 'required'
+            ]);
+
+            DB::table('LaboratPasEdit')
+                ->where('ID', $request->ID)
+                ->where('LabID', $request->LabID)
+                ->where('Prep_ID', $request->Prep_ID)
+                ->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pemeriksaan laboratorium berhasil dihapus.'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Update Lab Edit
+    public function updateLabEdit(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'ID'      => 'required|integer',
+                'LabID'   => 'required|integer',
+                'Prep_ID' => 'required|integer',
+            ]);
+
+            // Pastikan data memang ada
+            $data = DB::table('LaboratPasEdit')
+                ->where('ID', $request->ID)
+                ->where('LabID', $request->LabID)
+                ->where('Prep_ID', $request->Prep_ID)
+                ->first();
+
+            if (!$data) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data laboratorium tidak ditemukan.'
+                ], 404);
+            }
+
+
+            // UPDATE HANYA FIELD YANG DIEDIT
+            DB::table('LaboratPasEdit')
+                ->where('ID', $request->ID)
+                ->where('LabID', $request->LabID)
+                ->where('Prep_ID', $request->Prep_ID)
+                ->update([
+
+                    'Levels' => $request->input(
+                        'Levels',
+                        $data->Levels
+                    ),
+
+                    'NorL' => $request->input(
+                        'NorL',
+                        $data->NorL
+                    ),
+
+                    'Biaya' => $request->filled('Biaya')
+                        ? $request->Biaya
+                        : $data->Biaya
+
+                ]);
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data laboratorium berhasil diperbarui.'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function detail($id) 
     {
     // Koder
@@ -1340,8 +1727,20 @@ class PulangController extends Controller
         );
     }
 
-    $radiologiDetailFlat = collect($radiologiDetail)->flatten(1);
+    // EDIT RADIOLOGI
+    $radEdit = [];
 
+    foreach ($radiologi as $r) {
+    
+        $idRad = $r->IDRad;
+    
+        $radEdit[$idRad] = DB::select(
+            "EXEC dbo.WebRadiologiResultKlaim_SP ?",
+            [$idRad]
+        );
+    }
+
+    $radiologiDetailFlat = collect($radiologiDetail)->flatten(1);
 
     // Laborat
     $lab = DB::select("EXEC dbo.WeblaboratByIDReg_SP ?", [$id]);
@@ -1356,6 +1755,17 @@ class PulangController extends Controller
     }
 
     $labDetailFlat = collect($labDetail)->flatten(1);
+
+    // Edit Laborat
+    $labEdit = [];
+
+    foreach ($lab as $l) {
+ 
+        $labEdit[$l->IDLab] = DB::select(
+            "EXEC dbo.WebLaboratDetailEditByIDLab_SP ?",
+            [$l->IDLab]
+        );
+    } 
 
     // Utilitas / Tindakan Dokter
     $utilitas = DB::select("EXEC dbo.WebUtilitasBillingByID_SP ?", [$id]);
@@ -1445,11 +1855,13 @@ class PulangController extends Controller
         'utilitas',
         'tindakanList',
         'radiologi',
+        'radEdit',
         'radiologiDetail',
         'radiologiDetailFlat', 
         'lab',
         'labDetail',
         'labDetailFlat',
+        'labEdit',
         'lainlain', 
         'operasi',
         'jenisOpList',  
