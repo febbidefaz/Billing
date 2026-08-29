@@ -537,6 +537,25 @@
                         </script>
                     @endif
 
+                    {{-- Print Kwitansi PHK3 --}}
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansiPhk3()">
+                            <i class="fas fa-print"></i> Kwi Phk3
+                        </button>
+
+                        <script>
+                            function previewKwitansiPhk3() {
+
+                                window.open(
+                                    "{{ route('rawatinap.kwitansiPhk3Print', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
+
+                            }
+                        </script>
+                    @endif
+
                     {{-- print Obat All --}}
                     <div class="dropdown d-inline">
 
