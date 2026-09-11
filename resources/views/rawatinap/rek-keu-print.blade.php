@@ -594,6 +594,8 @@
                                     <tr>
                                         <td colspan="10" class="bold">
                                             {{ $dokter ?: 'DOKTER TIDAK DIISI' }}
+                                            &nbsp;&nbsp; | &nbsp;&nbsp;
+                                            Dr. Rad : {{ $items->first()->drRad ?? 'TIDAK DIISI' }}
                                         </td>
                                     </tr>
 

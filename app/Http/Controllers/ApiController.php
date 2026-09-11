@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ApiController extends Controller
@@ -320,7 +322,7 @@ class ApiController extends Controller
         }
     }
 
-    public function akunAll(Request $request)
+    public function akunAllOld(Request $request)
     {
         try {
             $request->validate(
@@ -389,6 +391,245 @@ class ApiController extends Controller
                 'status' => false,
                 'message' => 'Data tidak ditemukan atau gagal dimuat.',
                 'data' => []
+            ], 500);
+        }
+    }
+
+    // Ambil Token ObaPay
+    private function getFarmasiToken()
+    {
+        return Cache::remember('farmasi_token', 360, function () {
+
+            $response = Http::post('http://192.168.1.9:8010/api/token', [
+                'username' => env('FARMASI_USER'),
+                'password' => env('FARMASI_PASS')
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception('Gagal mendapatkan token');
+            }
+
+            return $response->json('token');
+        });
+    }
+
+    public function akunAll(Request $request)
+    {
+        try {
+
+            $request->validate(
+                [
+                    'id' => 'required|integer',
+                ],
+                [
+                    'id.required' => 'ID harus diisi.',
+                    'id.integer'  => 'ID harus berupa angka.',
+                ]
+            );
+
+            $id = $request->id;
+            // =========================================================
+            // AMBIL DATA PASIEN DARI THERAPY + uPx
+            // =========================================================
+            $pasien = DB::selectOne("
+            SELECT
+                t.uPx,
+                u.PxRS
+            FROM Therapy AS t
+            INNER JOIN uPx AS u
+                ON t.uPx = u.ID
+            WHERE t.ID = ?
+            ", [$id]);
+
+            $uPx  = $pasien->uPx ?? null;
+            $pxRS = $pasien->PxRS ?? null;
+
+            // =========================================================
+            // TENTUKAN AKUN RI / RJ DARI THERAPY
+            // =========================================================
+            $therapy = DB::selectOne("
+            SELECT
+                CASE
+                    WHEN FollowUp = N'RAWAT INAP' THEN '441400013'
+                    WHEN FollowUp = N'RESEP' THEN '441400014'
+                    ELSE '441400013'
+                END AS akun
+            FROM Therapy
+            WHERE ID = ?
+            ", [$id]);
+
+            $akunFarmasi = $therapy->akun ?? null;
+
+            // =========================================================
+            // AKUN ALL
+            // =========================================================
+            $data = DB::select("
+                SELECT
+                    ID,
+                    biaya,
+                    akun,
+                    jml,
+                    job,
+                    IDReg
+                FROM AkunALL
+                WHERE IDReg = ?
+            ", [$id]);
+
+            $nama = null;
+
+            if (!empty($data)) {
+                $pecah = explode('/', $data[0]->ID, 2);
+                $nama = isset($pecah[1]) ? trim($pecah[1]) : null;
+            }
+
+            // Collection harus tetap dibuat meskipun AkunALL kosong
+            $hasil = collect();
+
+            if (!empty($data)) {
+
+                foreach ($data as $item) {
+
+                    $hasil->push([
+                        'biaya' => (int) $item->biaya,
+                        'akun'  => $item->akun,
+                        'jml'   => (int) $item->jml,
+                        'job'   => $item->job,
+                    ]);
+                }
+            }
+
+
+            // =========================================================
+            // OBAPAY
+            // =========================================================
+            try {
+
+                $token = $this->getFarmasiToken();
+
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->get('http://192.168.1.9:8010/api/sales', [
+                        'appointment_id' => $id
+                    ]);
+
+                    if ($response->successful()) {
+
+                        $json = $response->json();
+                    
+                        $success = data_get($json, 'success', false);
+                    
+                        // Nama pasien dari ObaPay jika nama belum ada
+                        if (empty($nama)) {
+                            $nama = data_get(
+                                $json,
+                                'data.sales.0.patient.name'
+                            );
+                        }
+                    
+                        // Total ObaPay
+                        $grandTotalFarmasiApi = (int) data_get(
+                            $json,
+                            'data.grand_total',
+                            0
+                        );
+                    
+                        // Masukkan ObaPay
+                        if (
+                            $success === true &&
+                            $grandTotalFarmasiApi > 0 
+                        ) {
+                    
+                            $hasil->push([
+                                'biaya' => $grandTotalFarmasiApi,
+                                'akun'  => $akunFarmasi,
+                                'jml'   => 1,
+                                'job'   => 'N/A',
+                            ]);
+                        }
+                    }
+            } catch (\Exception $e) {
+
+                // ObaPay gagal tidak membuat AkunALL ikut gagal
+                Log::error(
+                    'OBAPAY ERROR IDReg ' . $id .
+                    ' : ' . $e->getMessage()
+                );
+            }
+
+
+            // =========================================================
+            // RESPONSE
+            // =========================================================
+            return response()->json([
+                'status' => true,
+                'IDReg'  => (string) $id,
+                'uPx'    => $uPx,
+                'PxRS'   => $pxRS,
+                'Nama'   => $nama,
+                'jumlah' => $hasil->count(),
+                'data'   => $hasil->values(),
+            ], 200);
+
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->validator->errors()->first(),
+                'data'    => []
+            ], 422);
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'AKUN ALL DATA ERROR IDReg ' .
+                ($request->id ?? '-') .
+                ' : ' .
+                $e->getMessage()
+            );
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Data tidak ditemukan atau gagal dimuat.',
+                'data'    => []
+            ], 500);
+        }
+    }
+
+    public function getPxRS()
+    {
+        try {
+
+            $data = DB::select("
+                SELECT
+                    ID,
+                    PxRS
+                FROM uPx
+                WHERE Aktiv = 1
+                ORDER BY PxRS
+            ");
+
+            $hasil = collect($data)->map(function ($item) {
+                return [
+                    'ID'   => (int) $item->ID,
+                    'PxRS' => $item->PxRS,
+                ];
+            })->values();
+
+            return response()->json([
+                'status' => true,
+                'jumlah' => $hasil->count(),
+                'data'   => $hasil,
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            Log::error('GET PXRS ERROR : ' . $e->getMessage());
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Data PxRS gagal dimuat.',
+                'data'    => []
             ], 500);
         }
     }

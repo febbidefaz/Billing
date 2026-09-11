@@ -30,4 +30,5 @@ Route::middleware('api.token')->group(function () {
     Route::get('/spesialis', [ApiController::class, 'spesialis']);
     Route::get('/dokter', [ApiController::class, 'dokter']);
     Route::get('/akun-all', [ApiController::class, 'akunAll']);
+    Route::get('/pxrs', [ApiController::class, 'getPxRS']);
 });
