@@ -594,8 +594,11 @@
                                     <tr>
                                         <td colspan="10" class="bold">
                                             {{ $dokter ?: 'Dokter Tidak Diisi' }}
-                                            &nbsp;&nbsp; | &nbsp;&nbsp;
-                                            Dr. Rad : {{ $items->first()->drRad ?? '-' }}
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            | &nbsp;&nbsp;
+                                            dr. Rad : {{ $items->first()->drRad ?? '-' }}
                                         </td>
                                     </tr>
 
