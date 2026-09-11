@@ -593,9 +593,9 @@
                                 @foreach (collect($rekeningRadiologiKeu)->groupBy('Dokter') as $dokter => $items)
                                     <tr>
                                         <td colspan="10" class="bold">
-                                            {{ $dokter ?: 'DOKTER TIDAK DIISI' }}
+                                            {{ $dokter ?: 'Dokter Tidak Diisi' }}
                                             &nbsp;&nbsp; | &nbsp;&nbsp;
-                                            Dr. Rad : {{ $items->first()->drRad ?? 'TIDAK DIISI' }}
+                                            Dr. Rad : {{ $items->first()->drRad ?? '-' }}
                                         </td>
                                     </tr>
 
