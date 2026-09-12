@@ -463,17 +463,10 @@ class ApiController extends Controller
             // =========================================================
             // AKUN ALL
             // =========================================================
-            $data = DB::select("
-                SELECT
-                    ID,
-                    biaya,
-                    akun,
-                    jml,
-                    job,
-                    IDReg
-                FROM AkunALL
-                WHERE IDReg = ?
-            ", [$id]);
+            $data = DB::select(
+                "EXEC dbo.WebAkunAllByID_SP @IDReg = ?",
+                [$id]
+            );
 
             $nama = null;
 
