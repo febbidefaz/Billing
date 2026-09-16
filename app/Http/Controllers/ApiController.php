@@ -428,45 +428,60 @@ class ApiController extends Controller
             );
 
             $id = $request->id;
-            // =========================================================
-            // AMBIL DATA PASIEN DARI THERAPY + uPx
-            // =========================================================
-            $pasien = DB::selectOne("
-            SELECT
-                t.uPx,
-                u.PxRS
-            FROM Therapy AS t
-            INNER JOIN uPx AS u
-                ON t.uPx = u.ID
-            WHERE t.ID = ?
-            ", [$id]);
-
-            $uPx  = $pasien->uPx ?? null;
-            $pxRS = $pasien->PxRS ?? null;
 
             // =========================================================
-            // TENTUKAN AKUN RI / RJ DARI THERAPY
+            // AMBIL DATA THERAPY + PASIEN + TENTUKAN RI/RJ
             // =========================================================
             $therapy = DB::selectOne("
-            SELECT
-                CASE
-                    WHEN FollowUp = N'RAWAT INAP' THEN '441400013'
-                    WHEN FollowUp = N'RESEP' THEN '441400014'
-                    ELSE '441400013'
-                END AS akun
-            FROM Therapy
-            WHERE ID = ?
+                SELECT
+                    t.uPx,
+                    u.PxRS,
+                    t.FollowUp,
+                    CASE
+                        WHEN t.FollowUp = N'RAWAT INAP' THEN '441400013'
+                        WHEN t.FollowUp = N'RESEP' THEN '441400014'
+                        ELSE '441400013'
+                    END AS akun
+                FROM Therapy AS t
+                LEFT JOIN uPx AS u
+                    ON t.uPx = u.ID
+                WHERE t.ID = ?
             ", [$id]);
-
-            $akunFarmasi = $therapy->akun ?? null;
-
+            
             // =========================================================
-            // AKUN ALL
+            // DATA PASIEN
             // =========================================================
-            $data = DB::select(
-                "EXEC dbo.WebAkunAllByID_SP @IDReg = ?",
-                [$id]
-            );
+            $uPx  = $therapy->uPx ?? null;
+            $pxRS = $therapy->PxRS ?? null;
+            
+            // =========================================================
+            // FOLLOW UP + AKUN FARMASI
+            // =========================================================
+            $followUp = strtoupper(trim($therapy->FollowUp ?? ''));
+            
+            // Default akun jika Therapy / FollowUp kosong
+            $akunFarmasi = $therapy->akun ?? '441400013';
+            
+            
+            // =========================================================
+            // AKUN ALL - PILIH SP RI / RJ
+            // =========================================================
+            if ($followUp === 'RESEP') {
+            
+                // RESEP = RAWAT JALAN
+                $data = DB::select(
+                    "EXEC dbo.WebAkunAllByIDRJ_SP @IDReg = ?",
+                    [$id]
+                );
+            
+            } else {
+            
+                // RAWAT INAP / KOSONG / LAINNYA = RAWAT INAP
+                $data = DB::select(
+                    "EXEC dbo.WebAkunAllByIDRI_SP @IDReg = ?",
+                    [$id]
+                );
+            }
 
             $nama = null;
 
@@ -486,7 +501,7 @@ class ApiController extends Controller
                         'biaya' => (int) $item->biaya,
                         'akun'  => $item->akun,
                         'jml'   => (int) $item->jml,
-                        'job'   => $item->job,
+                        'job' => $item->Job ?? $item->job ?? '',
                     ]);
                 }
             }
