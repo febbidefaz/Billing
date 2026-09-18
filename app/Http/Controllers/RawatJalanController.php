@@ -713,7 +713,7 @@ class RawatJalanController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
 
@@ -811,7 +811,7 @@ class RawatJalanController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                ->patch("http://192.168.3.31:8010/api/appointments/{$id}/discharge", [
                     'discharged_at' => $dischargedAt
                 ]);
 
@@ -827,7 +827,7 @@ class RawatJalanController extends Controller
 
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                    ->patch("http://192.168.3.31:8010/api/appointments/{$id}/discharge", [
                         'discharged_at' => $dischargedAt
                     ]);
             }
@@ -886,7 +886,7 @@ class RawatJalanController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                ->patch("http://192.168.3.31:8010/api/appointments/{$id}/discharge", [
                     'discharged_at' => null
                 ]);
 
@@ -903,7 +903,7 @@ class RawatJalanController extends Controller
 
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->patch("http://192.168.1.9:8010/api/appointments/{$id}/discharge", [
+                    ->patch("http://192.168.3.31:8010/api/appointments/{$id}/discharge", [
                         'discharged_at' => null
                     ]);
 
@@ -1113,7 +1113,7 @@ class RawatJalanController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
 
@@ -1179,7 +1179,7 @@ class RawatJalanController extends Controller
     
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
     
@@ -1190,7 +1190,7 @@ class RawatJalanController extends Controller
     
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->get('http://192.168.1.9:8010/api/sales', [
+                    ->get('http://192.168.3.31:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
             }
@@ -1287,7 +1287,7 @@ class RawatJalanController extends Controller
     
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
     
@@ -1298,7 +1298,7 @@ class RawatJalanController extends Controller
     
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->get('http://192.168.1.9:8010/api/sales', [
+                    ->get('http://192.168.3.31:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
             }
@@ -1387,7 +1387,7 @@ class RawatJalanController extends Controller
     {
         return Cache::remember('farmasi_token', 360, function () {
 
-            $response = Http::post('http://192.168.1.9:8010/api/token', [
+            $response = Http::post('http://192.168.3.31:8010/api/token', [
                 'username' => env('FARMASI_USER'),
                 'password' => env('FARMASI_PASS')
             ]);
@@ -1473,7 +1473,7 @@ class RawatJalanController extends Controller
     
         $response = Http::withToken($token)
             ->timeout(15)
-            ->get('http://192.168.1.9:8010/api/sales', [
+            ->get('http://192.168.3.31:8010/api/sales', [
                 'appointment_id' => $id
             ]);
     

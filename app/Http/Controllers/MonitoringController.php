@@ -49,7 +49,7 @@ class MonitoringController extends Controller
 
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
 
@@ -60,7 +60,7 @@ class MonitoringController extends Controller
 
                 $response = Http::withToken($token)
                     ->timeout(3)
-                    ->get('http://192.168.1.9:8010/api/sales', [
+                    ->get('http://192.168.3.31:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
             }
@@ -98,7 +98,7 @@ class MonitoringController extends Controller
     
             $response = Http::withToken($token)
                 ->timeout(15)
-                ->get('http://192.168.1.9:8010/api/sales', [
+                ->get('http://192.168.3.31:8010/api/sales', [
                     'appointment_id' => $id
                 ]);
     
@@ -109,7 +109,7 @@ class MonitoringController extends Controller
     
                 $response = Http::withToken($token)
                     ->timeout(15)
-                    ->get('http://192.168.1.9:8010/api/sales', [
+                    ->get('http://192.168.3.31:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
             }
@@ -151,7 +151,7 @@ class MonitoringController extends Controller
     private function getFarmasiToken()
     {
         return Cache::remember('farmasi_token', 360, function () {
-            $response = Http::post('http://192.168.1.9:8010/api/token', [
+            $response = Http::post('http://192.168.3.31:8010/api/token', [
                 'username' => env('FARMASI_USER'),
                 'password' => env('FARMASI_PASS')
             ]);
