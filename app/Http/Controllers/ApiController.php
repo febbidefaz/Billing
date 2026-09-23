@@ -515,55 +515,54 @@ class ApiController extends Controller
                 $token = $this->getFarmasiToken();
 
                 $response = Http::withToken($token)
+                    ->acceptJson()
                     ->timeout(15)
                     ->get('http://192.168.3.31:8010/api/sales', [
                         'appointment_id' => $id
                     ]);
 
-                    if ($response->successful()) {
+                if ($response->successful()) {
 
-                        $json = $response->json();
-                    
-                        $success = data_get($json, 'success', false);
-                    
-                        // Nama pasien dari ObaPay jika nama belum ada
-                        if (empty($nama)) {
-                            $nama = data_get(
-                                $json,
-                                'data.sales.0.patient.name'
-                            );
-                        }
-                    
-                        // Total ObaPay
-                        $grandTotalFarmasiApi = (int) data_get(
+                    $json = $response->json();
+
+                    // Nama pasien dari ObaPay jika belum ada
+                    if (empty($nama)) {
+                        $nama = data_get(
                             $json,
-                            'data.grand_total',
-                            0
+                            'data.sales.0.patient.name'
                         );
-                    
-                        // Masukkan ObaPay
-                        if (
-                            $success === true &&
-                            $grandTotalFarmasiApi > 0 
-                        ) {
-                    
-                            $hasil->push([
-                                'biaya' => $grandTotalFarmasiApi,
-                                'akun'  => $akunFarmasi,
-                                'jml'   => 1,
-                                'job'   => 'N/A',
-                            ]);
-                        }
                     }
-            } catch (\Exception $e) {
 
-                // ObaPay gagal tidak membuat AkunALL ikut gagal
+                    // Total Farmasi
+                    $grandTotalFarmasiApi = (int) data_get(
+                        $json,
+                        'data.grand_total',
+                        0
+                    );
+
+                    // Tambahkan ke AkunAll
+                    if (
+                        data_get($json, 'success', false) &&
+                        $grandTotalFarmasiApi > 0
+                    ) {
+
+                        $hasil->push([
+                            'biaya' => $grandTotalFarmasiApi,
+                            'akun'  => $akunFarmasi,
+                            'jml'   => 1,
+                            'job'   => 'N/A',
+                        ]);
+                    }
+                }
+
+            } catch (\Throwable $e) {
+
+                // ObaPay gagal tidak membuat AkunAll ikut gagal
                 Log::error(
                     'OBAPAY ERROR IDReg ' . $id .
                     ' : ' . $e->getMessage()
                 );
             }
-
 
             // =========================================================
             // RESPONSE
