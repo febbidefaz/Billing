@@ -191,7 +191,9 @@
         </thead>
 
         <tbody>
-            @foreach ($obapayEditFull ?? [] as $sale)
+            @foreach (collect($obapayEditFull ?? [])->sortBy(function ($sale) {
+            return Carbon::parse($sale->Tanggal)->timestamp;
+        })->values() as $sale)
                 @php
                     $subInvoice = 0;
                 @endphp

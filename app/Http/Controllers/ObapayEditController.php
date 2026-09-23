@@ -150,6 +150,7 @@ class ObapayEditController extends Controller
             'total' => $total
         ]);
     }
+    
     public function delete(Request $request)
     {
         if (!in_array(strtolower(Auth::user()->Role), ['kasir', 'casemix', 'perawat'])) {
