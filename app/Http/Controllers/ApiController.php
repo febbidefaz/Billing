@@ -41,7 +41,7 @@ class ApiController extends Controller
             }
 
             // Token berlaku 10 menit      
-            $expiredAt = now('Asia/Jakarta')->addMinutes(10);
+            $expiredAt = now('Asia/Jakarta')->addHours(2);
 
             $payload = [
                 'id' => $user->ID,
@@ -59,7 +59,7 @@ class ApiController extends Controller
                 'message' => 'Token berhasil dibuat.',
                 'token_type' => 'Bearer',
                 'token' => $token,
-                'expires_in' => 600,
+                'expires_in' => 7200,
                 'expires_at' => $expiredAt->format('Y-m-d H:i:s')
             ], 200);
 
@@ -322,6 +322,7 @@ class ApiController extends Controller
         }
     }
 
+   /*
     public function akunAllOld(Request $request)
     {
         try {
@@ -394,6 +395,7 @@ class ApiController extends Controller
             ], 500);
         }
     }
+    */
 
     // Ambil Token ObaPay
     private function getFarmasiToken()
@@ -416,7 +418,7 @@ class ApiController extends Controller
     public function akunAll(Request $request)
     {
         try {
-
+    
             $request->validate(
                 [
                     'id' => 'required|integer',
@@ -426,12 +428,19 @@ class ApiController extends Controller
                     'id.integer'  => 'ID harus berupa angka.',
                 ]
             );
-
+    
             $id = $request->id;
-
+    
+            // TIMER TOTAL
+            $timerTotal = microtime(true);
+    
+    
             // =========================================================
             // AMBIL DATA THERAPY + PASIEN + TENTUKAN RI/RJ
             // =========================================================
+    
+            $timer = microtime(true);
+    
             $therapy = DB::selectOne("
                 SELECT
                     t.uPx,
@@ -447,158 +456,277 @@ class ApiController extends Controller
                     ON t.uPx = u.ID
                 WHERE t.ID = ?
             ", [$id]);
-            
+    
+            Log::info(
+                'AKUNALL Therapy: ' .
+                round((microtime(true) - $timer) * 1000, 2) .
+                ' ms'
+            );
+    
+    
             // =========================================================
             // DATA PASIEN
             // =========================================================
+    
             $uPx  = $therapy->uPx ?? null;
             $pxRS = $therapy->PxRS ?? null;
-            
+    
+    
             // =========================================================
             // FOLLOW UP + AKUN FARMASI
             // =========================================================
-            $followUp = strtoupper(trim($therapy->FollowUp ?? ''));
-            
-            // Default akun jika Therapy / FollowUp kosong
-            $akunFarmasi = $therapy->akun ?? '441400013';
-            
-            
+    
+            $followUp = strtoupper(
+                trim($therapy->FollowUp ?? '')
+            );
+    
+            $akunFarmasi =
+                $therapy->akun ?? '441400013';
+    
+    
             // =========================================================
             // AKUN ALL - PILIH SP RI / RJ
             // =========================================================
+    
+            $timer = microtime(true);
+    
             if ($followUp === 'RESEP') {
-            
-                // RESEP = RAWAT JALAN
+    
+                // RAWAT JALAN
                 $data = DB::select(
                     "EXEC dbo.WebAkunAllByIDRJ_SP @IDReg = ?",
                     [$id]
                 );
-            
+    
             } else {
-            
-                // RAWAT INAP / KOSONG / LAINNYA = RAWAT INAP
+    
+                // RAWAT INAP
                 $data = DB::select(
                     "EXEC dbo.WebAkunAllByIDRI_SP @IDReg = ?",
                     [$id]
                 );
             }
-
+    
+            Log::info(
+                'AKUNALL DB: ' .
+                round((microtime(true) - $timer) * 1000, 2) .
+                ' ms'
+            );
+    
+    
+            // =========================================================
+            // NAMA
+            // =========================================================
+    
             $nama = null;
-
+    
             if (!empty($data)) {
-                $pecah = explode('/', $data[0]->ID, 2);
-                $nama = isset($pecah[1]) ? trim($pecah[1]) : null;
+    
+                $pecah = explode(
+                    '/',
+                    $data[0]->ID,
+                    2
+                );
+    
+                $nama =
+                    isset($pecah[1])
+                    ? trim($pecah[1])
+                    : null;
             }
-
-            // Collection harus tetap dibuat meskipun AkunALL kosong
+    
+    
+            // =========================================================
+            // HASIL
+            // =========================================================
+    
             $hasil = collect();
-
+    
             if (!empty($data)) {
-
+    
                 foreach ($data as $item) {
-
+    
                     $hasil->push([
                         'biaya' => (int) $item->biaya,
                         'akun'  => $item->akun,
                         'jml'   => (int) $item->jml,
-                        'job' => $item->Job ?? $item->job ?? '',
+                        'job'   => $item->Job
+                            ?? $item->job
+                            ?? '',
                     ]);
                 }
             }
-
-
+    
+    
             // =========================================================
             // OBAPAY
             // =========================================================
+    
+            $timer = microtime(true);
+    
             try {
-
-                $token = $this->getFarmasiToken();
-
-                $response = Http::withToken($token)
+    
+                $token =
+                    $this->getFarmasiToken();
+    
+                $response =
+                    Http::withToken($token)
                     ->acceptJson()
                     ->timeout(15)
-                    ->get('http://192.168.3.31:8010/api/sales', [
-                        'appointment_id' => $id
-                    ]);
-
+                    ->get(
+                        'http://192.168.3.31:8010/api/sales',
+                        [
+                            'appointment_id' => $id
+                        ]
+                    );
+    
+    
+                Log::info(
+                    'AKUNALL ObaPay: ' .
+                    round(
+                        (microtime(true) - $timer) * 1000,
+                        2
+                    ) .
+                    ' ms'
+                );
+    
+    
                 if ($response->successful()) {
-
-                    $json = $response->json();
-
+    
+                    $json =
+                        $response->json();
+    
+    
                     // Nama pasien dari ObaPay jika belum ada
                     if (empty($nama)) {
-                        $nama = data_get(
-                            $json,
-                            'data.sales.0.patient.name'
-                        );
+    
+                        $nama =
+                            data_get(
+                                $json,
+                                'data.sales.0.patient.name'
+                            );
                     }
-
+    
+    
                     // Total Farmasi
-                    $grandTotalFarmasiApi = (int) data_get(
-                        $json,
-                        'data.grand_total',
-                        0
-                    );
-
+                    $grandTotalFarmasiApi =
+                        (int) data_get(
+                            $json,
+                            'data.grand_total',
+                            0
+                        );
+    
+    
                     // Tambahkan ke AkunAll
                     if (
-                        data_get($json, 'success', false) &&
+                        data_get(
+                            $json,
+                            'success',
+                            false
+                        )
+                        &&
                         $grandTotalFarmasiApi > 0
                     ) {
-
+    
                         $hasil->push([
-                            'biaya' => $grandTotalFarmasiApi,
-                            'akun'  => $akunFarmasi,
-                            'jml'   => 1,
-                            'job'   => 'N/A',
+                            'biaya' =>
+                                $grandTotalFarmasiApi,
+    
+                            'akun' =>
+                                $akunFarmasi,
+    
+                            'jml' =>
+                                1,
+    
+                            'job' =>
+                                'N/A',
                         ]);
                     }
                 }
-
+    
             } catch (\Throwable $e) {
-
-                // ObaPay gagal tidak membuat AkunAll ikut gagal
+    
                 Log::error(
-                    'OBAPAY ERROR IDReg ' . $id .
-                    ' : ' . $e->getMessage()
+                    'OBAPAY ERROR IDReg ' .
+                    $id .
+                    ' : ' .
+                    $e->getMessage()
                 );
             }
-
+    
+    
+            // =========================================================
+            // TOTAL WAKTU
+            // =========================================================
+    
+            $totalMs =
+                round(
+                    (microtime(true) - $timerTotal) * 1000,
+                    2
+                );
+    
+            Log::info(
+                'AKUNALL TOTAL: ' .
+                $totalMs .
+                ' ms'
+            );
+    
+    
             // =========================================================
             // RESPONSE
             // =========================================================
+    
             return response()->json([
                 'status' => true,
-                'IDReg'  => (string) $id,
-                'uPx'    => $uPx,
-                'PxRS'   => $pxRS,
-                'Nama'   => $nama,
-                'jumlah' => $hasil->count(),
-                'data'   => $hasil->values(),
+    
+                'IDReg' =>
+                    (string) $id,
+    
+                'uPx' =>
+                    $uPx,
+    
+                'PxRS' =>
+                    $pxRS,
+    
+                'Nama' =>
+                    $nama,
+    
+                'jumlah' =>
+                    $hasil->count(),
+    
+                'data' =>
+                    $hasil->values(),
+    
             ], 200);
-
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-
+    
+    
+        } catch (
+            \Illuminate\Validation\ValidationException $e
+        ) {
+    
             return response()->json([
-                'status'  => false,
-                'message' => $e->validator->errors()->first(),
-                'data'    => []
+                'status' => false,
+                'message' =>
+                    $e->validator
+                    ->errors()
+                    ->first(),
+                'data' => []
             ], 422);
-
+    
+    
         } catch (\Exception $e) {
-
+    
             Log::error(
                 'AKUN ALL DATA ERROR IDReg ' .
                 ($request->id ?? '-') .
                 ' : ' .
                 $e->getMessage()
             );
-
+    
             return response()->json([
-                'status'  => false,
-                'message' => 'Data tidak ditemukan atau gagal dimuat.',
-                'data'    => []
+                'status' => false,
+                'message' =>
+                    'Data tidak ditemukan atau gagal dimuat.',
+                'data' => []
             ], 500);
         }
     }
