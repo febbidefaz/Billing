@@ -436,7 +436,7 @@ class ApiController extends Controller
     
     
             // =========================================================
-            // AMBIL DATA THERAPY + PASIEN + TENTUKAN RI/RJ
+            // 1. AMBIL DATA THERAPY + PASIEN + TENTUKAN RI/RJ
             // =========================================================
     
             $timer = microtime(true);
@@ -447,9 +447,9 @@ class ApiController extends Controller
                     u.PxRS,
                     t.FollowUp,
                     CASE
-                        WHEN t.FollowUp = N'RAWAT INAP' THEN '441400013'
-                        WHEN t.FollowUp = N'RESEP' THEN '441400014'
-                        ELSE '441400013'
+                        WHEN t.FollowUp = N'RAWAT INAP' THEN '441500013'
+                        WHEN t.FollowUp = N'RESEP' THEN '441500014'
+                        ELSE '441500013'
                     END AS akun
                 FROM Therapy AS t
                 LEFT JOIN uPx AS u
@@ -465,74 +465,18 @@ class ApiController extends Controller
     
     
             // =========================================================
-            // DATA PASIEN
+            // DATA DASAR
             // =========================================================
     
             $uPx  = $therapy->uPx ?? null;
             $pxRS = $therapy->PxRS ?? null;
-    
-    
-            // =========================================================
-            // FOLLOW UP + AKUN FARMASI
-            // =========================================================
     
             $followUp = strtoupper(
                 trim($therapy->FollowUp ?? '')
             );
     
             $akunFarmasi =
-                $therapy->akun ?? '441400013';
-    
-    
-            // =========================================================
-            // AKUN ALL - PILIH SP RI / RJ
-            // =========================================================
-    
-            $timer = microtime(true);
-    
-            if ($followUp === 'RESEP') {
-    
-                // RAWAT JALAN
-                $data = DB::select(
-                    "EXEC dbo.WebAkunAllByIDRJ_SP @IDReg = ?",
-                    [$id]
-                );
-    
-            } else {
-    
-                // RAWAT INAP
-                $data = DB::select(
-                    "EXEC dbo.WebAkunAllByIDRI_SP @IDReg = ?",
-                    [$id]
-                );
-            }
-    
-            Log::info(
-                'AKUNALL DB: ' .
-                round((microtime(true) - $timer) * 1000, 2) .
-                ' ms'
-            );
-    
-    
-            // =========================================================
-            // NAMA
-            // =========================================================
-    
-            $nama = null;
-    
-            if (!empty($data)) {
-    
-                $pecah = explode(
-                    '/',
-                    $data[0]->ID,
-                    2
-                );
-    
-                $nama =
-                    isset($pecah[1])
-                    ? trim($pecah[1])
-                    : null;
-            }
+                $therapy->akun ?? '441500013';
     
     
             // =========================================================
@@ -541,24 +485,13 @@ class ApiController extends Controller
     
             $hasil = collect();
     
-            if (!empty($data)) {
+            $nama = null;
     
-                foreach ($data as $item) {
-    
-                    $hasil->push([
-                        'biaya' => (int) $item->biaya,
-                        'akun'  => $item->akun,
-                        'jml'   => (int) $item->jml,
-                        'job'   => $item->Job
-                            ?? $item->job
-                            ?? '',
-                    ]);
-                }
-            }
+            $grandTotalFarmasiApi = 0;
     
     
             // =========================================================
-            // OBAPAY
+            // 2. OBAPAY - JALANKAN TERLEBIH DAHULU
             // =========================================================
     
             $timer = microtime(true);
@@ -596,15 +529,12 @@ class ApiController extends Controller
                         $response->json();
     
     
-                    // Nama pasien dari ObaPay jika belum ada
-                    if (empty($nama)) {
-    
-                        $nama =
-                            data_get(
-                                $json,
-                                'data.sales.0.patient.name'
-                            );
-                    }
+                    // Nama pasien dari ObaPay
+                    $nama =
+                        data_get(
+                            $json,
+                            'data.sales.0.patient.name'
+                        );
     
     
                     // Total Farmasi
@@ -614,33 +544,6 @@ class ApiController extends Controller
                             'data.grand_total',
                             0
                         );
-    
-    
-                    // Tambahkan ke AkunAll
-                    if (
-                        data_get(
-                            $json,
-                            'success',
-                            false
-                        )
-                        &&
-                        $grandTotalFarmasiApi > 0
-                    ) {
-    
-                        $hasil->push([
-                            'biaya' =>
-                                $grandTotalFarmasiApi,
-    
-                            'akun' =>
-                                $akunFarmasi,
-    
-                            'jml' =>
-                                1,
-    
-                            'job' =>
-                                'N/A',
-                        ]);
-                    }
                 }
     
             } catch (\Throwable $e) {
@@ -655,6 +558,113 @@ class ApiController extends Controller
     
     
             // =========================================================
+            // 3. BARU JALANKAN AKUN ALL
+            // =========================================================
+    
+            $timer = microtime(true);
+    
+            if ($followUp === 'RESEP') {
+    
+                // RAWAT JALAN
+                $data = DB::select(
+                    "EXEC dbo.WebAkunAllByIDRJ_SP @IDReg = ?",
+                    [$id]
+                );
+    
+            } else {
+    
+                // RAWAT INAP
+                $data = DB::select(
+                    "EXEC dbo.WebAkunAllByIDRI_SP @IDReg = ?",
+                    [$id]
+                );
+            }
+    
+    
+            Log::info(
+                'AKUNALL DB: ' .
+                round(
+                    (microtime(true) - $timer) * 1000,
+                    2
+                ) .
+                ' ms'
+            );
+    
+    
+            // =========================================================
+            // NAMA DARI AKUN ALL
+            // HANYA JIKA OBAPAY TIDAK MEMBERIKAN NAMA
+            // =========================================================
+    
+            if (
+                empty($nama)
+                &&
+                !empty($data)
+            ) {
+    
+                $pecah = explode(
+                    '/',
+                    $data[0]->ID,
+                    2
+                );
+    
+                $nama =
+                    isset($pecah[1])
+                    ? trim($pecah[1])
+                    : null;
+            }
+    
+    
+            // =========================================================
+            // MASUKKAN DATA AKUN ALL
+            // =========================================================
+    
+            if (!empty($data)) {
+    
+                foreach ($data as $item) {
+    
+                    $hasil->push([
+                        'biaya' => (int) $item->biaya,
+    
+                        'akun' =>
+                            $item->akun,
+    
+                        'jml' =>
+                            (int) $item->jml,
+    
+                        'job' =>
+                            $item->Job
+                            ?? $item->job
+                            ?? '',
+                    ]);
+                }
+            }
+    
+    
+            // =========================================================
+            // 4. TAMBAHKAN OBAPAY KE HASIL
+            // =========================================================
+    
+            if ($grandTotalFarmasiApi > 0) {
+    
+                $hasil->push([
+    
+                    'biaya' =>
+                        $grandTotalFarmasiApi,
+    
+                    'akun' =>
+                        $akunFarmasi,
+    
+                    'jml' =>
+                        1,
+    
+                    'job' =>
+                        'N/A',
+                ]);
+            }
+    
+    
+            // =========================================================
             // TOTAL WAKTU
             // =========================================================
     
@@ -663,6 +673,7 @@ class ApiController extends Controller
                     (microtime(true) - $timerTotal) * 1000,
                     2
                 );
+    
     
             Log::info(
                 'AKUNALL TOTAL: ' .
@@ -705,15 +716,18 @@ class ApiController extends Controller
     
             return response()->json([
                 'status' => false,
+    
                 'message' =>
                     $e->validator
-                    ->errors()
-                    ->first(),
+                        ->errors()
+                        ->first(),
+    
                 'data' => []
+    
             ], 422);
     
     
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
     
             Log::error(
                 'AKUN ALL DATA ERROR IDReg ' .
@@ -722,11 +736,15 @@ class ApiController extends Controller
                 $e->getMessage()
             );
     
+    
             return response()->json([
                 'status' => false,
+    
                 'message' =>
                     'Data tidak ditemukan atau gagal dimuat.',
+    
                 'data' => []
+    
             ], 500);
         }
     }
