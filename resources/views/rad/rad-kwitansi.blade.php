@@ -122,9 +122,6 @@
             text-align:
                 center;
 
-            border-right:
-                1px solid #f0d000 !important;
-
         }
 
 
