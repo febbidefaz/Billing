@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -595,5 +596,132 @@ class LabController extends Controller
                 'line'    => $e->getLine()
             ]);
         }
+    }
+
+    public function printkwitansi($idLab)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil data dari Stored Procedure
+        |--------------------------------------------------------------------------
+        */
+
+        $rows = DB::select(
+            'EXEC dbo.LaboratKwitansi_sp @IDLab = ?',
+            [(int) $idLab]
+        );
+
+        if (empty($rows)) {
+            abort(404, 'Data pemeriksaan laboratorium tidak ditemukan.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Data utama
+        |--------------------------------------------------------------------------
+        */
+
+        $first = $rows[0];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Perhitungan biaya
+        |--------------------------------------------------------------------------
+        */
+
+        $biaya = collect($rows)->sum(function ($row) {
+            return (float) ($row->Biaya ?? 0);
+        });
+
+        $diskon = collect($rows)->sum(function ($row) {
+            return (float) ($row->Discount ?? 0);
+        });
+
+        $total = $biaya - $diskon;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Alamat pasien
+        |--------------------------------------------------------------------------
+        */
+
+        $alamat = trim(
+            ($first->Addr ?? '') .
+            ' ' .
+            ($first->Kelurahan ?? '')
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jenis Kelamin
+        |--------------------------------------------------------------------------
+        */
+
+        $jk = strtoupper(trim($first->Jenis_Kelamin ?? ''));
+
+        if (in_array($jk, ['P', 'PEREMPUAN', 'WANITA'])) {
+            $sapaan = 'Ny';
+        } elseif (in_array($jk, ['L', 'LAKI-LAKI', 'PRIA'])) {
+            $sapaan = 'Tn';
+        } else {
+            $sapaan = '';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Data untuk Blade
+        |--------------------------------------------------------------------------
+        */
+
+        $data = [
+            'idLab' => $first->IDLab ?? $idLab,
+
+            'idReg' => $first->IDReg ?? '-',
+
+            'regNum' => $first->RegNum ?? '-',
+
+            'nama' => $first->Nama ?? '-',
+
+            'sapaan' => $sapaan,
+
+            'alamat' => $alamat ?: '-',
+
+            'dokter' => $first->Dokter ?? '-',
+
+            'tanggalPeriksa' => $first->TLab ?? null,
+
+            'petugas' => $first->Usr ?? '-',
+
+            'biaya' => $biaya,
+
+            'diskon' => $diskon,
+
+            'total' => $total,
+
+            'printedAt' => Carbon::now('Asia/Jakarta'),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate PDF
+        |--------------------------------------------------------------------------
+        */
+
+        $pdf = Pdf::loadView(
+            'lab.lab-kwitansi',
+            $data
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | A5 LANDSCAPE
+        |--------------------------------------------------------------------------
+        */
+
+        $pdf->setPaper('a5', 'landscape');
+
+        return $pdf->stream(
+            'Kwitansi-Laboratorium-' . $idLab . '.pdf'
+        );
     }
 }

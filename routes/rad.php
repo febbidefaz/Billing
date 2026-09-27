@@ -23,3 +23,6 @@ Route::post( '/radiologi/edit/delete',  [RawatInapController::class, 'deleteRadi
 
 Route::get( '/radiologi/edit/print/{id}', [RadController::class, 'printEditRadiologi']
     )->name('radiologi.edit.print');
+
+Route::get('/radiologi/kwitansi/{idRad}', [RadController::class, 'printkwitansi']
+    )->name('rad.kwitansi');    

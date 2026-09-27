@@ -2852,6 +2852,16 @@
                                                         <i class="fas fa-print mr-1"></i>
                                                         Print Radiologi
                                                     </button>
+
+                                                    <button type="button"
+                                                        class="btn btn-info"
+                                                        onclick="openRadiologiKwiPrint(
+                                                            '{{ route('rad.kwitansi', ['idRad' => $r->IDRad]) }}'
+                                                        )">
+
+                                                        <i class="fas fa-print mr-1"></i>
+                                                        Print Kwitansi
+                                                    </button>
                                                 </div>
 
                                                 <script>
@@ -2888,6 +2898,54 @@
 
                                                         if (!popup) {
                                                             alert('Popup diblokir browser. Izinkan popup untuk aplikasi ini.');
+                                                            return;
+                                                        }
+
+                                                        popup.focus();
+                                                    }
+
+                                                    function openRadiologiKwiPrint(url) {
+
+                                                        const width = 1000;
+                                                        const height = 750;
+
+                                                        const left = Math.max(
+                                                            0,
+                                                            Math.round((window.screen.width - width) / 2)
+                                                        );
+
+                                                        const top = Math.max(
+                                                            0,
+                                                            Math.round((window.screen.height - height) / 2)
+                                                        );
+
+                                                        const popup = window.open(
+                                                            url,
+
+                                                            // PENTING:
+                                                            // jangan sama dengan radiologiPrintPopup
+                                                            'radiologiKwitansiPopup',
+
+                                                            [
+                                                                `width=${width}`,
+                                                                `height=${height}`,
+                                                                `left=${left}`,
+                                                                `top=${top}`,
+                                                                'resizable=yes',
+                                                                'scrollbars=yes',
+                                                                'toolbar=no',
+                                                                'menubar=no',
+                                                                'location=no',
+                                                                'status=no'
+                                                            ].join(',')
+                                                        );
+
+                                                        if (!popup) {
+
+                                                            alert(
+                                                                'Popup diblokir browser. Izinkan popup untuk aplikasi ini.'
+                                                            );
+
                                                             return;
                                                         }
 
@@ -3210,6 +3268,16 @@
                                                     <i class="fas fa-print mr-1"></i>
                                                     Print Lab
                                                 </button>
+
+                                                <button type="button" class="btn btn-info"
+                                                    onclick="openLabKwiPrint(
+                                                        '{{ route('lab.kwitansi', ['idLab' => $l->IDLab]) }}'
+                                                    )">
+
+                                                    <i class="fas fa-print mr-1"></i>
+                                                    Print Kwitansi
+
+                                                </button>
                                             </div>
 
                                             <script>
@@ -3230,6 +3298,47 @@
                                                     const popup = window.open(
                                                         url,
                                                         'labPrintPopup',
+                                                        [
+                                                            `width=${width}`,
+                                                            `height=${height}`,
+                                                            `left=${left}`,
+                                                            `top=${top}`,
+                                                            'resizable=yes',
+                                                            'scrollbars=yes',
+                                                            'toolbar=no',
+                                                            'menubar=no',
+                                                            'location=no',
+                                                            'status=no'
+                                                        ].join(',')
+                                                    );
+
+                                                    if (!popup) {
+                                                        alert(
+                                                            'Popup diblokir browser. Silakan izinkan popup untuk aplikasi ini.'
+                                                        );
+                                                        return;
+                                                    }
+
+                                                    popup.focus();
+                                                }
+
+                                                function openLabKwiPrint(url) {
+                                                    const width = 1000;
+                                                    const height = 750;
+
+                                                    const left = Math.max(
+                                                        0,
+                                                        Math.round((window.screen.width - width) / 2)
+                                                    );
+
+                                                    const top = Math.max(
+                                                        0,
+                                                        Math.round((window.screen.height - height) / 2)
+                                                    );
+
+                                                    const popup = window.open(
+                                                        url,
+                                                        'labKwiPrintPopup',
                                                         [
                                                             `width=${width}`,
                                                             `height=${height}`,

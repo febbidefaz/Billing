@@ -23,4 +23,7 @@ Route::post('/laboratorium/edit/sync/{id}', [RawatInapController::class, 'syncLa
   
 Route::get('/lab/edit/print/{id}', [LabController::class, 'printEditLab']
     )->name('lab.edit.print');
+
+Route::get('/lab/kwitansi/{idLab}', [LabController::class, 'printkwitansi'] 
+    )->name('lab.kwitansi');
     
