@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\Pool;
 
 class MonitoringController extends Controller
 {
@@ -25,20 +26,64 @@ class MonitoringController extends Controller
 
     public function data()
     {
-        $data = DB::select('EXEC WebRIMonitoring_SP');
-
-        $data = collect($data)->map(function ($row) {
-
-            $obapay = $this->getTotalObapay($row->ID);
-
-            $row->Obapay = $obapay;
-            $row->Total = ($row->Total ?? 0) + $obapay;
-
-            return $row;
-        })->values();
-
+        $rows = collect(DB::select('EXEC WebRIMonitoring_SP'));
+    
+        if ($rows->isEmpty()) {
+            return response()->json(['data' => []]);
+        }
+    
+        try {
+    
+            $token = $this->getFarmasiToken();
+    
+            $responses = Http::pool(function (Pool $pool) use ($rows, $token) {
+    
+                return $rows->map(function ($row) use ($pool, $token) {
+    
+                    return $pool
+                        ->as((string) $row->ID)
+                        ->withToken($token)
+                        ->connectTimeout(1)
+                        ->timeout(3)
+                        ->get(
+                            'http://192.168.3.31:8010/api/sales',
+                            [
+                                'appointment_id' => $row->ID
+                            ]
+                        );
+    
+                })->all();
+    
+            });
+    
+            $rows = $rows->map(function ($row) use ($responses) {
+    
+                $response = $responses[(string) $row->ID] ?? null;
+    
+                $obapay = 0;
+    
+                if ($response && $response->successful()) {
+                    $obapay = (float) ($response->json('data.grand_total') ?? 0);
+                }
+    
+                $row->Obapay = $obapay;
+    
+                $row->Total =
+                    (float) ($row->Total ?? 0)
+                    + $obapay;
+    
+                return $row;
+            });
+    
+        } catch (\Throwable $e) {
+    
+            Log::error('Monitoring Obapay Error', [
+                'message' => $e->getMessage()
+            ]);
+        }
+    
         return response()->json([
-            'data' => $data
+            'data' => $rows->values()
         ]);
     }
 
