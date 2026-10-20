@@ -516,6 +516,22 @@
                         }
                     </script>
 
+                    {{-- Print Rekening Tanpa Karcis--}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="previewBillingTanpaKarcis()">
+                        <i class="fas fa-print"></i> Rek. Tanpa Karcis
+                    </button>
+
+                    <script>
+                        function previewBillingTanpaKarcis() {
+                            window.open(
+                                "{{ route('rawatjalan.rekeningPrintTanpaKarcis', $pasien->ID) }}",
+                                "_blank",
+                                "height=800,width=1000"
+                            );
+                        }
+                    </script>
+
+
                     {{-- print Rek Rinci Keu --}}
                     @if (in_array(strtolower(Auth::user()->Role), ['kasir', 'casemix']))
                         <button type="button" class="btn btn-info btn-sm" onclick="previewBillingKeu()">

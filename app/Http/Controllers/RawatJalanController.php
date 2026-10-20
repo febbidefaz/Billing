@@ -1261,6 +1261,115 @@ class RawatJalanController extends Controller
         ));
     }
 
+    // Rekening print
+    public function rekeningPrintTanpaKarcis($id)
+    {
+        $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+    
+        $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);
+        $rekeningVisit = DB::select("EXEC dbo.WebRekeningVisitByID_SP ?", [$id]);
+        $rekeningUtilitas = DB::select("EXEC dbo.WebRekeningUtilitasByID_SP ?", [$id]);
+        $rekeningLaborat = DB::select("EXEC dbo.WebRekeningLaboratByID_SP ?", [$id]);        
+        $totalLab = collect($rekeningLaborat)->sum('Netto');
+
+        $rekeningRadiologi = DB::select("EXEC dbo.WebRekeningRadiologiByID_SP ?", [$id]);
+        $totalRadiologi = collect($rekeningRadiologi)->sum('Netto');
+
+        $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+        $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
+        $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+
+        // Oba Pay
+        $salesFarmasi = [];
+        $grandTotalFarmasiApi = 0;
+    
+        try {
+            $token = $this->getFarmasiToken();
+    
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->get('http://192.168.3.31:8010/api/sales', [
+                    'appointment_id' => $id
+                ]);
+    
+            if ($response->status() == 401) {
+                Cache::forget('farmasi_token');
+    
+                $token = $this->getFarmasiToken();
+    
+                $response = Http::withToken($token)
+                    ->timeout(15)
+                    ->get('http://192.168.3.31:8010/api/sales', [
+                        'appointment_id' => $id
+                    ]);
+            }
+    
+            if ($response->successful()) {
+                $salesFarmasi = $response->json('data.sales') ?? [];
+                $grandTotalFarmasiApi = $response->json('data.grand_total') ?? 0;
+            }
+    
+        } catch (\Exception $e) {
+            Log::error('Farmasi API Rekening Print Error : ' . $e->getMessage());
+    
+            $salesFarmasi = [];
+            $grandTotalFarmasiApi = 0;
+        }
+
+        $totalKamar = collect($kamar)->sum('TotalSewa');
+        $totalAskep = collect($kamar)->sum('TotalAskep');
+        $totalVisit = collect($rekeningVisit)->sum('Netto');
+        $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+        $totalLain = collect($lainlain)->sum('TotalLain');
+        $totalOperasi = collect($rekeningOperasi)->sum('Netto');
+        $totalObat = collect($obat)->sum('HutangObat');
+
+        // $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+
+        $grandTotal =
+            //   $karcisJasa +
+            $totalKamar +
+            $totalAskep +
+            $totalVisit +
+            $totalUtilitas +
+            $totalRadiologi +
+            $totalLab +
+            $totalLain +
+            $totalOperasi +
+            $totalObat +
+            $grandTotalFarmasiApi;
+
+        $dijamin = $pasien->DownPay ?? 0;
+        $sisa = $grandTotal - $dijamin;
+
+        $terbilangSisa = strtoupper(
+            trim(
+                preg_replace('/\s+/', ' ', $this->terbilang($sisa))
+            )
+        );
+
+        $tanggalCetak = now()->format('d M Y H:i:s');
+    
+        return view('rawatjalan.rekening-print-tanpakarcis', compact(
+            'pasien',
+            'kamar',
+            'rekeningVisit',
+            'rekeningUtilitas',
+            'rekeningLaborat',
+            'totalLab',
+            'rekeningRadiologi',
+            'totalRadiologi',
+            'lainlain',
+            'rekeningOperasi',
+            'obat',
+            'salesFarmasi',
+            'grandTotalFarmasiApi',
+            'sisa',
+            'terbilangSisa',
+            'tanggalCetak'
+        ));
+    }
+
     // Rekening Keu print
     public function rekKeuPrint($id)
     {
