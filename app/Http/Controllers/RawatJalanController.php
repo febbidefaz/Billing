@@ -13,38 +13,88 @@ class RawatJalanController extends Controller
 {
     public function index()
     {
-        return view('rawatjalan');
+        $dokter = DB::select("EXEC dbo.WebcboDokter_SP");
+    
+        $spesialis = DB::select("EXEC dbo.cboSpesialis_SP");
+    
+        $prakOn = DB::select("EXEC dbo.cboPrakOn_sp");
+    
+        return view('rawatjalan', compact(
+            'dokter',
+            'spesialis',
+            'prakOn'
+        ));
     }
-
+   
+   
     public function data(Request $request)
     {
         try {
-    
-            $tglAwal = $request->tgl_awal ?? date('Y-m-d');
-            $tglAkhir = $request->tgl_akhir ?? date('Y-m-d');
-    
+
+            $tglAwal = $request->filled('tgl_awal')
+                ? $request->input('tgl_awal')
+                : date('Y-m-d');
+
+            $tglAkhir = $request->filled('tgl_akhir')
+                ? $request->input('tgl_akhir')
+                : date('Y-m-d');
+
+            $dokterId = $request->filled('dokter_id')
+                ? (int) $request->input('dokter_id')
+                : null;
+
+            $spesialisId = $request->filled('spesialis_id')
+                ? (int) $request->input('spesialis_id')
+                : null;
+
+            $jamPraktek = $request->filled('jam_praktek')
+                ? (int) $request->input('jam_praktek')
+                : null;
+
+            // Langsung EXEC tanpa SET NOCOUNT ON tambahan
+            // SP sudah memiliki SET NOCOUNT ON
             $data = DB::select("
-                SET NOCOUNT ON;
-                EXEC dbo.WebDaftarPasienRawatJalanKasir_SP ?, ?
+                EXEC dbo.WebDaftarPasienRawatJalanFilter_SP
+                    @TglAwal = ?,
+                    @TglAkhir = ?,
+                    @DokterID = ?,
+                    @SpesialisID = ?,
+                    @JamPraktek = ?
             ", [
                 $tglAwal,
-                $tglAkhir
+                $tglAkhir,
+                $dokterId,
+                $spesialisId,
+                $jamPraktek
             ]);
-    
-            return response()->json([
-                'data' => $data ?: []
+
+            Log::info('RAWAT JALAN BILLING DATA', [
+                'total' => count($data),
+                'tanggal_awal' => $tglAwal,
+                'tanggal_akhir' => $tglAkhir,
+                'dokter_id' => $dokterId,
+                'spesialis_id' => $spesialisId,
+                'jam_praktek' => $jamPraktek
             ]);
-    
-        } catch (\Exception $e) {
-    
-            Log::error('RAWAT JALAN DATA ERROR : ' . $e->getMessage());
-    
+
             return response()->json([
+                'data' => $data
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error('RAWAT JALAN BILLING ERROR', [
+                'message' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
                 'data' => [],
-                'message' => 'Data tidak ditemukan atau gagal dimuat.'
-            ], 200);
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     public function sepDetail(Request $request)
     {

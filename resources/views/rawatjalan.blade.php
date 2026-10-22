@@ -1,13 +1,13 @@
 @extends('layouts.app')
+
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
-
 @section('title', 'Rawat Jalan')
 
+{{-- SAMA DENGAN HALAMAN RAWAT INAP --}}
 @section('content_header')
     <div class="d-flex align-items-center">
         <h1 class="mb-0 mr-2">Data Rawat Jalan</h1>
-
         <span class="badge badge-info shadow-sm px-3 py-2" id="totalPasienHeader"
             style="font-size:14px;font-weight:1000;border-radius:10px;letter-spacing:0.5px;">
             0 Pasien
@@ -16,44 +16,59 @@
 @stop
 
 @section('page-content')
-
     <div class="card shadow-sm">
-
+        {{-- FILTER --}}
         <div class="card-header bg-light">
-
-            <div class="row align-items-center">
-
-                <div class="col-md-3">
-                    <div class="form-group row mb-0">
-                        <label class="col-sm-4 col-form-label">TGL Awal</label>
-                        <div class="col-sm-8">
-                            <input type="text" id="tgl1" class="form-control datepicker" value="{{ date('d-m-Y') }}"
-                                autocomplete="off">
-                        </div>
-                    </div>
+            <div class="row align-items-end">
+                {{-- TANGGAL AWAL --}}
+                <div class="col-lg-2 col-md-4 mb-2">
+                    <label>Tanggal Awal</label>
+                    <input type="text" id="tgl1" class="form-control datepicker" value="{{ date('d-m-Y') }}"
+                        autocomplete="off" readonly>
                 </div>
 
-                <div class="col-md-3">
-                    <div class="form-group row mb-0">
-                        <label class="col-sm-4 col-form-label">TGL Akhir</label>
-                        <div class="col-sm-8">
-                            <input type="text" id="tgl2" class="form-control datepicker" value="{{ date('d-m-Y') }}"
-                                autocomplete="off">
-                        </div>
-                    </div>
+                {{-- TANGGAL AKHIR --}}
+                <div class="col-lg-2 col-md-4 mb-2">
+                    <label>Tanggal Akhir</label>
+                    <input type="text" id="tgl2" class="form-control datepicker" value="{{ date('d-m-Y') }}"
+                        autocomplete="off" readonly>
                 </div>
-
-                <div class="col-md-2">
-                    <button type="button" id="btnFilter" class="btn btn-info btn-block">
+                <div class="col-lg-3 col-md-4 mb-2">
+                    <label for="dokter_id">Dokter</label>
+                    <select id="dokter_id" class="form-control">
+                        <option value="">Semua Dokter</option>
+                        @foreach ($dokter ?? [] as $d)
+                            <option value="{{ $d->ID }}">{{ $d->DokterAlias }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-2">
+                    <label for="spesialis_id">Spesialis</label>
+                    <select id="spesialis_id" class="form-control">
+                        <option value="">Semua Spesialis</option>
+                        @foreach ($spesialis ?? [] as $s)
+                            <option value="{{ $s->ID }}">{{ $s->Spesialis }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-2">
+                    <label for="jam_praktek">Jam Praktek</label>
+                    <select id="jam_praktek" class="form-control">
+                        <option value="">Semua Jam</option>
+                        @foreach ($prakOn ?? [] as $p)
+                            <option value="{{ $p->ID }}">{{ $p->Alias }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-1 col-md-4 mb-2">
+                    <button type="button" id="btnFilter" class="btn btn-info btn-block" title="Tampilkan">
                         <i class="fas fa-search"></i>
-                        Tampilkan
                     </button>
                 </div>
-
             </div>
-
         </div>
 
+        {{-- TABEL: FORMAT RAWAT INAP, KOLOM BILLING TETAP --}}
         <div class="card-body p-0">
             <div class="table-wrap">
                 <table id="tblRawatJalan" class="table table-hover table-striped table-bordered nowrap">
@@ -72,21 +87,20 @@
                             <th>No WA</th>
                         </tr>
                     </thead>
-
                     <tbody></tbody>
                 </table>
             </div>
         </div>
-
     </div>
-
 @stop
+
 
 @section('css')
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css">
 
     <style>
+        /* TABEL RAWAT JALAN */
         .table-wrap {
             width: 100%;
             overflow-x: auto;
@@ -96,7 +110,7 @@
         }
 
         #tblRawatJalan {
-            min-width: 900px !important;
+            min-width: 1200px !important;
             width: max-content !important;
         }
 
@@ -111,7 +125,7 @@
             top: 0;
             z-index: 2;
             background: #17a2b8 !important;
-            color: white;
+            color: white !important;
         }
 
         .table-wrap::-webkit-scrollbar {
@@ -122,8 +136,48 @@
             background: #999;
             border-radius: 10px;
         }
+
+        /* FILTER */
+        .card-header label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .card-header .form-control {
+            height: 38px;
+        }
+
+        #btnFilter {
+            height: 38px;
+        }
+
+        /* BOOTSTRAP DATEPICKER */
+        .datepicker-dropdown {
+            z-index: 1060 !important;
+        }
+
+        .datepicker table tr td.active,
+        .datepicker table tr td.active:hover {
+            background: #17a2b8 !important;
+            color: white !important;
+        }
+
+        #tgl1,
+        #tgl2 {
+            background-color: #fff !important;
+            cursor: pointer;
+        }
+
+        /* Turunkan posisi kalender */
+        .datepicker-dropdown {
+            margin-top: 60px !important;
+            z-index: 1060 !important;
+        }
     </style>
 @stop
+
+
 
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js">
@@ -134,46 +188,90 @@
     <script>
         let tableRawatJalan;
 
-        const userId = "{{ auth()->id() }}";
-        const keyPrefix = "rawat_jalan_" + userId + "_";
+        const userId = "{{ auth()->id() ?? 'guest' }}";
+        const keyPrefix = "billing_rawat_jalan_" + userId + "_";
 
+        // SIMPAN FILTER
         function simpanFilterRawatJalan() {
             localStorage.setItem(keyPrefix + "tgl_awal", $('#tgl1').val());
             localStorage.setItem(keyPrefix + "tgl_akhir", $('#tgl2').val());
+            localStorage.setItem(keyPrefix + "dokter_id", $('#dokter_id').val());
+            localStorage.setItem(keyPrefix + "spesialis_id", $('#spesialis_id').val());
+            localStorage.setItem(keyPrefix + "jam_praktek", $('#jam_praktek').val());
         }
 
+        // LOAD FILTER
         function loadFilterRawatJalan() {
-            let savedAwal = localStorage.getItem(keyPrefix + "tgl_awal");
-            let savedAkhir = localStorage.getItem(keyPrefix + "tgl_akhir");
+            const awal = localStorage.getItem(keyPrefix + "tgl_awal");
+            const akhir = localStorage.getItem(keyPrefix + "tgl_akhir");
+            const dokter = localStorage.getItem(keyPrefix + "dokter_id");
+            const spesialis = localStorage.getItem(keyPrefix + "spesialis_id");
+            const jam = localStorage.getItem(keyPrefix + "jam_praktek");
 
-            if (savedAwal) $('#tgl1').val(savedAwal);
-            if (savedAkhir) $('#tgl2').val(savedAkhir);
+            if (awal) $('#tgl1').val(awal);
+            if (akhir) $('#tgl2').val(akhir);
+            if (dokter !== null) $('#dokter_id').val(dokter);
+            if (spesialis !== null) $('#spesialis_id').val(spesialis);
+            if (jam !== null) $('#jam_praktek').val(jam);
         }
 
+        // DD-MM-YYYY KE YYYY-MM-DD
         function toDbDate(tgl) {
             if (!tgl) return '';
 
-            let p = tgl.split('-');
+            const p = tgl.split('-');
 
             if (p.length !== 3) return tgl;
 
             return p[2] + '-' + p[1] + '-' + p[0];
         }
 
+        // FORMAT TANGGAL TABEL
+        function formatTanggal(data, type) {
+            if (!data) return '-';
+
+            if (type === 'sort' || type === 'type') {
+                return data;
+            }
+
+            const tanggal = String(data).substring(0, 10);
+            const p = tanggal.split('-');
+
+            if (p.length !== 3) return data;
+
+            return p[2] + '/' + p[1] + '/' + p[0];
+        }
+
         $(function() {
 
-            $('.datepicker').datepicker({
-                format: 'dd-mm-yyyy',
-                autoclose: true,
-                todayHighlight: true,
-                language: 'id'
-            });
-
+            // LOAD FILTER TERSIMPAN
             loadFilterRawatJalan();
 
-            tableRawatJalan = $("#tblRawatJalan").DataTable({
+            // DATEPICKER
+            if ($.fn.datepicker) {
+                $('#tgl1, #tgl2').datepicker({
+                    format: 'dd-mm-yyyy',
+                    autoclose: true,
+                    todayHighlight: true,
+                    language: 'id',
+                    orientation: 'bottom auto'
+                });
+
+                $('#tgl1, #tgl2').on('click', function() {
+                    $(this).datepicker('show');
+                });
+            } else {
+                console.error('Bootstrap Datepicker belum termuat');
+            }
+
+            // DATATABLE RAWAT JALAN
+            tableRawatJalan = $('#tblRawatJalan').DataTable({
+
                 processing: true,
                 stateSave: true,
+                responsive: false,
+                autoWidth: false,
+                scrollX: false,
 
                 stateSaveCallback: function(settings, data) {
                     localStorage.setItem(
@@ -183,18 +281,44 @@
                 },
 
                 stateLoadCallback: function(settings) {
-                    let savedState = localStorage.getItem(
+                    const state = localStorage.getItem(
                         keyPrefix + "datatable_state"
                     );
 
-                    return savedState ? JSON.parse(savedState) : null;
+                    try {
+                        return state ? JSON.parse(state) : null;
+                    } catch (e) {
+                        return null;
+                    }
                 },
 
                 ajax: {
                     url: "{{ route('rawatjalan.data') }}",
+                    type: "GET",
+                    dataSrc: "data",
+
                     data: function(d) {
                         d.tgl_awal = toDbDate($('#tgl1').val());
                         d.tgl_akhir = toDbDate($('#tgl2').val());
+                        d.dokter_id = $('#dokter_id').val();
+                        d.spesialis_id = $('#spesialis_id').val();
+                        d.jam_praktek = $('#jam_praktek').val();
+                    },
+
+                    error: function(xhr) {
+                        console.error(
+                            'ERROR AJAX RAWAT JALAN:',
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+                        $('#totalPasienHeader').text('Error');
+
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(
+                                'Gagal memuat pasien. Periksa Console / Network.'
+                            );
+                        }
                     }
                 },
 
@@ -216,15 +340,8 @@
                     },
                     {
                         data: 'Tanggal',
-                        render: function(data) {
-                            if (!data) return '-';
-
-                            let tgl = new Date(data);
-                            let dd = String(tgl.getDate()).padStart(2, '0');
-                            let mm = String(tgl.getMonth() + 1).padStart(2, '0');
-                            let yyyy = tgl.getFullYear();
-
-                            return dd + '/' + mm + '/' + yyyy;
+                        render: function(data, type) {
+                            return formatTanggal(data, type);
                         }
                     },
                     {
@@ -256,17 +373,14 @@
                 createdRow: function(row, data) {
                     $(row).css('cursor', 'pointer');
 
-                    $(row).on('click', function() {
+                    $(row).off('click').on('click', function() {
                         simpanFilterRawatJalan();
 
                         window.location.href =
-                            "{{ route('rawatjalan.detail', ':id') }}".replace(':id', data.ID);
+                            "{{ route('rawatjalan.detail', ':id') }}"
+                            .replace(':id', data.ID);
                     });
                 },
-
-                responsive: false,
-                autoWidth: false,
-                scrollX: false,
 
                 paging: true,
                 pageLength: 200,
@@ -282,14 +396,18 @@
                 ],
 
                 drawCallback: function(settings) {
-                    let total = settings.fnRecordsTotal();
-                    $('#totalPasienHeader').html(total + ' Pasien');
+                    const total = settings.fnRecordsDisplay();
+
+                    $('#totalPasienHeader').text(total + ' Pasien');
                 },
 
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data",
                     info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    zeroRecords: "Data pasien tidak ditemukan",
+                    processing: "Memuat data...",
                     paginate: {
                         previous: "Sebelumnya",
                         next: "Berikutnya"
@@ -297,13 +415,26 @@
                 }
             });
 
-            $('#tgl1,#tgl2').on('change', function() {
-                simpanFilterRawatJalan();
-            });
+            // SIMPAN FILTER
+            $('#tgl1, #tgl2, #dokter_id, #spesialis_id, #jam_praktek')
+                .on('change', function() {
+                    simpanFilterRawatJalan();
+                });
 
-            $('#btnFilter').on('click', function() {
+            // TOMBOL TAMPILKAN
+            $('#btnFilter').off('click').on('click', function() {
+
                 simpanFilterRawatJalan();
-                tableRawatJalan.ajax.reload();
+
+                console.log('Filter Billing:', {
+                    tanggal_awal: $('#tgl1').val(),
+                    tanggal_akhir: $('#tgl2').val(),
+                    dokter_id: $('#dokter_id').val(),
+                    spesialis_id: $('#spesialis_id').val(),
+                    jam_praktek: $('#jam_praktek').val()
+                });
+
+                tableRawatJalan.ajax.reload(null, true);
             });
 
         });
