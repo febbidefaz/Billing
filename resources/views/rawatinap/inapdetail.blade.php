@@ -2853,8 +2853,7 @@
                                                         Print Radiologi
                                                     </button>
 
-                                                    <button type="button"
-                                                        class="btn btn-info"
+                                                    <button type="button" class="btn btn-info"
                                                         onclick="openRadiologiKwiPrint(
                                                             '{{ route('rad.kwitansi', ['idRad' => $r->IDRad]) }}'
                                                         )">
@@ -3398,34 +3397,30 @@
                                     @forelse ($lainlain as $l)
                                         <tr style="cursor:pointer"
                                             onclick="openEditLain(
-                                        '{{ $l->Lain_ID }}',
-                                        '{{ $l->TGL ? date('Y-m-d', strtotime($l->TGL)) : '' }}',
-                                        '{{ addslashes($l->Lain ?? '') }}',
-                                        '{{ $l->BiayaLain ?? 0 }}',
-                                        '{{ ($l->Pot ?? 0) * 100 }}'
-                                        '{{ ($l->BiayaLain ?? 0) * ($l->Pot ?? 0) }}'
-                                   
-                                    )">
+                                            @js($l->Lain_ID),
+                                            @js($l->TGL ? date('Y-m-d', strtotime($l->TGL)) : ''),
+                                            @js($l->Lain ?? ''),
+                                            @js($l->BiayaLain ?? 0),
+                                            @js(($l->Pot ?? 0) * 100)
+                                        )">
+
                                             <td>{{ $l->Lain_ID ?? '-' }}</td>
                                             <td>{{ $l->Lain ?? '-' }}</td>
                                             <td>{{ $l->TGL ? date('d/m/Y', strtotime($l->TGL)) : '-' }}</td>
-                                            {{--   <td>{{ $l->NamaKamar ?? '-' }}</td> --}}
+
                                             <td class="text-right">
                                                 Rp {{ number_format($l->BiayaLain ?? 0, 0, ',', '.') }}
                                             </td>
+
                                             <td class="text-right">
                                                 {{ number_format(($l->Pot ?? 0) * 100, 2) }}%
                                             </td>
 
                                             <td class="text-right">
-                                                Rp
-                                                {{ number_format(($l->BiayaLain ?? 0) * ($l->Pot ?? 0), 0, ',', '.') }}
+                                                Rp {{ number_format(($l->BiayaLain ?? 0) * ($l->Pot ?? 0), 0, ',', '.') }}
                                             </td>
-
                                         </tr>
-
                                     @empty
-
                                         <tr>
                                             <td colspan="6" class="text-center text-muted">
                                                 Data biaya lain-lain belum tersedia.
@@ -3546,15 +3541,6 @@
                     </div>
 
                     <script>
-                        function openInsertLain() {
-                            $('#lainTgl').val('{{ date('Y-m-d') }}');
-                            $('#lainNama').val('');
-                            $('#lainBiaya').val(0);
-                            $('#lainPot').val(0);
-
-                            $('#modalInsertLain').modal('show');
-                        }
-
                         function simpanInsertLain() {
                             if (!$('#lainNama').val()) {
                                 alert('Nama biaya lain-lain wajib diisi.');
