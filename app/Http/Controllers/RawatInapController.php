@@ -1264,6 +1264,80 @@ class RawatInapController extends Controller
         ));
     }
 
+     // Kwitansi Tanpa Karcis
+     public function kwitansiPrintTanpaKarcis($id)
+     {
+         $pasien = DB::selectOne("EXEC dbo.WebPasienRawatInapDetailByID_SP ?", [$id]);
+ 
+         $kamar = DB::select("EXEC dbo.WebKamarBillingByID_SP ?", [$id]);
+         $rekeningVisit = DB::select("EXEC dbo.WebRekeningVisitByID_SP ?", [$id]);
+         $rekeningUtilitas = DB::select("EXEC dbo.WebRekeningUtilitasByID_SP ?", [$id]);
+         $rekeningLaborat = DB::select("EXEC dbo.WebRekeningLaboratByID_SP ?", [$id]);
+         $rekeningRadiologi = DB::select("EXEC dbo.WebRekeningRadiologiByID_SP ?", [$id]);
+         $lainlain = DB::select("EXEC dbo.WebLainBillingByID_SP ?", [$id]);
+         $rekeningOperasi = DB::select("EXEC dbo.WebRekeningOperasiByID_SP ?", [$id]);
+         $obat = DB::select("EXEC dbo.WebObatBillingByID_SP ?", [$id]);
+         $kasir = DB::selectOne("EXEC dbo.WebKasirBillingByID_SP ?", [$id]);
+ 
+         $karcisJasa = ($pasien->Biaya ?? 0) + ($pasien->JasaPrk ?? 0);
+         $totalLab = collect($rekeningLaborat)->sum('Netto');
+         $totalRadiologi = collect($rekeningRadiologi)->sum('Netto');
+         $totalVisitRuang = collect($rekeningVisit)->sum('Netto') + collect($kamar)->sum('TotalSewa') + collect($kamar)->sum('TotalAskep');
+         $totalUtilitas = collect($rekeningUtilitas)->sum('Netto');
+         $totalOperasi = collect($rekeningOperasi)->sum('Netto');
+         $totalObat = collect($obat)->sum('HutangObat');
+         $totalLain = collect($lainlain)->sum('TotalLain');
+ 
+         $salesFarmasi = [];
+         $grandTotalFarmasiApi = 0;
+ 
+         try {
+ 
+             $token = $this->getFarmasiToken();
+ 
+             $response = Http::withToken($token)
+                 ->timeout(15)
+                 ->get('http://192.168.3.31:8010/api/sales', [
+                     'appointment_id' => $id
+                 ]);
+ 
+             if ($response->successful()) {
+                 $grandTotalFarmasiApi = $response->json('data.grand_total') ?? 0;
+             }
+ 
+         } catch (\Exception $e) {
+             $grandTotalFarmasiApi = 0;
+         }
+         $totalObat = collect($obat)->sum('HutangObat') + $grandTotalFarmasiApi;
+ 
+         $grandTotal = $totalLab + $totalRadiologi + $totalVisitRuang + $totalUtilitas + $totalOperasi + $totalObat + $totalLain;
+         $dijamin = $pasien->DownPay ?? 0;
+         $sisa = $grandTotal - $dijamin;
+ 
+         $terbilangSisa = strtoupper(trim(preg_replace('/\s+/', ' ', $this->terbilang($sisa))));
+         $tanggalCetak = now()
+             ->locale('id')
+             ->translatedFormat('l, d F Y');
+ 
+         return view('rawatinap.kwitansi-print-tanpakarcis', compact(
+             'pasien',
+             'karcisJasa',
+             'totalLab',
+             'totalRadiologi',
+             'totalVisitRuang',
+             'totalUtilitas',
+             'totalOperasi',
+             'totalObat',
+             'totalLain',
+             'grandTotal',
+             'dijamin',
+             'sisa',
+             'terbilangSisa',
+             'tanggalCetak',
+             'kasir'
+         ));
+     }
+
     // Kwitansi Phk3
     public function kwitansiPhk3Print($id)
     {

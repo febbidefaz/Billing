@@ -786,4 +786,85 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+    public function getPembelianObat(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'date' => 'nullable|date_format:Y-m-d'
+            ]);
+
+            // Tanggal default hari ini
+            $tanggal = $request->date ?? now('Asia/Jakarta')->format('Y-m-d');
+
+            // Ambil token ObaPay
+            $token = $this->getFarmasiToken();
+
+            // Request ke API ObaPay
+            $response = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(20)
+                ->get(
+                    'http://192.168.3.31:8010/api/purchases/grand-total',
+                    [
+                        'date' => $tanggal
+                    ]
+                );
+
+            if (!$response->successful()) {
+                Log::error('OBAPAY PEMBELIAN ERROR', [
+                    'date' => $tanggal,
+                    'http_status' => $response->status()
+                ]);
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Gagal mengambil data pembelian obat.'
+                ], 502);
+            }
+
+            $json = $response->json();
+
+            if (data_get($json, 'success') !== true) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data pembelian obat tidak berhasil diperoleh.'
+                ], 502);
+            }
+
+            $grandTotal = data_get($json, 'data.grand_total');
+
+            if (!is_numeric($grandTotal)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Nilai total pembelian obat tidak valid.'
+                ], 502);
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'date' => $tanggal,
+                    'grand_total' => (float) $grandTotal
+                ]
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->validator->errors()->first()
+            ], 422);
+
+        } catch (\Throwable $e) {
+
+            Log::error('GET PEMBELIAN OBAT ERROR: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan saat mengambil pembelian obat.'
+            ], 500);
+        }
+    }
 }

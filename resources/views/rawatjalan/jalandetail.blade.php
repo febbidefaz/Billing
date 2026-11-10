@@ -516,7 +516,7 @@
                         }
                     </script>
 
-                    {{-- Print Rekening Tanpa Karcis--}}
+                    {{-- Print Rekening Tanpa Karcis --}}
                     <button type="button" class="btn btn-info btn-sm" onclick="previewBillingTanpaKarcis()">
                         <i class="fas fa-print"></i> Rek. Tanpa Karcis
                     </button>
@@ -561,6 +561,23 @@
                             function previewKwitansi() {
                                 window.open(
                                     "{{ route('rawatinap.kwitansiPrint', $pasien->ID) }}",
+                                    "_blank",
+                                    "height=800,width=1000"
+                                );
+                            }
+                        </script>
+                    @endif
+
+                    {{-- Print Kwitansi Tanpa Karcis --}}
+                    @if (strtolower(Auth::user()->Role) == 'kasir')
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewKwitansiTanpaKarcis()">
+                            <i class="fas fa-print"></i> Kwi. Tanpa Karcis
+                        </button>
+
+                        <script>
+                            function previewKwitansiTanpaKarcis() {
+                                window.open(
+                                    "{{ route('rawatinap.kwitansiPrintTanpaKarcis', $pasien->ID) }}",
                                     "_blank",
                                     "height=800,width=1000"
                                 );
@@ -3924,7 +3941,8 @@
                             $sudahAdaKasir = !empty($k);
                         @endphp
 
-                        <form id="formKasir" action="{{ route('rawatinap.simpanKasir', $pasien->ID) }}" method="POST">
+                        <form id="formKasir" action="{{ route('rawatinap.simpanKasir', $pasien->ID) }}"
+                            method="POST">
 
                             @csrf
 
